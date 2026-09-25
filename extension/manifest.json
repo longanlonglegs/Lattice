@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Lattice Capture",
+  "description": "Save selected web passages to an open Lattice research project.",
+  "version": "0.1.0",
+  "permissions": ["contextMenus", "tabs", "scripting"],
+  "host_permissions": ["http://localhost:4173/*", "http://127.0.0.1:4173/*"],
+  "background": { "service_worker": "service-worker.js", "type": "module" }
+}

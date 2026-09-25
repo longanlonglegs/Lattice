@@ -1,0 +1,11 @@
+{
+  "name": "lattice-research-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.4.149"
+  }
+}
