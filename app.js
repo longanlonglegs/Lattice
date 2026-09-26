@@ -10,7 +10,7 @@ function card(id, tag, question, answer, quote, page, sourceId = "") {
   return { id, tag, question, answer, quote, page, sourceId, state: "pending", stance: "" };
 }
 function newProject(title = "Untitled research session") {
-  return { id: crypto.randomUUID(), title, question: "", hypothesis: "", cards: structuredClone(defaultCards), sources: [], activities: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  return { id: crypto.randomUUID(), title, question: "", hypothesis: "", cards: structuredClone(defaultCards), sources: [], activities: [], aiAnalysis: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
 function loadWorkspace() {
   let saved = null;
@@ -32,6 +32,7 @@ const currentProject = () => {
   project.sources = Array.isArray(project.sources) ? project.sources : [];
   project.activities = Array.isArray(project.activities) ? project.activities : [];
   project.hypothesis = typeof project.hypothesis === "string" ? project.hypothesis : "";
+  project.aiAnalysis = project.aiAnalysis && typeof project.aiAnalysis === "object" ? project.aiAnalysis : null;
   return project;
 };
 
@@ -60,9 +61,10 @@ function renderSourceList() {
   const sources = currentProject().sources;
   $("#source-count").textContent = `${sources.length} source${sources.length === 1 ? "" : "s"}`;
   $("#source-list").innerHTML = sources.length ? sources.slice(-3).reverse().map(source => `
-    <div class="source-chip"><span>${source.kind === "pdf" ? "PDF" : source.kind === "text" ? "TXT" : "URL"}</span><div><strong>${escapeHtml(source.title)}</strong><small>${source.detail || "Saved locally"}</small></div><button data-remove-source="${source.id}" type="button" aria-label="Remove ${escapeHtml(source.title)}">×</button></div>`).join("") : "";
+    <div class="source-chip"><span>${source.kind === "pdf" ? "PDF" : source.kind === "text" ? "TXT" : source.kind === "web" ? "WEB" : "URL"}</span><div><strong>${escapeHtml(source.title)}</strong><small>${source.detail || "Saved locally"}</small></div><button data-remove-source="${source.id}" type="button" aria-label="Remove ${escapeHtml(source.title)}">×</button></div>`).join("") : "";
   $("#source-list").querySelectorAll("[data-remove-source]").forEach(button => button.addEventListener("click", () => {
     currentProject().sources = currentProject().sources.filter(source => source.id !== button.dataset.removeSource);
+    clearAiAnalysis();
     saveWorkspace(); renderSourceList(); toast("Source removed from this project.");
   }));
 }
@@ -97,18 +99,82 @@ function renderInsights() {
     <div class="evidence-stat questions"><strong>${questions}</strong><span>open questions</span></div>
     <div class="evidence-stat anchors"><strong>${anchored}/${cards.length}</strong><span>claims anchored</span></div>`;
   const actions = [];
-  if (!project.question.trim()) actions.push(["Frame the research question", "A question makes it possible to judge whether evidence is relevant."]);
-  if (!project.hypothesis.trim()) actions.push(["Write a working hypothesis", "State what you expect so contradictions become visible instead of surprising."]);
-  if (!project.sources.length) actions.push(["Add your first source", "Import a local paper or capture a passage from the web."]);
-  if (untriaged) actions.push([`Classify ${untriaged} untriaged passage${untriaged === 1 ? "" : "s"}`, "Mark each as support, contradiction, or a question before drawing a conclusion."]);
-  if (contradiction) actions.push([`Resolve ${contradiction} contradiction${contradiction === 1 ? "" : "s"}`, "Compare the source definitions, populations, or methods before deciding which evidence applies."]);
-  if (support && !contradiction) actions.push(["Look for disconfirming evidence", "Your current record has support but no saved challenge to the working view."]);
-  if (!actions.length) actions.push(["Review the evidence balance", "Your saved claims are classified. Revisit the source anchors before changing your working hypothesis."]);
+  if (!project.question.trim()) actions.push(["Frame the research question", "A question makes it possible to judge whether evidence is relevant.", ".research-brief"]);
+  if (!project.hypothesis.trim()) actions.push(["Write a working hypothesis", "State what you expect so contradictions become visible instead of surprising.", ".research-brief"]);
+  if (!project.sources.length) actions.push(["Add your first source", "Import a local paper or capture a passage from the web.", ".ingest-card"]);
+  if (untriaged) actions.push([`Classify ${untriaged} untriaged passage${untriaged === 1 ? "" : "s"}`, "Mark each as support, contradiction, or a question before drawing a conclusion.", ".results-section"]);
+  if (contradiction) actions.push([`Resolve ${contradiction} contradiction${contradiction === 1 ? "" : "s"}`, "Compare the source definitions, populations, or methods before deciding which evidence applies.", ".results-section"]);
+  if (support && !contradiction) actions.push(["Look for disconfirming evidence", "Your current record has support but no saved challenge to the working view.", ".ingest-card"]);
+  if (!actions.length) actions.push(["Review the evidence balance", "Your saved claims are classified. Revisit the source anchors before changing your working hypothesis.", ".insights-section"]);
   $("#next-actions").innerHTML = actions.slice(0, 3).map((action, index) => `<button class="next-action" type="button" data-next-action="${index}"><span>${index + 1}</span><div><strong>${action[0]}</strong><small>${action[1]}</small></div><i>→</i></button>`).join("");
   $("#next-actions").querySelectorAll("[data-next-action]").forEach(button => button.addEventListener("click", () => {
-    const needsBrief = !project.question.trim() || !project.hypothesis.trim();
-    document.querySelector(needsBrief ? ".research-brief" : ".results-section").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.querySelector(actions[+button.dataset.nextAction][2]).scrollIntoView({ behavior: "smooth", block: "start" });
   }));
+  renderAiAnalysis();
+}
+function evidenceForAi() {
+  const project = currentProject();
+  const sourceById = new Map(project.sources.map(source => [source.id, source]));
+  return project.cards
+    .filter(item => {
+      const source = sourceById.get(item.sourceId);
+      return source && source.kind !== "url" && item.quote?.trim() && item.page?.trim();
+    })
+    .slice(0, 12)
+    .map(item => ({ id: String(item.id), quote: item.quote.trim().slice(0, 4000), page: item.page.trim().slice(0, 250), stance: item.stance || "unclassified" }));
+}
+function renderAiAnalysis() {
+  const project = currentProject();
+  const evidence = evidenceForAi();
+  const result = project.aiAnalysis;
+  const status = $("#ai-status");
+  const results = $("#ai-results");
+  if (!result) {
+    status.textContent = evidence.length ? `${evidence.length} source-grounded passage${evidence.length === 1 ? "" : "s"} are ready. Analysis stays off until you opt in.` : "Add a pasted, PDF, or browser-captured passage to make source-grounded analysis available.";
+    results.classList.add("hidden"); results.innerHTML = "";
+    return;
+  }
+  const evidenceById = new Map(evidence.map(item => [item.id, item]));
+  const sourceLabels = ids => (ids || []).map(id => evidenceById.get(String(id))?.page || `Evidence ${id}`).join(" · ");
+  status.textContent = `Last analysis: ${relativeTime(result.generatedAt)} · ${result.evidenceCount} source-grounded passage${result.evidenceCount === 1 ? "" : "s"} · ${result.confidence || "unknown"} confidence`;
+  results.classList.remove("hidden");
+  results.innerHTML = `
+    <div class="ai-summary"><span>AI EVIDENCE READ</span><p>${escapeHtml(result.summary || "No summary returned.")}</p></div>
+    <div class="ai-detail-grid">
+      <div><p class="ai-result-label">TENSIONS TO CHECK</p>${(result.tensions || []).length ? `<ol class="ai-tensions">${result.tensions.map(item => `<li><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.explanation)}</p><small>${escapeHtml(sourceLabels(item.evidence_ids))}</small></li>`).join("")}</ol>` : `<p class="ai-empty">No specific tension surfaced from these passages.</p>`}</div>
+      <div><p class="ai-result-label">NEXT RESEARCH MOVES</p>${(result.next_actions || []).length ? `<ol class="ai-actions">${result.next_actions.map(item => `<li><span class="priority ${escapeHtml(item.priority)}">${escapeHtml(item.priority)}</span><div><strong>${escapeHtml(item.action)}</strong><p>${escapeHtml(item.reason)}</p></div></li>`).join("")}</ol>` : `<p class="ai-empty">No next action returned.</p>`}</div>
+    </div>`;
+}
+function clearAiAnalysis() {
+  currentProject().aiAnalysis = null;
+}
+async function analyzeEvidence() {
+  const project = currentProject();
+  const evidence = evidenceForAi();
+  if (!$("#ai-consent").checked) return toast("Confirm the one-time data sharing choice first.");
+  if (!project.question.trim()) return toast("Add a research question before asking for an evidence analysis.");
+  if (!evidence.length) return toast("Add a pasted, PDF, or browser-captured passage first. Saved links alone are not sent to AI.");
+  const requestSignature = JSON.stringify({ question: project.question, hypothesis: project.hypothesis, evidence });
+  const button = $("#ai-analyze-button");
+  button.disabled = true; button.textContent = "Analyzing evidence…";
+  try {
+    const response = await fetch("/api/evidence-analysis", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: project.question, hypothesis: project.hypothesis, evidence }) });
+    const payload = await response.json();
+    if (!response.ok || !payload.analysis) throw new Error(payload.error || "The analysis could not be completed.");
+    const currentSignature = JSON.stringify({ question: currentProject().question, hypothesis: currentProject().hypothesis, evidence: evidenceForAi() });
+    if (currentSignature !== requestSignature) {
+      toast("The evidence changed while the analysis was running, so its result was not saved.");
+      return;
+    }
+    project.aiAnalysis = { ...payload.analysis, generatedAt: new Date().toISOString(), evidenceCount: evidence.length };
+    recordActivity("analysis", "Ran an AI evidence analysis", `${evidence.length} source-grounded passage${evidence.length === 1 ? "" : "s"}`);
+    saveWorkspace(); renderActivityList(); renderInsights(); toast("Source-grounded evidence analysis is ready.");
+  } catch (error) {
+    toast(error.message || "The analysis could not be completed.");
+  } finally {
+    button.disabled = !$("#ai-consent").checked;
+    button.innerHTML = "Analyze evidence <span>→</span>";
+  }
 }
 function renderProject() {
   const project = currentProject();
@@ -116,21 +182,68 @@ function renderProject() {
   $("#research-question").value = project.question;
   $("#working-hypothesis").value = project.hypothesis;
   $("#card-count").textContent = project.cards.length;
-  renderProjectPicker(); renderSourceList(); renderActivityList(); renderInsights(); renderCards(); updateProgress(); renderCardsLibrary();
+  renderProjectPicker(); renderSourceList(); renderActivityList(); renderInsights(); renderCards(); updateProgress(); renderCardsLibrary(); renderSourceLibrary();
+}
+function sourceKind(source) {
+  return source.kind === "pdf" ? "PDF" : source.kind === "text" ? "Pasted text" : source.kind === "web" ? "Web capture" : "Saved link";
+}
+function sourceHref(source) {
+  const candidate = String(source.originalUrl || (source.kind === "web" ? source.detail : source.title) || "").trim();
+  if (/^https?:\/\//i.test(candidate)) return candidate;
+  if (/^10\.\d{4,9}\//.test(candidate)) return `https://doi.org/${candidate}`;
+  if (source.kind === "url" && /^[a-z0-9.-]+\.[a-z]{2,}(?:\/|$)/i.test(candidate)) return `https://${candidate}`;
+  return "";
+}
+function sourceOrigin(source) {
+  const href = sourceHref(source);
+  if (!href) return source.detail || "Saved locally";
+  try {
+    const url = new URL(href);
+    return `${url.hostname.replace(/^www\./, "")}${url.pathname === "/" ? "" : url.pathname}`;
+  } catch { return source.detail || "Saved locally"; }
+}
+function allSources(projectId = "all") {
+  return workspace.projects
+    .filter(project => projectId === "all" || project.id === projectId)
+    .flatMap(project => project.sources.map(source => ({ ...source, projectId: project.id, projectTitle: project.title, passages: project.cards.filter(card => card.sourceId === source.id).length })));
+}
+function renderSourceLibrary() {
+  const filter = $("#source-library-project-filter");
+  const previous = filter.value || "all";
+  filter.innerHTML = `<option value="all">All projects</option>${workspace.projects.map(project => `<option value="${project.id}">${escapeHtml(project.title)}</option>`).join("")}`;
+  filter.value = workspace.projects.some(project => project.id === previous) || previous === "all" ? previous : "all";
+  const query = $("#source-library-search").value.trim().toLowerCase();
+  const sources = allSources(filter.value).filter(source => [source.title, source.detail, source.capturedText].some(value => String(value || "").toLowerCase().includes(query)));
+  const total = allSources().length;
+  $("#library-nav-count").textContent = total;
+  $("#library-summary").textContent = `${total} saved source${total === 1 ? "" : "s"}`;
+  $("#source-library-list").innerHTML = sources.length ? sources.map(source => {
+    const href = sourceHref(source);
+    const preview = source.capturedText ? `<p class="source-preview">${escapeHtml(source.capturedText.slice(0, 260))}${source.capturedText.length > 260 ? "…" : ""}</p>` : "";
+    return `<article class="library-source"><div class="library-source-kind">${sourceKind(source)}</div><div class="library-source-main"><div class="library-source-meta"><span>${escapeHtml(source.projectTitle)}</span><small>${source.passages} passage${source.passages === 1 ? "" : "s"} extracted</small></div><h2>${escapeHtml(source.title)}</h2><p class="library-source-origin">${escapeHtml(sourceOrigin(source))}</p>${preview}</div><div class="library-source-actions">${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">Open source ↗</a>` : ""}<button type="button" data-open-source-project="${source.projectId}">Open project</button></div></article>`;
+  }).join("") : `<div class="empty-sources"><strong>${query ? "No sources match that search." : "Your source library is empty."}</strong><p>${query ? "Try a different title, URL, or phrase from a capture." : "Add a link, PDF, pasted text, or web capture in Workspace to keep it here."}</p></div>`;
+  $("#source-library-list").querySelectorAll("[data-open-source-project]").forEach(button => button.addEventListener("click", () => {
+    workspace.activeId = button.dataset.openSourceProject;
+    renderProject(); showView("workspace");
+    document.querySelector(".ingest-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
 }
 function renderCards() {
   const cards = currentProject().cards;
   $("#cards-grid").innerHTML = cards.map((item, index) => `
-    <article class="study-card ${item.state}" data-id="${item.id}">
-      <div class="card-top"><span class="tag">${item.tag}</span><span class="card-index">0${index + 1}</span></div>
-      <p class="card-label">FRONT</p><textarea class="question" data-field="question" aria-label="Card question">${escapeHtml(item.question)}</textarea>
-      <div class="answer-wrap"><p class="card-label">BACK</p><textarea class="answer" data-field="answer" aria-label="Card answer">${escapeHtml(item.answer)}</textarea></div>
-      <div class="source-anchor"><span class="quote-mark">“</span><p>${escapeHtml(item.quote)}</p><button class="source-link" type="button">${escapeHtml(item.page)} ↗</button></div>
-      <div class="stance-control"><p>THIS PASSAGE…</p><div>
+    <article class="study-card ${item.state} ${item.revealed ? "revealed" : ""} ${item.editing ? "editing" : ""}" data-id="${item.id}">
+      <div class="card-top"><span class="tag">${item.tag}</span><div><span class="card-index">0${index + 1}</span><button class="card-edit" data-card-edit type="button">${item.editing ? "Done" : "Edit"}</button></div></div>
+      <div class="card-prompt"><p class="card-label">PROMPT</p><p class="card-question">${escapeHtml(item.question)}</p><textarea class="question" data-field="question" aria-label="Edit card question">${escapeHtml(item.question)}</textarea></div>
+      <button class="reveal-button" data-card-reveal type="button"><span>${item.revealed ? "⌃" : "⌄"}</span>${item.revealed ? "Hide answer" : "Reveal answer"}</button>
+      <div class="card-detail">
+        <div class="answer-wrap"><p class="card-label">ANSWER</p><p class="card-answer">${escapeHtml(item.answer)}</p><textarea class="answer" data-field="answer" aria-label="Edit card answer">${escapeHtml(item.answer)}</textarea></div>
+        <details class="source-anchor"><summary>View source evidence <span>${escapeHtml(item.page)}</span></summary><div><span class="quote-mark">“</span><p>${escapeHtml(item.quote)}</p></div></details>
+        <div class="stance-control"><p>THIS PASSAGE…</p><div>
         <button class="stance ${item.stance === "supports" ? "selected supports" : ""}" data-stance="supports">Supports</button>
         <button class="stance ${item.stance === "contradicts" ? "selected contradicts" : ""}" data-stance="contradicts">Contradicts</button>
         <button class="stance ${item.stance === "question" ? "selected question" : ""}" data-stance="question">Raises a question</button>
-      </div></div>
+        </div></div>
+      </div>
       <div class="card-actions">
         <button class="reject ${item.state === "rejected" ? "chosen" : ""}" data-action="reject">${item.state === "rejected" ? "↶ Restore" : "× Reject"}</button>
         <button class="approve ${item.state === "approved" ? "chosen" : ""}" data-action="approve">${item.state === "approved" ? "✓ Saved to Cards" : "✓ Save to Cards"}</button>
@@ -138,13 +251,23 @@ function renderCards() {
     </article>`).join("");
   $("#cards-grid").querySelectorAll("textarea").forEach(node => node.addEventListener("input", event => {
     const item = cards.find(candidate => candidate.id === +event.target.closest("article").dataset.id);
-    item[event.target.dataset.field] = event.target.value; saveWorkspace();
+    item[event.target.dataset.field] = event.target.value; clearAiAnalysis(); saveWorkspace(); renderInsights();
+  }));
+  $("#cards-grid").querySelectorAll("[data-card-reveal]").forEach(button => button.addEventListener("click", () => {
+    const item = cards.find(candidate => candidate.id === +button.closest("article").dataset.id);
+    item.revealed = !item.revealed; saveWorkspace(); renderCards();
+  }));
+  $("#cards-grid").querySelectorAll("[data-card-edit]").forEach(button => button.addEventListener("click", () => {
+    const item = cards.find(candidate => candidate.id === +button.closest("article").dataset.id);
+    item.editing = !item.editing;
+    if (item.editing) item.revealed = true;
+    saveWorkspace(); renderCards();
   }));
   $("#cards-grid").querySelectorAll("[data-stance]").forEach(button => button.addEventListener("click", () => {
     const item = cards.find(candidate => candidate.id === +button.closest("article").dataset.id);
     item.stance = item.stance === button.dataset.stance ? "" : button.dataset.stance;
     if (item.stance) recordActivity("decision", `Marked a passage as ${item.stance}`, item.page);
-    saveWorkspace(); renderCards(); updateProgress(); renderInsights();
+    clearAiAnalysis(); saveWorkspace(); renderCards(); updateProgress(); renderInsights();
   }));
   $("#cards-grid").querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
     const item = cards.find(candidate => candidate.id === +button.closest("article").dataset.id);
@@ -182,12 +305,60 @@ function renderCardsLibrary() {
     if (card) { card.state = "pending"; project.activities = Array.isArray(project.activities) ? project.activities : []; project.activities.unshift({ id: crypto.randomUUID(), type: "decision", text: "Removed a card from the library", detail: card.page, createdAt: new Date().toISOString() }); saveWorkspace(); renderProject(); toast("Card removed from your library."); }
   }));
 }
+function renderPrivacy() {
+  const projects = workspace.projects.length;
+  const sources = workspace.projects.reduce((total, project) => total + project.sources.length, 0);
+  const cards = workspace.projects.reduce((total, project) => total + project.cards.length, 0);
+  $("#local-data-summary").textContent = `${projects} project${projects === 1 ? "" : "s"}, ${sources} source${sources === 1 ? "" : "s"}, and ${cards} research card${cards === 1 ? "" : "s"} are stored only in this browser profile.`;
+}
+function downloadBackup() {
+  const backup = { app: "Lattice", version: 1, exportedAt: new Date().toISOString(), workspace };
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+  link.download = `lattice-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click(); URL.revokeObjectURL(link.href);
+  toast("Local backup downloaded.");
+}
+async function restoreBackup(file) {
+  if (!file) return;
+  try {
+    const backup = JSON.parse(await file.text());
+    const restored = backup?.workspace;
+    if (!restored?.activeId || !Array.isArray(restored.projects) || !restored.projects.length || !restored.projects.every(project => typeof project.id === "string" && typeof project.title === "string" && Array.isArray(project.cards) && Array.isArray(project.sources))) throw new Error("Invalid backup");
+    if (!window.confirm("Restore this backup? It will replace the local Lattice workspace in this browser.")) return;
+    workspace = restored;
+    localStorage.setItem(storageKey, JSON.stringify(workspace));
+    renderProject(); renderPrivacy(); showView("workspace"); toast("Backup restored locally.");
+  } catch { toast("That file is not a valid Lattice backup."); }
+  $("#restore-input").value = "";
+}
+function deleteWorkspace() {
+  if (!window.confirm("Delete every local Lattice project, source, card, and activity record from this browser? This cannot be undone unless you have a backup.")) return;
+  localStorage.removeItem(storageKey);
+  localStorage.removeItem("lattice-phase-zero-session");
+  const project = newProject();
+  workspace = { activeId: project.id, projects: [project] };
+  saveWorkspace(); renderProject(); renderPrivacy(); showView("workspace"); toast("Local workspace deleted.");
+}
 function showView(view) {
-  const cardsView = view === "cards";
-  $("#workspace").classList.toggle("hidden", cardsView);
-  $("#cards-view").classList.toggle("hidden", !cardsView);
+  if (["workspace", "library", "cards", "privacy"].includes(view) && window.location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
+  $("#workspace").classList.toggle("hidden", view !== "workspace");
+  $("#library-view").classList.toggle("hidden", view !== "library");
+  $("#cards-view").classList.toggle("hidden", view !== "cards");
+  $("#privacy-view").classList.toggle("hidden", view !== "privacy");
   document.querySelectorAll("[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === view));
-  if (cardsView) { renderCardsLibrary(); updateProgress(); }
+  updateViewContext(view);
+  if (view === "library") renderSourceLibrary();
+  if (view === "cards") { renderCardsLibrary(); updateProgress(); }
+  if (view === "privacy") renderPrivacy();
+}
+function updateViewContext(view) {
+  const labels = { workspace: "Workspace", library: "Library", cards: "Cards", privacy: "Privacy & data" };
+  $("#topbar-view").textContent = labels[view] || "Workspace";
+  const isWorkspace = view === "workspace";
+  $("#project-context").classList.toggle("hidden", !isWorkspace);
+  $("#topbar-divider").classList.toggle("hidden", !isWorkspace);
+  $("#topbar-status").textContent = isWorkspace ? "Saved locally" : view === "library" ? "All saved sources" : view === "cards" ? "Approved cards" : "Local controls";
 }
 function claimsFromText(text, sourceLabel, page = "", sourceId = "") {
   const sentences = text.replace(/\s+/g, " ").match(/[^.!?]+[.!?]+/g)?.filter(sentence => sentence.trim().length > 55).slice(0, 3) || [];
@@ -225,6 +396,7 @@ async function addLocalFile(file) {
     project.sources.push(source);
     recordActivity("import", `Imported ${source.title}`, source.detail);
     if (generated.length) project.cards = generated;
+    clearAiAnalysis();
     saveWorkspace(); renderProject();
     document.querySelector(".results-section").scrollIntoView({ behavior: "smooth", block: "start" });
     toast(generated.length ? `${source.title} imported with page-aware source anchors.` : `${source.title} was saved, but no usable passages were found.`);
@@ -238,10 +410,11 @@ function addUrlSource() {
   const value = $("#source-input").value.trim();
   if (!value) return toast("Add a URL or DOI first.");
   const project = currentProject();
-  const source = { id: crypto.randomUUID(), title: value.replace(/^https?:\/\//, ""), kind: "url", detail: "Link saved locally" };
+  const source = { id: crypto.randomUUID(), title: value.replace(/^https?:\/\//, ""), kind: "url", detail: "Link saved locally", originalUrl: value };
   project.sources.push(source);
   recordActivity("import", "Saved a source link", value.replace(/^https?:\/\//, ""));
   project.cards = structuredClone(defaultCards).map(item => ({ ...item, sourceId: source.id }));
+  clearAiAnalysis();
   saveWorkspace(); renderProject();
   document.querySelector(".results-section").scrollIntoView({ behavior: "smooth", block: "start" });
   toast("Source link saved. Sample cards are ready to review; local files provide direct extraction.");
@@ -259,13 +432,14 @@ function receiveBrowserCapture(payload) {
   if (!selection || !url) return;
   const project = currentProject();
   const title = String(payload?.title || new URL(url).hostname).trim();
-  const source = { id: crypto.randomUUID(), title, kind: "web", detail: url, capturedText: selection };
+  const source = { id: crypto.randomUUID(), title, kind: "web", detail: url, originalUrl: url, capturedText: selection };
   project.sources.push(source);
   const generated = claimsFromText(selection, title, "Web capture", source.id);
   if (generated.length) project.cards = generated;
+  clearAiAnalysis();
   recordActivity("capture", `Captured a passage from ${title}`, url);
   saveWorkspace(); renderProject();
-  document.querySelector(".memory-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector(".results-section").scrollIntoView({ behavior: "smooth", block: "start" });
   toast("Web passage captured in this project.");
 }
 
@@ -280,15 +454,25 @@ window.addEventListener("message", event => {
 $("#project-picker").addEventListener("change", event => { workspace.activeId = event.target.value; renderProject(); });
 $("#new-project").addEventListener("click", () => { const project = newProject("New research project"); workspace.projects.unshift(project); workspace.activeId = project.id; saveWorkspace(); renderProject(); $("#project-title").focus(); $("#project-title").select(); });
 document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => showView(button.dataset.view)));
+$("#brand-home").addEventListener("click", event => { event.preventDefault(); showView("workspace"); window.scrollTo({ top: 0, behavior: "smooth" }); });
+$("#how-it-works").addEventListener("click", () => { showView("workspace"); document.querySelector(".research-brief").scrollIntoView({ behavior: "smooth", block: "start" }); });
+$("#continue-to-judgment").addEventListener("click", () => document.querySelector(".insights-section").scrollIntoView({ behavior: "smooth", block: "start" }));
 $("#cards-project-filter").addEventListener("change", renderCardsLibrary);
-["#project-title", "#research-question", "#working-hypothesis"].forEach(selector => $(selector).addEventListener("input", () => { $("#save-status").textContent = "Saving…"; saveWorkspace(); renderInsights(); }));
+$("#source-library-project-filter").addEventListener("change", renderSourceLibrary);
+$("#source-library-search").addEventListener("input", renderSourceLibrary);
+$("#backup-button").addEventListener("click", downloadBackup);
+$("#restore-input").addEventListener("change", event => restoreBackup(event.target.files[0]));
+$("#delete-workspace").addEventListener("click", deleteWorkspace);
+["#project-title", "#research-question", "#working-hypothesis"].forEach(selector => $(selector).addEventListener("input", () => { $("#save-status").textContent = "Saving…"; clearAiAnalysis(); saveWorkspace(); renderInsights(); }));
+$("#ai-consent").addEventListener("change", event => { $("#ai-analyze-button").disabled = !event.target.checked; });
+$("#ai-analyze-button").addEventListener("click", analyzeEvidence);
 $("#markdown-export").addEventListener("click", exportMarkdown);
 $("#analyze-button").addEventListener("click", addUrlSource);
 $("#upload-button").addEventListener("click", () => addLocalFile($("#file-input").files[0]));
 $("#text-button").addEventListener("click", () => {
   const text = $("#source-text").value.trim(); if (!text) return toast("Paste text first.");
   const project = currentProject(); const source = { id: crypto.randomUUID(), title: "Pasted text", kind: "text", detail: "Imported locally", capturedText: text };
-  project.sources.push(source); recordActivity("import", "Added pasted text", "Imported locally"); project.cards = claimsFromText(text, source.title, "Pasted text", source.id); saveWorkspace(); renderProject(); toast("Pasted text added to this project.");
+  project.sources.push(source); recordActivity("import", "Added pasted text", "Imported locally"); project.cards = claimsFromText(text, source.title, "Pasted text", source.id); clearAiAnalysis(); saveWorkspace(); renderProject(); toast("Pasted text added to this project.");
 });
 $("#export-button").addEventListener("click", async () => {
   const approved = approvedCards($("#cards-project-filter").value);
@@ -299,3 +483,4 @@ $("#export-button").addEventListener("click", async () => {
 });
 
 renderProject();
+showView(["#workspace", "#library", "#cards", "#privacy"].includes(window.location.hash) ? window.location.hash.slice(1) : "workspace");

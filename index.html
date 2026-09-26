@@ -10,45 +10,40 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="#"><span class="brand-mark">L</span><span>Lattice</span></a>
+        <a class="brand" id="brand-home" href="#workspace"><span class="brand-mark">L</span><span>Lattice</span></a>
         <nav>
           <button class="nav-item active" data-view="workspace" type="button"><span>⌘</span> Workspace</button>
-          <a class="nav-item" href="#library"><span>◫</span> Library <b>12</b></a>
+          <button class="nav-item" data-view="library" type="button"><span>◫</span> Library <b id="library-nav-count">0</b></button>
           <button class="nav-item" data-view="cards" type="button"><span>✦</span> Cards <b id="cards-nav-count">0</b></button>
+          <button class="nav-item" data-view="privacy" type="button"><span>⌁</span> Privacy & data</button>
         </nav>
         <div class="sidebar-footer">
           <div class="privacy"><span class="lock">⌁</span><div><strong>Local-first</strong><small>Your sources stay yours.</small></div></div>
-          <button class="help-button" type="button">? &nbsp; How it works</button>
+          <button class="help-button" id="how-it-works" type="button">? &nbsp; How it works</button>
           <div class="user"><span>LD</span><div><strong>Logan D.</strong><small>Researcher</small></div><i>•••</i></div>
         </div>
       </aside>
 
       <main>
         <header class="topbar">
-          <div class="breadcrumb"><span>Workspace</span><em>/</em><label class="sr-only" for="project-picker">Active project</label><select id="project-picker" aria-label="Active project"></select><button class="new-project" id="new-project" type="button">+ New project</button></div>
-          <div class="top-actions"><span class="status-dot"></span><span>Saved locally</span><button class="icon-button" aria-label="More options">•••</button></div>
+          <div class="breadcrumb"><span id="topbar-view">Workspace</span><em id="topbar-divider">/</em><div id="project-context"><label class="sr-only" for="project-picker">Active project</label><select id="project-picker" aria-label="Active project"></select><button class="new-project" id="new-project" type="button">+ New project</button></div></div>
+          <div class="top-actions"><span class="status-dot"></span><span id="topbar-status">Saved locally</span><button class="icon-button" aria-label="More options">•••</button></div>
         </header>
 
         <section class="workspace" id="workspace">
-          <div class="intro">
-            <p class="eyebrow">RESEARCH COPILOT</p>
-            <h1>Turn a paper into<br><i>knowledge you keep.</i></h1>
-            <p class="lede">Build a traceable map of what you believe, what the evidence says, and what you should investigate next.</p>
-          </div>
-
           <section class="research-brief" aria-labelledby="research-brief-title">
-            <div class="section-heading"><div><p class="eyebrow">START WITH INTENT</p><h2 id="research-brief-title">What are you trying to find out?</h2></div><span class="saved-label" id="save-status">Saved locally</span></div>
+            <div class="section-heading"><div><p class="eyebrow">01 — FRAME YOUR QUESTION</p><h2 id="research-brief-title">What are you trying to find out?</h2></div><span class="saved-label" id="save-status">Saved locally</span></div>
             <label for="project-title">PROJECT NAME</label>
             <input id="project-title" class="project-title" aria-label="Project name" value="Untitled research session" />
             <label for="research-question">RESEARCH QUESTION</label>
             <textarea id="research-question" rows="2" placeholder="For example: When does layer normalization improve sequence modeling, and what trade-offs does it introduce?">When does layer normalization improve sequence modeling, and what trade-offs does it introduce?</textarea>
             <label for="working-hypothesis">WORKING HYPOTHESIS <span>(optional)</span></label>
             <textarea id="working-hypothesis" class="hypothesis-input" rows="2" placeholder="What do you currently expect to be true?"></textarea>
-            <div class="brief-footer"><p>This question stays attached to every source, claim, and next action in this session.</p><button class="markdown-button" id="markdown-export" type="button">↓ Export session as Markdown</button></div>
+            <div class="brief-footer"><p>Start here. Your question and hypothesis give the evidence something to answer.</p><button class="markdown-button" id="markdown-export" type="button">↓ Export session as Markdown</button></div>
           </section>
 
           <section class="ingest-card" aria-labelledby="add-source-title">
-            <div class="section-heading"><div><p class="eyebrow">02 — ADD EVIDENCE</p><h2 id="add-source-title">What are you reading?</h2></div><div class="source-summary"><span id="source-count">0 sources</span><span class="supported">PDF · arXiv · DOI · text</span></div></div>
+            <div class="section-heading"><div><p class="eyebrow">02 — ADD EVIDENCE</p><h2 id="add-source-title">Bring in what you found.</h2><p class="section-description">Add one source at a time. Lattice preserves where each passage came from.</p></div><div class="source-summary"><span id="source-count">0 sources</span><span class="supported">PDF · arXiv · DOI · text</span></div></div>
             <div class="source-tabs" role="tablist"><button class="source-tab selected" data-tab="link">Link</button><button class="source-tab" data-tab="upload">Upload PDF</button><button class="source-tab" data-tab="text">Paste text</button></div>
             <div class="input-row" id="link-panel"><span class="input-icon">↗</span><input id="source-input" aria-label="Paper URL or DOI" placeholder="Paste an arXiv link, DOI, or paper URL" value="https://arxiv.org/abs/1607.06450" /><button class="primary" id="analyze-button">Extract claims <span>→</span></button></div>
             <div class="input-row hidden" id="upload-panel"><span class="input-icon">↑</span><input id="file-input" type="file" accept="application/pdf,.txt,.md" /><button class="primary" id="upload-button">Use source <span>→</span></button></div>
@@ -57,28 +52,49 @@
             <div class="source-list" id="source-list" aria-live="polite"></div>
           </section>
 
-          <section class="memory-section" aria-labelledby="memory-title">
-            <div class="section-heading"><div><p class="eyebrow">RESEARCH MEMORY</p><h2 id="memory-title">Your trail of evidence</h2><p class="section-description">Captured sources and decisions remain attached to this project so you can return to the reasoning, not just the result.</p></div><span class="memory-badge">Local activity</span></div>
-            <div class="capture-callout"><span>⌘</span><div><strong>Capture from Chrome</strong><p>Select a passage on any page, then use <em>Save selection to Lattice</em> from the right-click menu.</p></div></div>
-            <ol class="activity-list" id="activity-list" aria-live="polite"></ol>
+          <section class="results-section supporting-cards" id="cards">
+            <div class="results-heading"><div><p class="eyebrow">03 — REVIEW THE EVIDENCE</p><h2>Make one call per passage <span id="card-count">3</span></h2><p class="section-description">Read the anchor, then mark whether it supports, contradicts, or raises a question about your hypothesis.</p></div><div class="review-meter"><span id="reviewed-count">0 of 3 reviewed</span><div><i id="meter-fill"></i></div></div></div>
+            <div class="claim-notice"><span>✦</span><p><strong>One quick call per passage.</strong> Does it support, contradict, or open a question about the hypothesis above?</p></div>
+            <div class="cards-grid" id="cards-grid"></div>
+            <div class="review-next"><div><strong>Ready to weigh the whole picture?</strong><small>Use the classifications above to make a grounded judgment.</small></div><button id="continue-to-judgment" type="button">Continue to judgment <span>→</span></button></div>
           </section>
 
           <section class="insights-section" aria-labelledby="insights-title">
-            <div class="section-heading"><div><p class="eyebrow">GROUNDED REASONING</p><h2 id="insights-title">What should you do next?</h2><p class="section-description">These signals come only from your saved sources and your own evidence decisions.</p></div><span class="grounded-badge">Source-anchored</span></div>
+            <div class="section-heading"><div><p class="eyebrow">04 — MAKE A JUDGMENT</p><h2 id="insights-title">What does your evidence say?</h2><p class="section-description">Now weigh the classified passages, identify what is still uncertain, and choose the next investigation.</p></div><span class="grounded-badge">Source-anchored</span></div>
             <div class="evidence-stats" id="evidence-stats"></div>
             <div class="next-actions" id="next-actions"></div>
+            <section class="ai-evidence" aria-labelledby="ai-evidence-title">
+              <div class="ai-evidence-heading"><div><p class="eyebrow">OPTIONAL AI ANALYSIS</p><h3 id="ai-evidence-title">Stress-test this evidence set</h3><p>Turn your saved, source-anchored passages into a concise evidence read—not a summary of the wider internet.</p></div><button class="ai-analyze-button" id="ai-analyze-button" type="button" disabled>Analyze evidence <span>→</span></button></div>
+              <label class="ai-consent" for="ai-consent"><input id="ai-consent" type="checkbox" /><span>I understand this sends this project’s question, hypothesis, and displayed source excerpts to OpenAI for this one analysis.</span></label>
+              <p class="ai-status" id="ai-status">Keep this off to stay fully local.</p>
+              <div class="ai-results hidden" id="ai-results" aria-live="polite"></div>
+            </section>
           </section>
 
-          <section class="results-section" id="cards">
-            <div class="results-heading"><div><p class="eyebrow">03 — WEIGH THE EVIDENCE</p><h2>What does this source change? <span id="card-count">3</span></h2><p class="section-description">Classify each source-grounded passage before deciding whether it is worth retaining.</p></div><div class="review-meter"><span id="reviewed-count">0 of 3 reviewed</span><div><i id="meter-fill"></i></div></div></div>
-            <div class="claim-notice"><span>✦</span><p><strong>A quick decision is enough.</strong> Mark whether a passage supports, contradicts, or opens a question about your research. You can always change it later.</p></div>
-            <div class="cards-grid" id="cards-grid"></div>
+          <section class="memory-section secondary-section activity-section" aria-labelledby="memory-title">
+            <div class="section-heading"><div><p class="eyebrow">ACTIVITY TRAIL</p><h2 id="memory-title">Research context</h2><p class="section-description">Capture from Chrome or revisit the local trail when you need it—not while you are making a judgment.</p></div><span class="memory-badge">Local activity</span></div>
+            <div class="capture-callout"><span>⌘</span><div><strong>Capture from Chrome</strong><p>Select a passage on any page, then use <em>Save selection to Lattice</em> from the right-click menu.</p></div></div>
+            <ol class="activity-list" id="activity-list" aria-live="polite"></ol>
           </section>
+        </section>
+        <section class="library-view hidden" id="library-view" aria-labelledby="library-view-title">
+          <div class="library-page-heading"><div><p class="eyebrow">YOUR SOURCE LIBRARY</p><h1 id="library-view-title">Everything you’ve<br><i>looked at.</i></h1><p>Every paper, link, capture, and local import stays connected to the project where you found it.</p></div><span id="library-summary">0 saved sources</span></div>
+          <div class="source-library-controls"><label class="sr-only" for="source-library-search">Search sources</label><input id="source-library-search" type="search" placeholder="Search titles, URLs, and captured text" /><label for="source-library-project-filter">PROJECT</label><select id="source-library-project-filter"><option value="all">All projects</option></select></div>
+          <div class="source-library-list" id="source-library-list"></div>
         </section>
         <section class="cards-view hidden" id="cards-view" aria-labelledby="cards-view-title">
           <div class="cards-page-heading"><div><p class="eyebrow">YOUR CARD LIBRARY</p><h1 id="cards-view-title">Cards worth<br><i>remembering.</i></h1><p>Approved cards from every local project, ready to export when you choose.</p></div><div class="cards-page-actions"><span id="approved-summary">0 approved cards</span><button class="export-button" id="export-button" type="button" disabled>Export to Anki <span>→</span></button></div></div>
           <div class="library-filter"><label for="cards-project-filter">SHOWING</label><select id="cards-project-filter"><option value="all">All projects</option></select></div>
           <div class="approved-cards-list" id="approved-cards-list"></div>
+        </section>
+        <section class="privacy-view hidden" id="privacy-view" aria-labelledby="privacy-view-title">
+          <div class="privacy-page-heading"><p class="eyebrow">PRIVATE BETA CONTROLS</p><h1 id="privacy-view-title">Your research<br><i>stays in your hands.</i></h1><p>Lattice stores projects in this browser’s local storage. AI analysis is off by default and only sends the passages you explicitly approve for that one request.</p></div>
+          <div class="privacy-grid">
+            <section class="privacy-card"><span class="privacy-icon">⌁</span><div><h2>Stored on this device</h2><p id="local-data-summary">Loading local workspace…</p></div></section>
+            <section class="privacy-card"><span class="privacy-icon">↗</span><div><h2>Browser capture</h2><p>The Chrome extension sends only your selected text, its page title, and URL to an open local Lattice tab.</p></div></section>
+            <section class="privacy-card"><span class="privacy-icon">✦</span><div><h2>Optional integrations</h2><p>AI analysis sends the project question, hypothesis, and source excerpts only after you opt in. Anki export communicates directly with AnkiConnect when you choose Export.</p></div></section>
+          </div>
+          <section class="data-tools" aria-labelledby="data-tools-title"><div><p class="eyebrow">DATA CONTROLS</p><h2 id="data-tools-title">Back up or reset your workspace</h2><p>A backup contains all local projects, sources, cards, and activity history. Store it somewhere you trust.</p></div><div class="data-actions"><button class="data-button primary-data" id="backup-button" type="button">↓ Download backup</button><label class="data-button" for="restore-input">↑ Restore backup</label><input class="sr-only" id="restore-input" type="file" accept="application/json" /><button class="data-button danger" id="delete-workspace" type="button">Delete local data</button></div></section>
         </section>
       </main>
     </div>

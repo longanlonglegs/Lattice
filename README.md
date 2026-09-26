@@ -32,6 +32,26 @@ Approved cards now live in the **Cards** item in the left navigation. That separ
 
 Each project can include a working hypothesis. Lattice turns the user’s evidence labels—supports, contradicts, and open question—into a local evidence balance and structural next actions. It does not claim that a research area is unexplored or infer facts outside the saved project corpus.
 
+## Optional AI evidence analysis
+
+Lattice can optionally stress-test the evidence in the **Make a judgment** section. It is deliberately not a general research chatbot: the model receives only the active project’s research question, working hypothesis, and up to 12 source-anchored card excerpts from pasted text, PDFs, or browser captures. Saved links and the rest of the local workspace are not sent.
+
+Set an API key only in the local server environment, then start the app:
+
+```bash
+OPENAI_API_KEY="your_key" npm start
+```
+
+You may set `OPENAI_MODEL` to choose another compatible model; the default is `gpt-5-mini`. The API key never enters browser code or local storage. The user must check the one-time consent box and click **Analyze evidence** before any data leaves the device. The result is constrained to a short evidence read, tensions tied to supplied passage IDs, and next research actions; it is saved locally with the project.
+
+## Privacy and beta safety
+
+The **Privacy & data** view explains what Lattice stores locally and includes complete JSON backup, restore, and delete controls. Restore and deletion require confirmation. There is no Lattice account, remote database, or source-content telemetry in this prototype. Optional AI analysis is the only remote request and is explicitly consent-gated in the interface.
+
+## Launch preparation
+
+`landing.html` is a standalone public-facing page for the local beta. It contains the current positioning and links into the app, but it does not publish the product, collect sign-ups, create accounts, or charge users. See `outputs/lattice-launch-checklist.md` for the remaining human approval and deployment steps.
+
 ## Production wiring (next implementation step)
 
 - Resolve arXiv/DOI metadata with OpenAlex, Crossref, and arXiv—not general web scraping.
