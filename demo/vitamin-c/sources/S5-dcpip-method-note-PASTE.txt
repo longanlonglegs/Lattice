@@ -1,0 +1,10 @@
+Method note: limitations of DCPIP titration for coloured juices
+Demo Food Analysis Methods Wiki (fictional page, for testing the Lattice app)
+
+DCPIP (2,6-dichlorophenolindophenol) titration is the most common classroom method for measuring vitamin C. Ascorbic acid reduces blue DCPIP to a colourless form, and the end point is the first permanent pink colour in acidic solution. In clear solutions the method is quick and reasonably accurate.
+
+In orange juice and other coloured samples, however, the end point is hard to see because the juice's own colour masks the faint pink. Different operators commonly disagree by 5 to 10 percent on the same sample.
+
+DCPIP is also not specific to ascorbic acid. Other reducing substances in juice, such as some polyphenols and any added sulfite, also decolourise DCPIP. This tends to overestimate vitamin C, and the error grows as ascorbic acid falls during storage, because the other reducing substances make up a larger share of the total. As a result, DCPIP titration can make vitamin C loss over time look smaller than it really is.
+
+For storage studies of coloured juices, iodometric titration with a starch indicator, or HPLC, is recommended over DCPIP. If DCPIP must be used, dilute the juice, titrate against a white background, and run a blank with a juice sample whose vitamin C has been destroyed by heating.

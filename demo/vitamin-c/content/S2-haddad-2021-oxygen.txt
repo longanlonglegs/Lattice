@@ -1,0 +1,26 @@
+Dissolved oxygen, not temperature, controls early vitamin C loss in packaged juice
+Rania Haddad, Luc Moreau and Wei Ling Tan
+Demo Journal of Food Chemistry 16 (2021) 87-96
+
+FICTIONAL SOURCE - written for testing the Lattice app. Not a real paper.
+
+Abstract
+Shelf-life models for vitamin C in juice usually treat temperature as the dominant variable. We compared orange juice that had been deaerated with nitrogen against the same juice saturated with air, stored at 4 and 20 degC. In the first 72 hours, air-saturated juice at 20 degC lost 18 percent of its ascorbic acid while deaerated juice at the same temperature lost only 3 percent. The effect of oxygen in this period was larger than the effect of a 16 degC change in temperature. When oxygen was limited, the temperature dependence was weak (Q10 of about 1.4). We argue that oxygen exposure, not temperature, is the main driver of vitamin C loss during the first days of storage and after a container is opened.
+
+1. Introduction
+Ascorbic acid degrades by two routes. The aerobic route needs dissolved oxygen and is fast; the anaerobic route proceeds without oxygen and is much slower. Commercial juice is often packed with some dissolved oxygen and a headspace of air, and consumers repeatedly open containers after purchase. Most published kinetic studies use sealed containers, which may hide the role of oxygen.
+
+2. Methods
+Orange juice from a single batch was split. Half was sparged with nitrogen for 20 minutes to remove dissolved oxygen (below 0.5 mg/L); the other half was sparged with air (about 8 mg/L dissolved oxygen). Both were filled into 100 mL glass vials with no headspace, sealed, and stored at 4 or 20 degC. Ascorbic acid was measured by iodometric titration at 0, 6, 24, 48 and 72 hours, with four replicate vials per condition.
+
+3. Results
+At 20 degC, air-saturated juice lost 18 percent of its ascorbic acid in 72 hours, and most of this loss happened in the first 24 hours. Deaerated juice lost 3 percent over the same period. At 4 degC the corresponding losses were 11 percent and 2 percent. Dissolved oxygen in the air-saturated vials fell below 1 mg/L within about 30 hours, after which the rate of loss slowed sharply. Comparing deaerated juice at 4 and 20 degC gave a Q10 of about 1.4.
+
+4. Discussion
+Reducing oxygen cut early vitamin C loss far more than refrigeration did. Our results suggest that studies which seal juice with little oxygen will naturally find temperature to be the main factor, because they have already removed the factor that matters most early on. For consumers, keeping juice in a full, tightly closed container may matter as much as keeping it cold. For manufacturers, oxygen-barrier packaging and deaeration deserve as much attention as cold-chain storage.
+
+5. Limitations
+Our study lasted only 72 hours, so we cannot say how oxygen and temperature compare over weeks of storage, when the slower anaerobic route dominates. We used iodometric titration rather than HPLC.
+
+References
+Fictional reference list omitted.

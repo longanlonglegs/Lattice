@@ -1,0 +1,26 @@
+Biphasic degradation of ascorbic acid: why single first-order fits mislead
+Haruki Sato and Aoife Brennan
+Demo Reviews in Food Kinetics 7 (2020) 33-41
+
+FICTIONAL SOURCE - written for testing the Lattice app. Not a real paper.
+
+Abstract
+Vitamin C loss in juice is routinely described by a single first-order rate constant. We re-analysed degradation curves for orange juice sampled every 4 hours for the first two days and then daily for 28 days. The data show two distinct phases: a fast initial phase lasting roughly one to two days, while dissolved oxygen is consumed, followed by a much slower phase. A single first-order model fitted to the whole curve underestimated loss in the first 48 hours by up to 40 percent and overestimated loss after four weeks. A two-phase model fitted the data much better. Shelf-life predictions based on a single rate constant should be treated with caution.
+
+1. Introduction
+First-order kinetics are attractive because one number summarises stability. However, a reaction can only follow simple first-order kinetics if its mechanism does not change during storage. For ascorbic acid this assumption is doubtful, because the dominant oxidation route changes once dissolved oxygen is used up.
+
+2. Methods
+Orange juice was stored in sealed 500 mL bottles with a 5 percent air headspace at 20 degC. Samples were taken every 4 hours for 48 hours and then every day up to day 28. Ascorbic acid was measured by HPLC. We compared a single first-order model with a two-phase model in which a fast first-order phase is followed by a slow first-order phase.
+
+3. Results
+About 12 percent of the ascorbic acid was lost in the first 36 hours. After that, the daily rate of loss fell by a factor of about five. The single first-order model fitted the full 28-day dataset with an apparently good R squared of 0.95, but its residuals were systematic: the model was too low early on and too high at the end. The two-phase model reduced the residual error by 70 percent.
+
+4. Discussion
+A high R squared for a first-order fit does not show that the kinetics are first order, particularly when early samples are sparse. Studies that first sample after one day will miss most of the fast phase and may conclude that loss is simply first order. Temperature still matters, but it acts on two different processes, and the apparent Q10 depends on which phase dominates the time window studied. When comparing studies, readers should check the sampling schedule before comparing rate constants.
+
+5. Limitations
+We studied one juice at one temperature. The point at which the fast phase ends depends on headspace volume and the initial dissolved oxygen, which we did not vary.
+
+References
+Fictional reference list omitted.

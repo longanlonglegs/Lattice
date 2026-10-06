@@ -3,9 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/index.js",
+    "test": "node --test",
+    "lint": "eslint src server test extension demo eslint.config.js"
   },
   "dependencies": {
+    "d3": "^7.9.0",
     "pdfjs-dist": "^5.4.149"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0"
   }
 }

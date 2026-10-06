@@ -1,0 +1,10 @@
+Experiment 3 - Repeat of the 20 degC sealed run (anomaly)
+Dates: 24 to 31 March (fictional data for testing the Lattice app)
+
+We repeated the 20 degC sealed-bottle condition from Experiment 1 to check that the result was reproducible, using the same method and a new carton of the same juice.
+
+After 7 days this repeat lost 38 percent of its vitamin C, compared with 24 percent in Experiment 1. This is far outside the variation between our titrations (about 3 percent).
+
+Looking for a cause, we found that the bottles for this run had been rinsed with tap water from the old prep room, which has copper pipes, rather than with distilled water. We ran the condition a third time with bottles rinsed in deionised water and measured a 7-day loss of 22 percent, close to Experiment 1.
+
+Conclusion: we think trace copper from the tap water speeded up the oxidation of vitamin C in the repeat run. We have excluded the 38 percent result from our analysis and now rinse all glassware with deionised water. We did not measure the copper concentration, so this explanation is not confirmed.

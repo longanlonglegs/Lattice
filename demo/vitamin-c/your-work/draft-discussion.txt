@@ -1,0 +1,14 @@
+Draft - Discussion section (version 1)
+Fictional student draft for testing the Lattice app
+
+Our results show that temperature is the dominant factor controlling vitamin C loss in stored orange juice. Juice kept at 40 degC lost more than five times as much vitamin C in a week as juice kept in the fridge.
+
+Refrigeration at 4 degC reduced vitamin C loss by roughly two-thirds compared with storage at room temperature. This agrees with published work showing that cold storage is the most effective single measure for preserving vitamin C.
+
+The loss of vitamin C followed first-order kinetics throughout the storage period, so a single rate constant can be used to predict how long juice keeps its vitamin C.
+
+The DCPIP titration method gave accurate and reliable results for orange juice, so our measurements can be compared directly with studies that used HPLC.
+
+The anomalous repeat run is best explained by contamination with copper from tap water, which is known to catalyse the oxidation of vitamin C.
+
+Manufacturers should therefore prioritise cold storage over oxygen-barrier packaging if they want to protect the vitamin C content of juice.

@@ -1,0 +1,26 @@
+Arrhenius behaviour of ascorbic acid loss in stored orange juice
+Chidinma Okafor and Erik Lindqvist
+Demo Journal of Food Chemistry 14 (2019) 211-219
+
+FICTIONAL SOURCE - written for testing the Lattice app. Not a real paper.
+
+Abstract
+We measured ascorbic acid (vitamin C) in pasteurised orange juice stored in sealed glass bottles at 4, 20 and 37 degC for 21 days. At every temperature the loss of ascorbic acid followed first-order kinetics, with ln(concentration) falling linearly with time (R squared above 0.97). The rate constant rose with temperature in line with the Arrhenius equation, giving an activation energy of 52 kJ/mol. Between 20 and 37 degC the rate roughly doubled for every 10 degC rise (Q10 of about 2.0). We conclude that storage temperature is the main controllable factor in vitamin C retention for sealed juice.
+
+1. Introduction
+Vitamin C is the nutrient most often used as an index of quality loss in fruit juice because it is both nutritionally important and chemically fragile. Ascorbic acid is oxidised to dehydroascorbic acid, which then hydrolyses irreversibly to 2,3-diketogulonic acid and has no vitamin activity. Many studies model this loss as a single first-order reaction, which allows shelf life to be predicted from a small number of measurements. Our aim was to test whether first-order kinetics hold across the temperatures a consumer is likely to use, and to estimate how strongly temperature controls the rate.
+
+2. Methods
+Commercial pasteurised orange juice was filled into 250 mL glass bottles leaving a 10 mL air headspace and sealed with screw caps. Bottles were stored in the dark at 4, 20 and 37 degC. Three bottles per temperature were opened on days 0, 1, 3, 7, 14 and 21. Ascorbic acid was measured by HPLC with UV detection at 245 nm. Each bottle was measured once and then discarded.
+
+3. Results
+Initial ascorbic acid was 41.2 mg per 100 mL. After 21 days, retention was 88 percent at 4 degC, 63 percent at 20 degC and 29 percent at 37 degC. Plots of ln(C/C0) against time were linear at all three temperatures. First-order rate constants were 0.0061, 0.022 and 0.059 per day at 4, 20 and 37 degC respectively. An Arrhenius plot of ln k against 1/T gave a straight line with an activation energy of 52 kJ/mol. The rate increased by a factor of about 2.0 for each 10 degC rise between 20 and 37 degC.
+
+4. Discussion
+The good linear fits support the use of a single first-order model for predicting vitamin C loss in sealed juice. Because the bottles were sealed with only a small headspace, the oxygen available to the juice was limited and roughly the same at every temperature, so the differences we observed can be attributed to temperature. In practical terms, refrigeration at 4 degC cut the 21-day loss by about two-thirds compared with storage at room temperature. We therefore recommend cold storage as the most effective single measure for preserving vitamin C in juice once it is packaged.
+
+5. Limitations
+We did not measure dissolved oxygen, and we did not test open containers or juice exposed to air after opening. Our first sampling point after day 0 was day 1, so very early changes within the first hours would not have been resolved.
+
+References
+Fictional reference list omitted.

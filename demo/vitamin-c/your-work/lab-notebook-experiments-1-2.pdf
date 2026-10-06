@@ -1,0 +1,97 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 3577 >>
+stream
+BT /F2 15 Tf 72 698.3 Td (Lab notebook: vitamin C in stored orange juice) Tj ET
+BT /F2 11.5 Tf 72 681.6 Td (Experiments 1 and 2 \(fictional data for testing the Lattice app\)) Tj ET
+BT /F2 11.5 Tf 72 657.9 Td (EXPERIMENT 1 - Temperature series) Tj ET
+BT /F2 11.5 Tf 72 641.2 Td (Dates: 3 to 10 March) Tj ET
+BT /F1 10.5 Tf 72 619.0 Td (Aim: find out how storage temperature affects vitamin C loss in orange juice over one) Tj ET
+BT /F1 10.5 Tf 72 603.8 Td (week.) Tj ET
+BT /F1 10.5 Tf 72 581.6 Td (Method: One carton of fresh, not-from-concentrate orange juice was divided into 15) Tj ET
+BT /F1 10.5 Tf 72 566.3 Td (screw-top glass bottles of 100 mL each, filled to leave about 10 mL of air at the top.) Tj ET
+BT /F1 10.5 Tf 72 551.1 Td (Five bottles were stored at each of three temperatures: 4 degC \(fridge\), 20 degC \(lab) Tj ET
+BT /F1 10.5 Tf 72 535.9 Td (bench, in a dark cupboard\) and 40 degC \(incubator\). Vitamin C was measured by DCPIP) Tj ET
+BT /F1 10.5 Tf 72 520.6 Td (titration on day 0, 1, 3, 5 and 7, opening a new bottle each time. Each value is the) Tj ET
+BT /F1 10.5 Tf 72 505.4 Td (mean of three titrations.) Tj ET
+BT /F1 10.5 Tf 72 483.2 Td (Results \(mg vitamin C per 100 mL\):) Tj ET
+BT /F1 10.5 Tf 72 468.0 Td (Day 0: 4 degC 40.5, 20 degC 40.5, 40 degC 40.5) Tj ET
+BT /F1 10.5 Tf 72 452.7 Td (Day 1: 4 degC 39.6, 20 degC 37.9, 40 degC 34.8) Tj ET
+BT /F1 10.5 Tf 72 437.5 Td (Day 3: 4 degC 38.9, 20 degC 35.6, 40 degC 29.6) Tj ET
+BT /F1 10.5 Tf 72 422.3 Td (Day 5: 4 degC 37.6, 20 degC 32.9, 40 degC 24.3) Tj ET
+BT /F1 10.5 Tf 72 407.1 Td (Day 7: 4 degC 36.9, 20 degC 30.8, 40 degC 19.8) Tj ET
+BT /F1 10.5 Tf 72 384.8 Td (After 7 days, the juice at 4 degC had lost 9 percent of its vitamin C, the juice at 20) Tj ET
+BT /F1 10.5 Tf 72 369.6 Td (degC had lost 24 percent and the juice at 40 degC had lost 51 percent.) Tj ET
+BT /F1 10.5 Tf 72 347.4 Td (Observations: At 20 degC and 40 degC the drop between day 0 and day 1 was bigger than) Tj ET
+BT /F1 10.5 Tf 72 332.2 Td (the drop on later days. A plot of ln\(concentration\) against time was roughly straight) Tj ET
+BT /F1 10.5 Tf 72 316.9 Td (from day 1 onwards, but the day 0 point sat above the line.) Tj ET
+BT /F1 10.5 Tf 72 294.7 Td (Conclusion: Higher storage temperature clearly increased the rate of vitamin C loss.) Tj ET
+BT /F1 10.5 Tf 72 279.5 Td (Between 20 and 40 degC the 7-day loss roughly doubled for each 10 degC rise, which) Tj ET
+BT /F1 10.5 Tf 72 264.3 Td (agrees with our hypothesis. Refrigeration at 4 degC reduced the loss by about two-thirds) Tj ET
+BT /F1 10.5 Tf 72 249.0 Td (compared with 20 degC. The larger first-day drop does not fit simple first-order) Tj ET
+BT /F1 10.5 Tf 72 233.8 Td (kinetics perfectly and should be investigated.) Tj ET
+BT /F1 10.5 Tf 72 211.6 Td (The end point of the DCPIP titration was difficult to see in the orange juice, so we) Tj ET
+BT /F1 10.5 Tf 72 196.4 Td (diluted samples 1:4 with distilled water.) Tj ET
+BT /F2 11.5 Tf 72 165.7 Td (EXPERIMENT 2 - Open versus sealed containers) Tj ET
+BT /F2 11.5 Tf 72 149.0 Td (Dates: 14 to 21 March) Tj ET
+BT /F1 10.5 Tf 72 126.8 Td (Aim: test whether exposure to air matters as much as temperature.) Tj ET
+BT /F1 10.5 Tf 72 104.6 Td (Method: Juice from a new carton was stored at 20 degC in two ways: \(a\) sealed glass) Tj ET
+BT /F1 10.5 Tf 72 89.3 Td (bottles filled completely with no air gap, and \(b\) open 250 mL beakers covered loosely) Tj ET
+BT /F1 10.5 Tf 72 74.1 Td (with paper, stirred once a day to mimic a carton being opened and poured. Vitamin C was) Tj ET
+BT /F1 9 Tf 296 40 Td (1) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 1284 >>
+stream
+BT /F1 10.5 Tf 72 704.8 Td (measured by DCPIP titration on day 0, 1, 3 and 7.) Tj ET
+BT /F1 10.5 Tf 72 682.5 Td (Results \(mg vitamin C per 100 mL\):) Tj ET
+BT /F1 10.5 Tf 72 667.3 Td (Day 0: sealed 42.0, open 42.0) Tj ET
+BT /F1 10.5 Tf 72 652.1 Td (Day 1: sealed 40.9, open 36.1) Tj ET
+BT /F1 10.5 Tf 72 636.9 Td (Day 3: sealed 38.6, open 31.5) Tj ET
+BT /F1 10.5 Tf 72 621.6 Td (Day 7: sealed 35.7, open 24.8) Tj ET
+BT /F1 10.5 Tf 72 599.4 Td (After 7 days at 20 degC, the sealed full bottles lost 15 percent of their vitamin C,) Tj ET
+BT /F1 10.5 Tf 72 584.2 Td (while the open beakers lost 41 percent. The open beakers lost 14 percent in the first) Tj ET
+BT /F1 10.5 Tf 72 569.0 Td (day alone.) Tj ET
+BT /F1 10.5 Tf 72 546.7 Td (Conclusion: Exposure to air increased vitamin C loss at 20 degC by about as much as) Tj ET
+BT /F1 10.5 Tf 72 531.5 Td (raising the temperature from 20 to 40 degC did in Experiment 1. This suggests oxygen) Tj ET
+BT /F1 10.5 Tf 72 516.3 Td (exposure may be at least as important as temperature, which our hypothesis did not) Tj ET
+BT /F1 10.5 Tf 72 501.1 Td (expect. The sealed full bottles also lost less than the 20 degC bottles in Experiment 1,) Tj ET
+BT /F1 10.5 Tf 72 485.8 Td (which had an air gap at the top.) Tj ET
+BT /F1 9 Tf 296 40 Td (2) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000003949 00000 n 
+0000004085 00000 n 
+0000005421 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+5557
+%%EOF

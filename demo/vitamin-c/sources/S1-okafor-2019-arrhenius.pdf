@@ -1,0 +1,96 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 3894 >>
+stream
+BT /F2 15 Tf 72 698.3 Td (Arrhenius behaviour of ascorbic acid loss in stored orange) Tj ET
+BT /F2 15 Tf 72 676.5 Td (juice) Tj ET
+BT /F2 11.5 Tf 72 659.8 Td (Chidinma Okafor and Erik Lindqvist) Tj ET
+BT /F2 11.5 Tf 72 643.2 Td (Demo Journal of Food Chemistry 14 \(2019\) 211-219) Tj ET
+BT /F1 10.5 Tf 72 620.9 Td (FICTIONAL SOURCE - written for testing the Lattice app. Not a real paper.) Tj ET
+BT /F2 11.5 Tf 72 597.3 Td (Abstract) Tj ET
+BT /F1 10.5 Tf 72 582.0 Td (We measured ascorbic acid \(vitamin C\) in pasteurised orange juice stored in sealed glass) Tj ET
+BT /F1 10.5 Tf 72 566.8 Td (bottles at 4, 20 and 37 degC for 21 days. At every temperature the loss of ascorbic acid) Tj ET
+BT /F1 10.5 Tf 72 551.6 Td (followed first-order kinetics, with ln\(concentration\) falling linearly with time \(R) Tj ET
+BT /F1 10.5 Tf 72 536.4 Td (squared above 0.97\). The rate constant rose with temperature in line with the Arrhenius) Tj ET
+BT /F1 10.5 Tf 72 521.1 Td (equation, giving an activation energy of 52 kJ/mol. Between 20 and 37 degC the rate) Tj ET
+BT /F1 10.5 Tf 72 505.9 Td (roughly doubled for every 10 degC rise \(Q10 of about 2.0\). We conclude that storage) Tj ET
+BT /F1 10.5 Tf 72 490.7 Td (temperature is the main controllable factor in vitamin C retention for sealed juice.) Tj ET
+BT /F2 11.5 Tf 72 467.0 Td (1. Introduction) Tj ET
+BT /F1 10.5 Tf 72 451.8 Td (Vitamin C is the nutrient most often used as an index of quality loss in fruit juice) Tj ET
+BT /F1 10.5 Tf 72 436.5 Td (because it is both nutritionally important and chemically fragile. Ascorbic acid is) Tj ET
+BT /F1 10.5 Tf 72 421.3 Td (oxidised to dehydroascorbic acid, which then hydrolyses irreversibly to) Tj ET
+BT /F1 10.5 Tf 72 406.1 Td (2,3-diketogulonic acid and has no vitamin activity. Many studies model this loss as a) Tj ET
+BT /F1 10.5 Tf 72 390.9 Td (single first-order reaction, which allows shelf life to be predicted from a small number) Tj ET
+BT /F1 10.5 Tf 72 375.6 Td (of measurements. Our aim was to test whether first-order kinetics hold across the) Tj ET
+BT /F1 10.5 Tf 72 360.4 Td (temperatures a consumer is likely to use, and to estimate how strongly temperature) Tj ET
+BT /F1 10.5 Tf 72 345.2 Td (controls the rate.) Tj ET
+BT /F2 11.5 Tf 72 321.5 Td (2. Methods) Tj ET
+BT /F1 10.5 Tf 72 306.3 Td (Commercial pasteurised orange juice was filled into 250 mL glass bottles leaving a 10 mL) Tj ET
+BT /F1 10.5 Tf 72 291.1 Td (air headspace and sealed with screw caps. Bottles were stored in the dark at 4, 20 and) Tj ET
+BT /F1 10.5 Tf 72 275.8 Td (37 degC. Three bottles per temperature were opened on days 0, 1, 3, 7, 14 and 21.) Tj ET
+BT /F1 10.5 Tf 72 260.6 Td (Ascorbic acid was measured by HPLC with UV detection at 245 nm. Each bottle was measured) Tj ET
+BT /F1 10.5 Tf 72 245.4 Td (once and then discarded.) Tj ET
+BT /F2 11.5 Tf 72 221.7 Td (3. Results) Tj ET
+BT /F1 10.5 Tf 72 206.5 Td (Initial ascorbic acid was 41.2 mg per 100 mL. After 21 days, retention was 88 percent at) Tj ET
+BT /F1 10.5 Tf 72 191.3 Td (4 degC, 63 percent at 20 degC and 29 percent at 37 degC. Plots of ln\(C/C0\) against time) Tj ET
+BT /F1 10.5 Tf 72 176.0 Td (were linear at all three temperatures. First-order rate constants were 0.0061, 0.022 and) Tj ET
+BT /F1 10.5 Tf 72 160.8 Td (0.059 per day at 4, 20 and 37 degC respectively. An Arrhenius plot of ln k against 1/T) Tj ET
+BT /F1 10.5 Tf 72 145.6 Td (gave a straight line with an activation energy of 52 kJ/mol. The rate increased by a) Tj ET
+BT /F1 10.5 Tf 72 130.4 Td (factor of about 2.0 for each 10 degC rise between 20 and 37 degC.) Tj ET
+BT /F2 11.5 Tf 72 106.7 Td (4. Discussion) Tj ET
+BT /F1 10.5 Tf 72 91.5 Td (The good linear fits support the use of a single first-order model for predicting) Tj ET
+BT /F1 10.5 Tf 72 76.2 Td (vitamin C loss in sealed juice. Because the bottles were sealed with only a small) Tj ET
+BT /F1 9 Tf 296 40 Td (1) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 1131 >>
+stream
+BT /F1 10.5 Tf 72 704.8 Td (headspace, the oxygen available to the juice was limited and roughly the same at every) Tj ET
+BT /F1 10.5 Tf 72 689.5 Td (temperature, so the differences we observed can be attributed to temperature. In) Tj ET
+BT /F1 10.5 Tf 72 674.3 Td (practical terms, refrigeration at 4 degC cut the 21-day loss by about two-thirds) Tj ET
+BT /F1 10.5 Tf 72 659.1 Td (compared with storage at room temperature. We therefore recommend cold storage as the) Tj ET
+BT /F1 10.5 Tf 72 643.9 Td (most effective single measure for preserving vitamin C in juice once it is packaged.) Tj ET
+BT /F2 11.5 Tf 72 620.2 Td (5. Limitations) Tj ET
+BT /F1 10.5 Tf 72 605.0 Td (We did not measure dissolved oxygen, and we did not test open containers or juice) Tj ET
+BT /F1 10.5 Tf 72 589.7 Td (exposed to air after opening. Our first sampling point after day 0 was day 1, so very) Tj ET
+BT /F1 10.5 Tf 72 574.5 Td (early changes within the first hours would not have been resolved.) Tj ET
+BT /F2 11.5 Tf 72 550.8 Td (References) Tj ET
+BT /F1 10.5 Tf 72 535.6 Td (Fictional reference list omitted.) Tj ET
+BT /F1 9 Tf 296 40 Td (2) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000218 00000 n 
+0000000320 00000 n 
+0000004266 00000 n 
+0000004402 00000 n 
+0000005585 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+5721
+%%EOF

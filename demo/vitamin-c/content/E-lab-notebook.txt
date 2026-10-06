@@ -1,0 +1,42 @@
+Lab notebook: vitamin C in stored orange juice
+Experiments 1 and 2 (fictional data for testing the Lattice app)
+
+EXPERIMENT 1 - Temperature series
+Dates: 3 to 10 March
+
+Aim: find out how storage temperature affects vitamin C loss in orange juice over one week.
+
+Method: One carton of fresh, not-from-concentrate orange juice was divided into 15 screw-top glass bottles of 100 mL each, filled to leave about 10 mL of air at the top. Five bottles were stored at each of three temperatures: 4 degC (fridge), 20 degC (lab bench, in a dark cupboard) and 40 degC (incubator). Vitamin C was measured by DCPIP titration on day 0, 1, 3, 5 and 7, opening a new bottle each time. Each value is the mean of three titrations.
+
+Results (mg vitamin C per 100 mL):
+Day 0: 4 degC 40.5, 20 degC 40.5, 40 degC 40.5
+Day 1: 4 degC 39.6, 20 degC 37.9, 40 degC 34.8
+Day 3: 4 degC 38.9, 20 degC 35.6, 40 degC 29.6
+Day 5: 4 degC 37.6, 20 degC 32.9, 40 degC 24.3
+Day 7: 4 degC 36.9, 20 degC 30.8, 40 degC 19.8
+
+After 7 days, the juice at 4 degC had lost 9 percent of its vitamin C, the juice at 20 degC had lost 24 percent and the juice at 40 degC had lost 51 percent.
+
+Observations: At 20 degC and 40 degC the drop between day 0 and day 1 was bigger than the drop on later days. A plot of ln(concentration) against time was roughly straight from day 1 onwards, but the day 0 point sat above the line.
+
+Conclusion: Higher storage temperature clearly increased the rate of vitamin C loss. Between 20 and 40 degC the 7-day loss roughly doubled for each 10 degC rise, which agrees with our hypothesis. Refrigeration at 4 degC reduced the loss by about two-thirds compared with 20 degC. The larger first-day drop does not fit simple first-order kinetics perfectly and should be investigated.
+
+The end point of the DCPIP titration was difficult to see in the orange juice, so we diluted samples 1:4 with distilled water.
+
+
+EXPERIMENT 2 - Open versus sealed containers
+Dates: 14 to 21 March
+
+Aim: test whether exposure to air matters as much as temperature.
+
+Method: Juice from a new carton was stored at 20 degC in two ways: (a) sealed glass bottles filled completely with no air gap, and (b) open 250 mL beakers covered loosely with paper, stirred once a day to mimic a carton being opened and poured. Vitamin C was measured by DCPIP titration on day 0, 1, 3 and 7.
+
+Results (mg vitamin C per 100 mL):
+Day 0: sealed 42.0, open 42.0
+Day 1: sealed 40.9, open 36.1
+Day 3: sealed 38.6, open 31.5
+Day 7: sealed 35.7, open 24.8
+
+After 7 days at 20 degC, the sealed full bottles lost 15 percent of their vitamin C, while the open beakers lost 41 percent. The open beakers lost 14 percent in the first day alone.
+
+Conclusion: Exposure to air increased vitamin C loss at 20 degC by about as much as raising the temperature from 20 to 40 degC did in Experiment 1. This suggests oxygen exposure may be at least as important as temperature, which our hypothesis did not expect. The sealed full bottles also lost less than the 20 degC bottles in Experiment 1, which had an air gap at the top.

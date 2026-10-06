@@ -1,0 +1,17 @@
+# Dependencies (install with `npm install`)
+node_modules/
+
+# Local secrets
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS and editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
