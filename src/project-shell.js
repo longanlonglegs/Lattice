@@ -25,17 +25,17 @@ export function showTab(tab) {
 export function renderTabs() {
   const project = currentProject();
   // Superseded hypothesis guesses are kept for history but are not ideas in the web.
-  const cards = project.cards.filter(item => item.state !== "rejected" && !item.superseded);
-  const reviewed = project.cards.filter(item => item.state !== "pending").length;
-  const saved = project.cards.filter(item => item.state === "approved").length;
+  const cards = project.cards.filter(item => item.state === "approved" && !item.superseded);
+  const accepted = project.cards.filter(item => item.state === "approved").length;
+  const waiting = project.cards.filter(item => item.state === "pending" && !item.superseded).length;
   const question = project.question.trim();
   const hypothesis = project.hypothesis.trim();
   $("#tab-web-status").textContent = cards.length ? plural(cards.length, "idea") : "Empty";
-  $("#tab-cards-status").textContent = `${reviewed} of ${project.cards.length} reviewed`;
+  $("#tab-cards-status").textContent = `${plural(accepted, "card")}${waiting ? ` · ${waiting} to review` : ""}`;
   $("#tab-sources-status").textContent = plural(project.sources.length, "source");
   const latest = latestVersion(project);
   $("#tab-history-status").textContent = !question ? "Not started" : !latest ? (hypothesis ? "Question + hypothesis" : "Question set") : `Version ${latest.number}${hasUnrecordedChanges(project) ? " · edited" : ""}`;
-  $("#tab-insights-status").textContent = project.aiAnalysis ? "AI read ready" : `${saved} saved`;
+  $("#tab-insights-status").textContent = project.aiAnalysis ? "AI read ready" : "Counts & next steps";
   renderWeb();
   renderPipelineStatus();
   schedulePipeline();

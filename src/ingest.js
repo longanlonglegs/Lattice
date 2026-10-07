@@ -3,6 +3,7 @@ import { $, toast, plural } from "./util.js";
 import { nextCardId, card, currentProject, persist, saveWorkspace, recordActivity } from "./state.js";
 import { renderProject } from "./workspace.js";
 import { closeDrawer } from "./project-shell.js";
+import { requestReview } from "./review.js";
 import { mergeMeta, pdfInfoMeta } from "./records.js";
 import { putText } from "./db.js";
 import { enqueueImport, throwIfCancelled } from "./imports.js";
@@ -57,13 +58,13 @@ export async function ingestSource(project, source, pages, { mode = "content", a
   project.aiAnalysis = null;
   project.placeholder = false;
   project.updatedAt = new Date().toISOString();
-  if (project === currentProject()) { saveWorkspace(); renderProject(); } else persist();
+  if (project === currentProject()) { saveWorkspace(); renderProject(); if (result.cards.length) requestReview(); } else persist();
   return result;
 }
 export function announce(result, source, truncated = false) {
   const count = plural(result.cards.length, "card");
   if (!result.cards.length) toast(`${source.title} was saved, but no usable passages were found.`);
-  else if (result.method === "ai") toast(`${count} added from ${source.title}.${result.truncated || truncated ? " Only the first ~60k characters were read." : ""}`);
+  else if (result.method === "ai") toast(`${count} from ${source.title} ready to review.${result.truncated || truncated ? " Only the first ~60k characters were read." : ""}`);
   else toast(`Used basic extraction (${result.reason}). ${count} added.`);
 }
 export async function readPdf(file, signal) {

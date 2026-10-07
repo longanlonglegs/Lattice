@@ -4,7 +4,7 @@ import { currentProject, saveWorkspace, persist, sourceCode, sourceKind, isOwnWo
 import { renderProjectNav } from "./projects.js";
 import { renderInsights } from "./insights.js";
 import { renderCards, updateProgress } from "./cards.js";
-import { renderSourceLibrary, renderCardsLibrary } from "./library.js";
+import { renderSourceLibrary } from "./library.js";
 import { renderTabs } from "./project-shell.js";
 import { renderHistory } from "./history.js";
 import { originOf } from "./origins.js";
@@ -111,12 +111,11 @@ export function renderProject() {
   $("#research-question").value = project.question;
   $("#working-hypothesis").value = project.hypothesis;
   $("#card-count").textContent = project.cards.length;
-  renderProjectNav(); renderSourceList(); renderActivityList(); renderInsights(); renderCards(); updateProgress(); renderCardsLibrary(); renderSourceLibrary(); renderHistory(); renderTabs();
+  renderProjectNav(); renderSourceList(); renderActivityList(); renderInsights(); renderCards(); updateProgress(); renderSourceLibrary(); renderHistory(); renderTabs();
 }
 export function exportMarkdown() {
   const project = currentProject();
-  const approved = project.cards.filter(item => item.state === "approved");
-  const records = approved.length ? approved : project.cards.filter(item => item.state !== "rejected");
+  const records = project.cards.filter(item => item.state === "approved"); // only accepted cards
   const cardById = new Map(project.cards.map(item => [item.id, item]));
   const edges = projectEdges(project);
   const sourceLine = source => isOwnWork(source) ? `- ${sourceByline(source)}: ${source.title}` : `- ${reference(source.meta, source.title)}${Object.keys(source.meta || {}).length ? "" : ` (${sourceKind(source)}${source.originalUrl ? `, ${source.originalUrl}` : ""})`}`;
@@ -130,7 +129,7 @@ export function exportMarkdown() {
     const relations = relationLines(item);
     return [`### ${item.claim}`, "", ...item.quotes.flatMap(quote => [`> ${quote.text}`, `> — ${quote.location}`, ""]), originOf(item.origin).label, ...(item.note ? ["", `Note: ${item.note}`] : []), ...(relations.length ? ["", "Relations:", ...relations] : []), ""];
   };
-  const guesses = project.cards.filter(item => item.origin === "hypothesis" && !item.superseded);
+  const guesses = records.filter(item => item.origin === "hypothesis" && !item.superseded);
   const versions = project.versions.slice().reverse().flatMap(version => [`### Version ${version.number} · ${new Date(version.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, "", ...(version.note ? [`Note: ${version.note}`, ""] : []), `Question: ${version.question || "—"}`, "", `Hypothesis: ${version.hypothesis || "—"}`, ""]);
   const stickies = project.stickies.filter(sticky => sticky.text.trim());
   const body = [
@@ -138,7 +137,7 @@ export function exportMarkdown() {
     "## Working hypothesis", project.hypothesis || "Not yet stated", "",
     ...(guesses.length ? ["## Hypothesis guesses", "", ...guesses.flatMap(cardBlock)] : []),
     "## Sources", ...project.sources.map(sourceLine), "",
-    `## Evidence${approved.length ? " (saved cards)" : ""}`, "", ...records.filter(item => item.origin !== "hypothesis").flatMap(cardBlock),
+    "## Evidence", "", ...records.filter(item => item.origin !== "hypothesis").flatMap(cardBlock),
     ...(versions.length ? ["## Question and hypothesis history", "", ...versions] : []),
     ...(stickies.length ? ["## Sticky notes", "", ...stickies.map(sticky => `- ${sticky.text.trim().replace(/\n+/g, " ")}`), ""] : [])
   ].join("\n");

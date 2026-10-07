@@ -11,7 +11,8 @@ import { onPipelineChange, schedulePipeline } from "./pipeline.js";
 import { renderPipelineStatus } from "./project-shell.js";
 import { initWebControls, renderWeb } from "./web/web-view.js";
 import { renderInsights, analyzeEvidence } from "./insights.js";
-import { renderSourceLibrary, renderCardsLibrary } from "./library.js";
+import { renderSourceLibrary } from "./library.js";
+import { initReviewKeys, requestReview } from "./review.js";
 import { downloadBackup, restoreBackup, deleteWorkspace, exportProject, importProject } from "./privacy.js";
 import { ob, renderOnboarding, openOnboarding, validateObStep, addObText, addObFiles, saveSettings, createProject, deleteProject } from "./onboarding.js";
 import { addLocalFile, addPastedText, addUrlSource, receiveBrowserCapture } from "./ingest.js";
@@ -55,7 +56,7 @@ $("#menu-button").addEventListener("click", () => setMenu(!document.body.classLi
 $("#nav-backdrop").addEventListener("click", () => setMenu(false));
 document.querySelector(".sidebar").addEventListener("click", event => { if (event.target.closest("button, a")) setMenu(false); });
 $("#brand-home").addEventListener("click", event => { event.preventDefault(); showView("workspace"); });
-$("#how-it-works").addEventListener("click", () => { showTab("web"); showView("workspace"); });
+$("#how-it-works").addEventListener("click", () => showView("how"));
 document.querySelectorAll("[data-project-tab]").forEach(button => button.addEventListener("click", () => showTab(button.dataset.projectTab)));
 document.querySelectorAll("[data-goto]").forEach(button => button.addEventListener("click", () => showTab(button.dataset.goto)));
 document.querySelectorAll("[data-add-evidence]").forEach(button => button.addEventListener("click", openDrawer));
@@ -63,7 +64,6 @@ $("#drawer-close").addEventListener("click", closeDrawer);
 $("#evidence-drawer").addEventListener("click", event => { if (event.target === event.currentTarget) closeDrawer(); });
 document.addEventListener("keydown", event => { if (event.key === "Escape") closeDrawer(); });
 $("#cards-origin-filter").addEventListener("change", renderCards);
-$("#cards-project-filter").addEventListener("change", renderCardsLibrary);
 $("#source-library-project-filter").addEventListener("change", renderSourceLibrary);
 $("#source-library-search").addEventListener("input", renderSourceLibrary);
 $("#backup-button").addEventListener("click", downloadBackup);
@@ -75,6 +75,8 @@ $("#import-project-input").addEventListener("change", event => importProject(eve
 $("#record-version").addEventListener("click", recordFromForm);
 $("#activity-toggle").addEventListener("click", toggleActivityList);
 initWebControls();
+initReviewKeys();
+$("#cards-review-button").addEventListener("click", requestReview);
 $("#pipeline-status").addEventListener("click", () => schedulePipeline(0));
 // New relations update the web and the card list (unless a card is being edited, to keep its focus).
 onPipelineChange(() => {
@@ -95,3 +97,4 @@ renderProject();
 showTab(projectTabs.includes(hashTab) ? hashTab : "web");
 if (loaded.fresh) openOnboarding("create");
 else showView(Object.keys(viewSections).filter(view => view !== "onboarding").includes(hashView) ? hashView : "workspace");
+if (!loaded.fresh) requestReview(); // cards left waiting in an earlier session

@@ -3,7 +3,7 @@
 import { $, escapeHtml, plural } from "../util.js";
 import { currentProject, persist } from "../state.js";
 import { origins, originOf } from "../origins.js";
-import { graphLoaded, projectEdges, webCards } from "../pipeline.js";
+import { graphLoaded, pipelineStatus, projectEdges, webCards } from "../pipeline.js";
 import { relationTypes, describeRelation, edgeEnds, shortText, visibleEdges } from "../relations.js";
 import { shortCitation } from "../records.js";
 import { renderAttention, setAttentionOpen } from "./attention.js";
@@ -192,6 +192,7 @@ export function renderWeb() {
   renderStickies();
   renderLegend();
   renderAttention();
+  renderUpdating();
   if (web.selectedId && !web.nodes.has(web.selectedId)) select(null); else renderSide();
 }
 
@@ -212,7 +213,7 @@ function cardHtml(node) {
   }
   const source = currentProject().sources.find(item => item.id === card.sourceId);
   const citation = shortCitation(source?.meta) || shortText(source?.meta?.title || source?.title || "", 28);
-  return `<p class="wc-kicker"><span class="wc-dot"></span>${escapeHtml(originOf(card.origin).short)}${citation ? ` · ${escapeHtml(citation)}` : ""}${card.state === "approved" ? ` <b title="Saved">✓</b>` : ""}${noteIcon(card)}</p>
+  return `<p class="wc-kicker"><span class="wc-dot"></span>${escapeHtml(originOf(card.origin).short)}${citation ? ` · ${escapeHtml(citation)}` : ""}${noteIcon(card)}</p>
     <p class="wc-text">${escapeHtml(card.short || shortText(card.claim, 95))}</p>`;
 }
 
@@ -222,7 +223,6 @@ function drawCards() {
     .join(enter => enter.append("div").attr("class", "web-card").each(function (node) { bindCard(this, node); }))
     .attr("data-origin", node => node.card.origin)
     .classed("hub", isHub)
-    .classed("saved", node => node.card.state === "approved")
     .classed("pinned", node => node.pinned)
     .classed("filtered", node => hidden.origins.has(node.card.origin))
     .style("--origin", node => originOf(node.card.origin).colour)
@@ -316,6 +316,18 @@ function tick() {
   d3.select("#web-cards").selectAll("div.web-card").style("transform", node => `translate(${node.x - node.w / 2}px, ${node.y - node.h / 2}px)`);
 }
 
+// While the pipeline re-reads ideas or judges new pairs (after an import or an edited claim), a banner says so
+// and the cards involved pulse. The web stays usable meanwhile.
+function renderUpdating() {
+  const status = pipelineStatus();
+  const busy = web && status.projectId === web.projectId && (status.state === "embedding" || status.state === "relating");
+  const banner = $("#web-updating");
+  banner.classList.toggle("hidden", !busy);
+  if (busy) banner.querySelector("span").textContent = status.state === "embedding" ? `Reading ${plural(status.left, "idea")}…` : `Updating connections… ${plural(status.left, "pair")} left to check`;
+  const involved = new Set(busy ? status.cards || [] : []);
+  d3.select("#web-cards").selectAll("div.web-card").classed("updating", node => involved.has(node.id));
+}
+
 // ---------- Interaction ----------
 
 function neighbours(id) {
@@ -405,7 +417,7 @@ function renderSide() {
     }).join("");
   side.innerHTML = `
     <button class="drawer-close web-side-close" type="button" aria-label="Close" data-web-close>×</button>
-    <div class="web-side-meta"><span class="origin-badge" style="--origin:${originOf(card.origin).colour}">${escapeHtml(originOf(card.origin).label)}</span>${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}${card.state === "approved" ? `<span class="card-cite">✓ Saved</span>` : ""}</div>
+    <div class="web-side-meta"><span class="origin-badge" style="--origin:${originOf(card.origin).colour}">${escapeHtml(originOf(card.origin).label)}</span>${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}</div>
     <h3>${escapeHtml(card.claim)}</h3>
     ${card.quotes.map(quote => `<blockquote>“${escapeHtml(quote.text)}”</blockquote><p class="web-side-location">${escapeHtml(quote.location)}</p>`).join("")}
     <p class="rail-label">YOUR NOTE</p>

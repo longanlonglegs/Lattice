@@ -1,10 +1,8 @@
-// The Library (saved sources) and Saved evidence (approved cards) views.
-import { $, escapeHtml, toast, plural } from "./util.js";
-import { workspace, normalizeProject, projectsByRecent, persist, sourceKind, recordActivity } from "./state.js";
+// The Library: every source across projects.
+import { $, escapeHtml, plural } from "./util.js";
+import { workspace, projectsByRecent, sourceKind } from "./state.js";
 import { openProject } from "./projects.js";
-import { renderProject, sourceByline, sourceTitle } from "./workspace.js";
-import { originBadge } from "./cards.js";
-import { cardLocation } from "./records.js";
+import { sourceByline, sourceTitle } from "./workspace.js";
 
 export function sourceHref(source) {
   const candidate = String(source.originalUrl || (source.kind === "web" ? source.detail : source.title) || "").trim();
@@ -24,7 +22,7 @@ export function sourceOrigin(source) {
 export function allSources(projectId = "all") {
   return workspace.projects
     .filter(project => projectId === "all" || project.id === projectId)
-    .flatMap(project => project.sources.map(source => ({ ...source, projectId: project.id, projectTitle: project.title, passages: project.cards.filter(card => card.sourceId === source.id).length })));
+    .flatMap(project => project.sources.map(source => ({ ...source, projectId: project.id, projectTitle: project.title, passages: project.cards.filter(card => card.sourceId === source.id && card.state === "approved").length })));
 }
 export function renderSourceLibrary() {
   const filter = $("#source-library-project-filter");
@@ -42,22 +40,4 @@ export function renderSourceLibrary() {
     return `<article class="library-source"><div class="library-source-kind">${sourceKind(source)}</div><div class="library-source-main"><div class="library-source-meta"><span>${escapeHtml(source.projectTitle)}</span><small>${plural(source.passages, "card")} extracted</small></div><h2>${escapeHtml(sourceTitle(source))}</h2>${sourceByline(source) ? `<p class="source-cite">${escapeHtml(sourceByline(source))}</p>` : ""}<p class="library-source-origin">${escapeHtml(sourceOrigin(source))}</p>${preview}</div><div class="library-source-actions">${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">Open source ↗</a>` : ""}<button type="button" data-open-source-project="${escapeHtml(source.projectId)}">Open project</button></div></article>`;
   }).join("") : `<div class="empty-sources"><strong>${query ? "No sources match that search." : "Your source library is empty."}</strong><p>${query ? "Try a different title, URL, or phrase from a capture." : "Use + Add evidence in a project to keep a link, file, pasted text, or web capture here."}</p></div>`;
   $("#source-library-list").querySelectorAll("[data-open-source-project]").forEach(button => button.addEventListener("click", () => openProject(button.dataset.openSourceProject, "sources")));
-}
-export function approvedCards(projectId = "all") {
-  return workspace.projects.filter(project => projectId === "all" || project.id === projectId).flatMap(project => project.cards.filter(item => item.state === "approved").map(item => ({ ...item, projectId: project.id, projectTitle: project.title })));
-}
-export function renderCardsLibrary() {
-  const filter = $("#cards-project-filter");
-  const previous = filter.value || "all";
-  filter.innerHTML = `<option value="all">All projects</option>${projectsByRecent().map(project => `<option value="${escapeHtml(project.id)}">${escapeHtml(project.title)}</option>`).join("")}`;
-  filter.value = workspace.projects.some(project => project.id === previous) || previous === "all" ? previous : "all";
-  const cards = approvedCards(filter.value);
-  $("#approved-cards-list").innerHTML = cards.length ? cards.map(item => `
-    <article class="saved-card" data-project-id="${escapeHtml(item.projectId)}" data-card-id="${escapeHtml(item.id)}"><div class="saved-meta"><span>${escapeHtml(item.projectTitle)}</span>${originBadge(item.origin)} ${escapeHtml(cardLocation(item))}</div><div><h3>${escapeHtml(item.claim)}</h3>${item.quotes.map(quote => `<p>“${escapeHtml(quote.text)}”</p>`).join("")}</div><button type="button" data-remove-card>Remove</button></article>`).join("") : `<div class="empty-cards"><strong>No saved evidence yet.</strong><p>Save a useful card in Workspace and it will appear here.</p></div>`;
-  $("#approved-cards-list").querySelectorAll("[data-remove-card]").forEach(button => button.addEventListener("click", () => {
-    const item = button.closest(".saved-card");
-    const project = workspace.projects.find(candidate => candidate.id === item.dataset.projectId);
-    const entry = project?.cards.find(candidate => candidate.id === +item.dataset.cardId);
-    if (entry) { entry.state = "pending"; recordActivity("decision", "Removed a card from saved evidence", cardLocation(entry), normalizeProject(project)); persist(); renderProject(); toast("Card removed from saved evidence."); }
-  }));
 }

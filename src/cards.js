@@ -1,9 +1,9 @@
-// The evidence-card review list in the workspace.
+// The Cards tab: accepted cards by source, a banner for cards waiting in the review deck, and the rejected ones at the bottom.
 import { $, escapeHtml, plural } from "./util.js";
 import { currentProject, persist, saveWorkspace, sourceCode, isOwnWork, recordActivity, clearAiAnalysis } from "./state.js";
 import { renderActivityList } from "./workspace.js";
 import { renderInsights } from "./insights.js";
-import { approvedCards } from "./library.js";
+import { pendingCards } from "./review.js";
 import { originOf } from "./origins.js";
 import { getText } from "./db.js";
 import { cardLocation, quoteInPages, shortCitation } from "./records.js";
@@ -34,8 +34,7 @@ export function cardHtml(item, index, citation = "", relations = "") {
       <div class="card-note-wrap">${item.note ? `<p class="card-note">✎ ${escapeHtml(item.note)}</p>` : ""}<textarea class="note-input" data-field="note" aria-label="Your note" placeholder="Add your own note…">${escapeHtml(item.note || "")}</textarea></div>
       ${relations}
       <div class="card-actions">
-        <button class="reject ${item.state === "rejected" ? "chosen" : ""}" data-action="reject">${item.state === "rejected" ? "↶ Restore" : "× Reject"}</button>
-        <button class="approve ${item.state === "approved" ? "chosen" : ""}" data-action="approve">${item.state === "approved" ? "✓ Saved" : "✓ Save"}</button>
+        ${item.state === "rejected" ? `<button class="approve" data-action="restore">↶ Restore</button>` : `<button class="reject" data-action="reject">× Reject</button>`}
       </div>
     </article>`;
 }
@@ -54,27 +53,46 @@ async function recheckQuote(item, index, block) {
 
 const editSnapshots = new Map(); // card id -> its text when Edit was opened
 
+function groupsHtml(groups, edges, cardById) {
+  return groups.map(({ source, cards: groupCards }) => `
+    <section class="card-group">
+      <header class="card-group-head"><span class="kind-chip ${isOwnWork(source) ? "own-work" : ""}">${source.kind === "other" ? "—" : sourceCode(source)}</span><h3>${escapeHtml(source.title)}</h3><small>${plural(groupCards.length, "card")}</small></header>
+      <div class="cards-grid">${groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))).join("")}</div>
+    </section>`).join("");
+}
+
+// Cards by source; hypothesis guesses first, superseded guesses last.
+function groupBySource(project, cards) {
+  const groups = project.sources.slice().reverse().map(source => ({ source, cards: cards.filter(item => item.sourceId === source.id) })).filter(group => group.cards.length);
+  const known = new Set(project.sources.map(source => source.id));
+  const loose = cards.filter(item => !known.has(item.sourceId) && item.origin !== "hypothesis");
+  if (loose.length) groups.push({ source: { title: "Other cards", kind: "other" }, cards: loose });
+  const guesses = cards.filter(item => item.origin === "hypothesis");
+  const current = guesses.filter(item => !item.superseded);
+  const earlier = guesses.filter(item => item.superseded);
+  if (current.length) groups.unshift({ source: { title: "My hypothesis: current guesses", kind: "hypothesis", origin: "hypothesis" }, cards: current });
+  if (earlier.length) groups.push({ source: { title: "Earlier hypothesis guesses (superseded)", kind: "hypothesis", origin: "hypothesis" }, cards: earlier });
+  return groups;
+}
+
 export function renderCards() {
   const project = currentProject();
   const edges = projectEdges(project);
   const cardById = new Map(project.cards.map(item => [item.id, item]));
   const filter = $("#cards-origin-filter").value;
   const cards = project.cards.filter(item => filter === "all" || item.origin === filter);
-  const groups = project.sources.slice().reverse().map(source => ({ source, cards: cards.filter(item => item.sourceId === source.id) })).filter(group => group.cards.length);
-  const known = new Set(project.sources.map(source => source.id));
-  const loose = cards.filter(item => !known.has(item.sourceId) && item.origin !== "hypothesis");
-  if (loose.length) groups.push({ source: { title: "Other cards", kind: "other" }, cards: loose });
-  // Hypothesis guesses: the current ones first, earlier (superseded) ones last.
-  const guesses = cards.filter(item => item.origin === "hypothesis");
-  const current = guesses.filter(item => !item.superseded);
-  const earlier = guesses.filter(item => item.superseded);
-  if (current.length) groups.unshift({ source: { title: "My hypothesis: current guesses", kind: "hypothesis", origin: "hypothesis" }, cards: current });
-  if (earlier.length) groups.push({ source: { title: "Earlier hypothesis guesses (superseded)", kind: "hypothesis", origin: "hypothesis" }, cards: earlier });
-  $("#cards-grid").innerHTML = groups.length ? groups.map(({ source, cards: groupCards }) => `
-    <section class="card-group">
-      <header class="card-group-head"><span class="kind-chip ${isOwnWork(source) ? "own-work" : ""}">${source.kind === "other" ? "—" : sourceCode(source)}</span><h3>${escapeHtml(source.title)}</h3><small>${plural(groupCards.length, "card")}</small></header>
-      <div class="cards-grid">${groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))).join("")}</div>
-    </section>`).join("") : `<div class="empty-cards">${filter === "all" ? "<strong>No evidence cards yet.</strong><p>Use + Add evidence to add a source or some of your own work, and Lattice will extract cards here.</p>" : "<strong>No cards from this origin.</strong><p>Choose All origins to see every card.</p>"}</div>`;
+  const accepted = cards.filter(item => item.state === "approved");
+  const rejected = cards.filter(item => item.state === "rejected");
+  const waiting = pendingCards(project).length;
+  $("#cards-review-banner").classList.toggle("hidden", !waiting);
+  $("#cards-review-count").textContent = plural(waiting, "new card");
+  const empty = filter === "all"
+    ? "<strong>No accepted cards yet.</strong><p>Use + Add evidence to add a source or some of your own work. You review each card Lattice extracts before it joins your project.</p>"
+    : "<strong>No accepted cards from this origin.</strong><p>Choose All origins to see every card.</p>";
+  const rejectedHtml = rejected.length
+    ? `<details class="rejected-section"><summary>Rejected cards · ${rejected.length}<small>Not in the web, relations, Insights, or exports. Restore one to bring it back.</small></summary><div class="cards-grid">${rejected.map((item, index) => cardHtml(item, index, shortCitation(project.sources.find(source => source.id === item.sourceId)?.meta))).join("")}</div></details>`
+    : "";
+  $("#cards-grid").innerHTML = (accepted.length ? groupsHtml(groupBySource(project, accepted), edges, cardById) : `<div class="empty-cards">${empty}</div>`) + rejectedHtml;
   const findCard = node => cards.find(candidate => candidate.id === +node.closest("article").dataset.id);
   $("#cards-grid").querySelectorAll("textarea").forEach(node => node.addEventListener("input", event => {
     const item = findCard(event.target);
@@ -98,19 +116,12 @@ export function renderCards() {
   }));
   $("#cards-grid").querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
     const item = findCard(button);
-    const next = button.dataset.action === "approve" ? "approved" : "rejected";
-    item.state = item.state === next ? "pending" : next;
-    recordActivity("decision", item.state === "pending" ? "Reopened a card" : `${item.state === "approved" ? "Saved" : "Rejected"} a card`, cardLocation(item));
+    item.state = button.dataset.action === "restore" ? "approved" : "rejected";
+    item.editing = false;
+    recordActivity("decision", item.state === "approved" ? "Restored a rejected card" : "Rejected a card", item.short || cardLocation(item));
     clearAiAnalysis(); saveWorkspace(); renderCards(); updateProgress(); renderInsights(); renderActivityList();
   }));
 }
 export function updateProgress() {
-  const cards = currentProject().cards;
-  const reviewed = cards.filter(item => item.state !== "pending").length;
-  const approved = approvedCards().length;
-  $("#card-count").textContent = cards.length;
-  $("#reviewed-count").textContent = `${reviewed} of ${cards.length} reviewed`;
-  $("#meter-fill").style.width = `${cards.length ? reviewed / cards.length * 100 : 0}%`;
-  $("#approved-summary").textContent = plural(approved, "saved card");
-  $("#cards-nav-count").textContent = approved;
+  $("#card-count").textContent = currentProject().cards.filter(item => item.state === "approved").length;
 }

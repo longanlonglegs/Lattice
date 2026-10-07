@@ -3,6 +3,7 @@ import { $, escapeHtml, toast, relativeTime } from "./util.js";
 import { card, currentProject, nextCardId, persist, recordActivity, saveWorkspace } from "./state.js";
 import { renderProject } from "./workspace.js";
 import { cardLocation, sentenceGuesses, wordDiff } from "./records.js";
+import { requestReview } from "./review.js";
 
 export const latestVersion = project => project.versions.at(-1) || null;
 export const isHypothesis = item => item.origin === "hypothesis";
@@ -45,6 +46,8 @@ export async function recordVersion(project, { note = "", linkedCardIds = [] } =
   const result = await splitGuesses(project, version.hypothesis);
   project.cards.push(...result.guesses.map(item => ({ ...card(nextCardId(), item.guess, [{ text: item.quote, location: `Hypothesis v${version.number}` }], "", "hypothesis"), versionId: version.id })));
   save(project);
+  // New guesses go through the review deck like any other card.
+  if (project === currentProject()) requestReview();
   return { version, guesses: result.guesses.length, method: result.method };
 }
 
@@ -87,7 +90,7 @@ export function renderVersionStatus() {
 export function renderHistory() {
   const project = currentProject();
   const checked = new Set([...document.querySelectorAll("#version-link-list input:checked")].map(input => input.value));
-  const linkable = project.cards.filter(item => item.state !== "rejected" && !isHypothesis(item)).sort((a, b) => (b.state === "approved") - (a.state === "approved"));
+  const linkable = project.cards.filter(item => item.state === "approved" && !isHypothesis(item));
   $("#version-link-list").innerHTML = linkable.length ? linkable.map(item => `<label class="version-link"><input type="checkbox" value="${escapeHtml(item.id)}" ${checked.has(String(item.id)) ? "checked" : ""} /><span>${escapeHtml(item.claim)}</span></label>`).join("") : `<p class="version-muted">No evidence cards yet.</p>`;
   $("#version-link-count").textContent = `(${checked.size} selected)`;
   renderVersionStatus();

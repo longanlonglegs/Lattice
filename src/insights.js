@@ -7,13 +7,14 @@ import { origins } from "./origins.js";
 import { projectEdges, webCards } from "./pipeline.js";
 import { relationTypes, needsAttention, edgeEnds } from "./relations.js";
 import { setAttentionOpen } from "./web/attention.js";
+import { pendingCards, requestReview } from "./review.js";
 
 // tabs: false skips the tab refresh (which reschedules the pipeline); used when the pipeline itself reports progress.
 export function renderInsights({ tabs = true } = {}) {
   const project = currentProject();
   const ideas = webCards(project);
-  const evidence = project.cards.filter(item => item.state !== "rejected" && item.origin !== "hypothesis");
-  const pending = project.cards.filter(item => item.state === "pending").length;
+  const evidence = project.cards.filter(item => item.state === "approved" && item.origin !== "hypothesis");
+  const pending = pendingCards(project).length;
   const ownWork = project.sources.filter(isOwnWork).length;
   const edges = projectEdges(project);
   const attention = needsAttention(ideas, edges);
@@ -32,7 +33,7 @@ export function renderInsights({ tabs = true } = {}) {
   if (attention.contradictions.length) actions.push([`Resolve ${plural(attention.contradictions.length, "contradiction")}`, "Ideas in your web disagree. Check whether conditions, methods, or a hidden factor explain it.", "attention"]);
   if (attention.unsupportedGuesses.length) actions.push([`${plural(attention.unsupportedGuesses.length, "hypothesis guess")} ${attention.unsupportedGuesses.length === 1 ? "has" : "have"} no evidence`, "Look for a source or experiment that tests it, for or against.", "attention"]);
   if (attention.unsupportedDrafts.length) actions.push([`${plural(attention.unsupportedDrafts.length, "draft claim")} ${attention.unsupportedDrafts.length === 1 ? "lacks" : "lack"} support`, "Your draft asserts something no source or experiment backs up yet.", "attention"]);
-  if (pending) actions.push([`Review ${plural(pending, "new card")}`, "Save the ones worth keeping and reject the rest.", "cards"]);
+  if (pending) actions.push([`Review ${plural(pending, "new card")}`, "Accept the ones worth keeping and reject the rest; only accepted cards join your web.", "review"]);
   if (project.sources.length && !ownWork) actions.push(["Add your own work", "Drafts, experiment logs, and results count as evidence too.", "evidence"]);
   if (evidence.length >= 3 && !project.aiAnalysis) actions.push(["Stress-test your evidence", "Run the optional AI read below to surface tensions and gaps.", "ai"]);
   if (!actions.length) actions.push(["Look for evidence that could prove you wrong", "A source that challenges your hypothesis is worth more than another that agrees.", "evidence"]);
@@ -42,6 +43,7 @@ export function renderInsights({ tabs = true } = {}) {
     if (target === "ai") $(".ai-evidence").scrollIntoView({ behavior: "smooth", block: "center" });
     else if (target === "evidence") openDrawer();
     else if (target === "attention") { showTab("web"); setAttentionOpen(true); }
+    else if (target === "review") requestReview();
     else showTab(target);
   }));
   renderAiAnalysis();
@@ -50,7 +52,7 @@ export function renderInsights({ tabs = true } = {}) {
 
 const originForAi = origin => ({ experiment: "researcher's own experiment", draft: "researcher's own draft" }[origin] || "external source");
 
-// What the stress-test sees: up to 12 source-grounded cards (saved first), the current hypothesis guesses,
+// What the stress-test sees: up to 12 accepted, source-grounded cards, the current hypothesis guesses,
 // and the strongest relations between them.
 export function inputsForAi() {
   const project = currentProject();
@@ -58,9 +60,8 @@ export function inputsForAi() {
   const evidence = project.cards
     .filter(item => {
       const source = sourceById.get(item.sourceId);
-      return item.state !== "rejected" && item.origin !== "hypothesis" && source && (source.kind !== "url" || source.fetched) && item.quotes?.some(quote => quote.text?.trim());
+      return item.state === "approved" && item.origin !== "hypothesis" && source && (source.kind !== "url" || source.fetched) && item.quotes?.some(quote => quote.text?.trim());
     })
-    .sort((a, b) => (b.state === "approved") - (a.state === "approved"))
     .slice(0, 12)
     .map(item => ({ id: String(item.id), claim: item.claim, quote: item.quotes.map(quote => quote.text.trim()).filter(Boolean).join(" … ").slice(0, 4000), page: (item.quotes[0].location || "Source").trim().slice(0, 250), origin: originForAi(item.origin) }));
   const guesses = webCards(project).filter(item => item.origin === "hypothesis").slice(0, 5).map(item => ({ id: String(item.id), claim: item.claim }));

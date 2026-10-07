@@ -382,6 +382,41 @@ Opening a project lands on its **idea web**: a 2D, physics-driven network of eve
 
 ---
 
+## After the plan — Review deck ✅ Done 2026-10-08
+**Goal (user request):** reviewing should matter. Every newly generated card must be accepted or rejected before it counts.
+- **Deck** (`src/review.js`):
+  - It opens over the page whenever the current project has pending cards: after an import finishes, after a new hypothesis version is split, on opening a project, and on startup. Later cards join an open deck.
+  - One card at a time, with its origin, citation, claim, and quotes. **Accept** (→ or A), **Reject** (← or R), **✎ Edit** (claim and quotes inline; edits are kept even if the card is then rejected), **Accept all N remaining**, and **Later** (Esc).
+  - A progress bar and running tally. One activity entry per session ("Reviewed N cards: X accepted, Y rejected").
+- **Hypothesis guesses also go through the deck** (user's choice), as a dark card with an accent border, the label "YOUR HYPOTHESIS · GUESS FROM VERSION N", a note that it is a guess from your own hypothesis, not evidence from a source, and the hypothesis wording under "From your hypothesis:". Superseded guesses never need review.
+- **Only accepted cards count:** `webCards` (the web, relationship pipeline, Needs attention), Insights counts and suggestions, the stress-test, Markdown export, Library card counts, history links, and the Projects page counts. Pending cards are never embedded, which saves AI calls.
+- **Cards tab:** accepted cards grouped as before, each with **× Reject**. A **"N new cards waiting for review · Review now"** banner. A collapsible **Rejected cards** section at the bottom, with **↶ Restore**. The "N of M reviewed" meter is gone.
+- **Removed:** the Save button and the cross-project **Saved evidence** page (Accept replaces Save, the user's choice).
+- **Verified** in Chrome with real AI calls:
+  - The deck opened by itself after setup, with 3 cards (2 guesses and 1 experiment card). Pending cards stayed out of the web and were never embedded.
+  - → accepted. An inline edit followed by Reject kept the edit. Later closed the deck and the banner showed 1 waiting. A reload reopened the deck, and Review now reopened it too.
+  - The hypothesis card showed its label and note. Accept all finished the deck.
+  - The Cards tab showed 2 accepted cards and 1 in Rejected. The web and pipeline used only accepted cards. Restore brought a card back into the web; rejecting removed one. The Markdown export left rejected cards out.
+  - No console errors.
+
+## After the plan — Web update indicator and "How it works" guide ✅ Done 2026-10-08
+- **Update indicator:**
+  - The pipeline's status now includes the ids of the cards it is working on: cards being embedded, or every card in a pair still to judge.
+  - While it is embedding or relating for the shown project, the web shows a banner at the top of the canvas ("Reading N ideas…" / "Updating connections… N pairs left to check"), and those cards pulse. With reduced motion, they get a static outline instead.
+  - The banner doesn't block the web. It also appears after a claim edit, with that card pulsing.
+- **How it works** (`#how`, opened by **? How it works** in the sidebar, which used to jump to the Web tab) is a static guide built from HTML/CSS diagrams in the app's colours, with five sections:
+  1. The journey of a source, in six steps, each tagged "On your device" or "Sent to OpenAI".
+  2. Where your data goes: your browser ⇄ the local server ⇄ outside services, listing what each holds or receives.
+  3. How connections are decided: embedding → every guess plus the 3 nearest ideas → AI judges each pair → verdict stored, with the relation legend.
+  4. Reading the web, with a sample hub and evidence cards.
+  5. You stay in control.
+
+  It stacks into one column on phones.
+- **Verified** in Chrome:
+  - The guide opened at `#how` with all sections and fitted a 420 px screen without sideways scrolling. "Back to your project" returned to the workspace.
+  - After accepting 3 new cards, the banner showed "Reading 3 ideas…" with 3 cards pulsing, and both cleared once the web was up to date. Editing one claim brought the banner back with just that card pulsing.
+  - No console errors.
+
 ## Out of scope for this plan
 Cross-project links in the web; drawing or editing connections by hand; OCR for scanned PDFs; `.docx` import; accounts/sync; replacing link scraping with arXiv/Crossref/OpenAlex APIs for *full text* (Part 4B uses Crossref for metadata only); stricter per-record validation when restoring a backup; Firefox/Safari versions of the capture extension. Known limitations kept for later are recorded in [FUTURE_WORK.md](FUTURE_WORK.md).
 

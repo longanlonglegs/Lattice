@@ -15,7 +15,6 @@
           <button class="nav-item" data-view="projects" type="button"><span>▦</span> Projects <b id="projects-nav-count">0</b></button>
           <button class="nav-item active" data-view="workspace" type="button"><span>⌘</span> Workspace</button>
           <button class="nav-item" data-view="library" type="button"><span>◫</span> Library <b id="library-nav-count">0</b></button>
-          <button class="nav-item" data-view="cards" type="button"><span>✦</span> Saved evidence <b id="cards-nav-count">0</b></button>
           <button class="nav-item" data-view="privacy" type="button"><span>⌁</span> Privacy & data</button>
         </nav>
         <div class="sidebar-recent">
@@ -138,13 +137,14 @@
                 <div class="web-stage hidden" id="web-stage">
                   <div class="web-toolbar"><label class="sr-only" for="web-search">Find an idea</label><input id="web-search" type="search" placeholder="Find an idea… (Enter to jump to it)" /><span id="web-search-count"></span><label class="web-all-toggle" for="web-show-all"><input id="web-show-all" type="checkbox" /> Show all connections</label><button class="ghost-button attention-button" id="web-attention-toggle" type="button" aria-expanded="false">⚑ Needs attention <b id="web-attention-count">0</b></button><button class="ghost-button" id="web-add-sticky" type="button">+ Sticky note</button><button class="ghost-button" id="web-fit" type="button">Fit to view</button></div>
                   <div class="web-legend" id="web-legend"></div>
-                  <div class="web-canvas" id="web-canvas" aria-label="Idea web"><div class="web-world" id="web-world"><svg class="web-lines" id="web-svg" aria-hidden="true"></svg><div class="web-cards" id="web-cards"></div><div class="web-stickies" id="web-stickies"></div></div><aside class="web-attention hidden" id="web-attention" aria-label="Needs attention"></aside><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
+                  <div class="web-canvas" id="web-canvas" aria-label="Idea web"><div class="web-updating hidden" id="web-updating" role="status"><i class="spinner"></i><span>Updating connections…</span></div><div class="web-world" id="web-world"><svg class="web-lines" id="web-svg" aria-hidden="true"></svg><div class="web-cards" id="web-cards"></div><div class="web-stickies" id="web-stickies"></div></div><aside class="web-attention hidden" id="web-attention" aria-label="Needs attention"></aside><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
                   <p class="web-help">Your hypothesis guesses sit in the middle; evidence gathers around the guess it bears on most. Drag the background to pan, scroll to zoom. Drag a card to pin it, double-click to unpin. Click a card for its full claim, quotes, relations, and your note. Double-click empty space to add a sticky note.</p>
                 </div>
               </section>
 
               <section class="step-panel hidden" data-panel="cards" aria-labelledby="review-title">
-                <div class="panel-heading"><div><h2 id="review-title">Evidence cards <span id="card-count">0</span></h2><p>Each card is one main conclusion with the exact quotes it rests on. Fix anything that’s off, save the useful ones, and reject the rest.</p></div><div class="review-meter"><span id="reviewed-count">0 of 0 reviewed</span><div><i id="meter-fill"></i></div></div></div>
+                <div class="panel-heading"><div><h2 id="review-title">Evidence cards <span id="card-count">0</span></h2><p>The cards you accepted: each one is a main conclusion with the exact quotes it rests on. Edit anything that’s off, or reject a card to take it out of your web.</p></div></div>
+                <div class="review-banner hidden" id="cards-review-banner"><span><b id="cards-review-count">0 new cards</b> waiting for review. They join your web once you accept them.</span><button class="primary" id="cards-review-button" type="button">Review now</button></div>
                 <label class="origin-picker cards-filter" for="cards-origin-filter"><span>Showing</span><select id="cards-origin-filter"><option value="all">All origins</option><option value="external">External source</option><option value="experiment">My experiment</option><option value="draft">My draft</option><option value="hypothesis">My hypothesis</option></select></label>
                 <div class="cards-groups" id="cards-grid"></div>
               </section>
@@ -197,10 +197,85 @@
           <div class="source-library-controls"><label class="sr-only" for="source-library-search">Search sources</label><input id="source-library-search" type="search" placeholder="Search titles, URLs, and captured text" /><label for="source-library-project-filter">PROJECT</label><select id="source-library-project-filter"><option value="all">All projects</option></select></div>
           <div class="source-library-list" id="source-library-list"></div>
         </section>
-        <section class="cards-view hidden" id="cards-view" aria-labelledby="cards-view-title">
-          <div class="cards-page-heading"><div><p class="eyebrow">SAVED EVIDENCE</p><h1 id="cards-view-title">Evidence worth<br><i>keeping.</i></h1><p>The evidence cards you saved, from every local project.</p></div><div class="cards-page-actions"><span id="approved-summary">0 saved cards</span></div></div>
-          <div class="library-filter"><label for="cards-project-filter">SHOWING</label><select id="cards-project-filter"><option value="all">All projects</option></select></div>
-          <div class="approved-cards-list" id="approved-cards-list"></div>
+        <section class="how-view hidden" id="how-view" aria-labelledby="how-view-title">
+          <div class="how-heading"><p class="eyebrow">HOW LATTICE WORKS</p><h1 id="how-view-title">From a pile of reading<br><i>to a map of your thinking.</i></h1><p>What happens to a source from the moment you add it, where your data goes, and how Lattice decides which ideas are connected.</p></div>
+
+          <section class="how-section" aria-labelledby="how-journey-title">
+            <p class="eyebrow">1 · THE JOURNEY OF A SOURCE</p>
+            <h2 id="how-journey-title">Six steps from a paper to your web</h2>
+            <ol class="how-flow">
+              <li><span class="how-step">1</span><b class="how-icon">＋</b><h3>Add evidence</h3><p>A link, arXiv paper, DOI, PDF, pasted text, or a passage captured in Chrome. You say whether it's an external source, your experiment, or your draft.</p><em class="how-tag local">On your device</em></li>
+              <li><span class="how-step">2</span><b class="how-icon">▤</b><h3>Read the text</h3><p>PDFs and pasted text are read in your browser. Links are downloaded by Lattice's local server. The full text is stored in your browser.</p><em class="how-tag local">On your device</em></li>
+              <li><span class="how-step">3</span><b class="how-icon">✦</b><h3>Find the main conclusions</h3><p>The text (up to about 60,000 characters) and your question and hypothesis go to OpenAI, which returns a few main conclusions, each with supporting quotes.</p><em class="how-tag cloud">Sent to OpenAI</em></li>
+              <li><span class="how-step">4</span><b class="how-icon">✓</b><h3>Check every quote</h3><p>Each quote is checked word for word against the source text. Anything the AI paraphrased or invented is dropped before you see it.</p><em class="how-tag local">On your device</em></li>
+              <li><span class="how-step">5</span><b class="how-icon">⇆</b><h3>You review</h3><p>New cards appear in a deck, one at a time. You accept or reject each one. Only accepted cards become part of your project.</p><em class="how-tag local">On your device</em></li>
+              <li><span class="how-step">6</span><b class="how-icon">◎</b><h3>Connect the ideas</h3><p>Accepted claims are compared with your hypothesis and with each other, and the AI decides how they relate. The result is your idea web.</p><em class="how-tag cloud">Claims sent to OpenAI</em></li>
+            </ol>
+          </section>
+
+          <section class="how-section" aria-labelledby="how-data-title">
+            <p class="eyebrow">2 · WHERE YOUR DATA GOES</p>
+            <h2 id="how-data-title">Stored with you; sent out only to do a job</h2>
+            <div class="how-data">
+              <div class="how-box you"><p class="how-box-label">YOUR BROWSER</p><h3>Everything you keep</h3><ul><li>Projects, questions, and hypothesis versions</li><li>Sources and their full text</li><li>Cards, notes, and sticky notes</li><li>Relations between ideas and the web layout</li></ul><small>Stored in this browser (IndexedDB). There is no Lattice account or cloud database.</small></div>
+              <div class="how-arrow"><span>text to read · results back</span></div>
+              <div class="how-box server"><p class="how-box-label">LATTICE SERVER · ON YOUR COMPUTER</p><h3>The go-between</h3><ul><li>Downloads the links you add</li><li>Holds your OpenAI key, which never reaches the browser</li><li>Checks quotes against the source text</li></ul><small>Started with <code>npm start</code>; it listens only on your own computer.</small></div>
+              <div class="how-arrow"><span>only what each job needs</span></div>
+              <div class="how-box outside"><p class="how-box-label">OUTSIDE SERVICES</p><h3>Called for specific tasks</h3><ul><li><b>OpenAI</b>: source text to find conclusions; claims to find relations; your hypothesis to split it into guesses</li><li><b>OpenAI, only if you opt in</b>: card excerpts, guesses, and relations for the stress-test</li><li><b>Crossref</b>: a DOI, to look up a paper's details</li><li><b>Websites</b>: the pages you link to</li></ul></div>
+            </div>
+          </section>
+
+          <section class="how-section" aria-labelledby="how-connect-title">
+            <p class="eyebrow">3 · HOW CONNECTIONS ARE DECIDED</p>
+            <h2 id="how-connect-title">Lattice compares only what's worth comparing</h2>
+            <div class="how-connect">
+              <div class="how-connect-step"><span class="how-mini claim">“Copper speeds up vitamin C loss”</span><p>Each accepted claim is turned into a list of numbers (an <i>embedding</i>) that captures its meaning.</p></div>
+              <i class="how-chev">→</i>
+              <div class="how-connect-step"><span class="how-mini pairs"><b>Every hypothesis guess</b> + <b>3 closest ideas</b> from other sources</span><p>Each idea is paired with every guess, and with the few ideas from other sources that mean the most similar thing.</p></div>
+              <i class="how-chev">→</i>
+              <div class="how-connect-step"><span class="how-mini judge">AI reads each pair</span><p>The model decides how the two claims relate, how sure it is, and gives a one-line reason. It judges only the two claims, with no outside knowledge.</p></div>
+              <i class="how-chev">→</i>
+              <div class="how-connect-step"><span class="how-mini web">Stored once</span><p>Verdicts are saved, so a reload costs nothing. Editing a claim only re-checks that claim's pairs.</p></div>
+            </div>
+            <div class="how-relations">
+              <span><i class="rel supports"></i><b>Supports</b> one claim is evidence for the other</span>
+              <span><i class="rel contradicts"></i><b>Contradicts</b> they can't both be true</span>
+              <span><i class="rel refines"></i><b>Refines</b> adds a condition or a limit</span>
+              <span><i class="rel same"></i><b>Same claim</b> says the same thing</span>
+              <span><i class="rel explains"></i><b>Explains</b> gives a cause or mechanism</span>
+            </div>
+          </section>
+
+          <section class="how-section" aria-labelledby="how-web-title">
+            <p class="eyebrow">4 · READING THE WEB</p>
+            <h2 id="how-web-title">Your hypothesis in the middle, evidence around it</h2>
+            <div class="how-web">
+              <div class="how-web-cards">
+                <div class="how-hub"><p>MY HYPOTHESIS · V1</p><b>Temperature matters more than exposure to air.</b><small><span>▲ 1 for</span><span>▼ 3 against</span></small></div>
+                <div class="how-ev" style="--o:#4b6ca6"><p>● SOURCE · HADDAD 2021</p>Dissolved oxygen dominates early loss</div>
+                <div class="how-ev" style="--o:#3f7a63"><p>● EXPERIMENT</p>Open beakers lose far more than sealed bottles</div>
+                <div class="how-ev" style="--o:#c98a2e"><p>● DRAFT</p>Temperature is the dominant factor</div>
+              </div>
+              <ul class="how-web-notes">
+                <li><b>Dark cards</b> are the guesses your hypothesis was split into. Each one counts the evidence for and against it.</li>
+                <li><b>Evidence cards</b> are coloured by origin: <span class="o" style="--o:#4b6ca6">external source</span>, <span class="o" style="--o:#3f7a63">your experiment</span>, <span class="o" style="--o:#c98a2e">your draft</span>. Each gathers around the guess it bears on most.</li>
+                <li><b>Lines</b> to your hypothesis are always drawn. Lines between two pieces of evidence appear only when they matter; <i>Show all connections</i> reveals the rest.</li>
+                <li><b>Needs attention</b> lists contradictions, untested guesses, and draft claims that nothing supports. <b>Insights</b> suggests what to do next.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="how-section how-control" aria-labelledby="how-control-title">
+            <p class="eyebrow">5 · YOU STAY IN CONTROL</p>
+            <h2 id="how-control-title">Nothing joins your project without you</h2>
+            <div class="how-grid">
+              <div><b>You decide</b><p>Every card is reviewed before it counts. Reject it and it leaves the web, the AI analysis, and your exports.</p></div>
+              <div><b>Opt-in analysis</b><p>The AI stress-test only runs after you tick its consent box, every time it is set up for a project.</p></div>
+              <div><b>Take it with you</b><p>Back up everything, export one project to a file, or export a readable Markdown report.</p></div>
+              <div><b>Delete any time</b><p>Privacy &amp; data removes every project and its stored text from this browser.</p></div>
+            </div>
+            <div class="how-cta"><button class="primary" data-view="workspace" type="button">Back to your project →</button><button class="ghost-button" data-view="privacy" type="button">Privacy &amp; data</button></div>
+          </section>
         </section>
         <section class="privacy-view hidden" id="privacy-view" aria-labelledby="privacy-view-title">
           <div class="privacy-page-heading"><p class="eyebrow">PRIVATE BETA CONTROLS</p><h1 id="privacy-view-title">Your research<br><i>stays in your hands.</i></h1><p>Lattice stores projects in this browser’s storage (IndexedDB). When the local server has an OpenAI API key, the text of each source you add is sent to OpenAI to extract cards, and each card’s claim is sent to find how ideas relate. The AI stress-test in the Insights tab still asks before it runs.</p></div>
@@ -227,6 +302,7 @@
       </div>
     </div>
     <div class="nav-backdrop" id="nav-backdrop"></div>
+    <div class="review-deck hidden" id="review-deck"></div>
     <div class="import-queue hidden" id="import-queue" aria-live="polite"></div>
     <div class="toast" id="toast" role="status"></div>
     <script src="node_modules/d3/dist/d3.min.js"></script>

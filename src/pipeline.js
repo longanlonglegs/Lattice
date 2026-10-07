@@ -28,8 +28,9 @@ const notify = () => listeners.forEach(listener => listener());
 const setStatus = next => { status = next; notify(); };
 export const pipelineStatus = () => status;
 
-// The ideas that take part in the web: every non-rejected card except superseded hypothesis guesses.
-export const webCards = project => project.cards.filter(item => item.state !== "rejected" && !item.superseded && String(item.claim || "").trim());
+// The ideas that take part in the web: accepted cards, except superseded hypothesis guesses.
+// Cards waiting in the review deck, and rejected ones, are left out everywhere.
+export const webCards = project => project.cards.filter(item => item.state === "approved" && !item.superseded && String(item.claim || "").trim());
 const groupOf = item => item.sourceId || `hypothesis:${item.versionId || ""}`;
 
 async function graphFor(projectId) {
@@ -73,7 +74,7 @@ async function run() {
   const unembedded = cards.filter(item => graph.embeddings.get(item.id)?.text !== item.claim);
   for (let start = 0; start < unembedded.length; start += EMBED_BATCH) {
     const batch = unembedded.slice(start, start + EMBED_BATCH);
-    setStatus({ projectId: project.id, state: "embedding", left: unembedded.length - start });
+    setStatus({ projectId: project.id, state: "embedding", left: unembedded.length - start, cards: unembedded.slice(start).map(item => item.id) });
     const { vectors } = await post("/api/embed", { texts: batch.map(item => item.claim) });
     const records = batch.map((item, index) => ({ id: `${project.id}:${item.id}`, projectId: project.id, cardId: item.id, text: item.claim, vector: vectors[index] }));
     records.forEach(record => graph.embeddings.set(record.cardId, record));
@@ -94,6 +95,7 @@ async function run() {
   const batches = [];
   for (let start = 0; start < todo.length; start += RELATE_BATCH) batches.push(todo.slice(start, start + RELATE_BATCH));
   let left = todo.length;
+  const cardsIn = list => [...new Set(list.flat().flatMap(pair => [pair.a, pair.b]))];
   const judge = async batch => {
     const { results } = await post("/api/relate", { question: project.question, pairs: batch.map(pair => ({ id: pair.id, a: idea(byId.get(pair.a)), b: idea(byId.get(pair.b)) })) });
     const resultById = new Map(results.map(item => [item.id, item]));
@@ -104,9 +106,10 @@ async function run() {
     edges.forEach(edge => graph.edges.set(edge.id, edge));
     await putRecords("edges", edges);
     left -= batch.length;
-    setStatus({ projectId: project.id, state: "relating", left });
+    batch.done = true;
+    setStatus({ projectId: project.id, state: "relating", left, cards: cardsIn(batches.filter(batch => !batch.done)) });
   };
-  if (todo.length) setStatus({ projectId: project.id, state: "relating", left });
+  if (todo.length) setStatus({ projectId: project.id, state: "relating", left, cards: cardsIn(batches) });
   for (let start = 0; start < batches.length; start += PARALLEL) await Promise.all(batches.slice(start, start + PARALLEL).map(judge));
   setStatus({ projectId: project.id, state: "done", left: 0 });
 }
