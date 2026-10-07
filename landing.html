@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lattice is a local-first research thinking system for evidence, uncertainty, and next actions." />
-    <title>Lattice — research that remembers your thinking</title>
+    <meta name="description" content="Lattice turns your papers, experiments, and drafts into verified evidence cards and maps how every idea bears on your hypothesis." />
+    <title>Lattice — see how your evidence fits together</title>
     <link rel="stylesheet" href="landing.css" />
   </head>
   <body>
@@ -15,36 +15,48 @@
     </header>
     <main>
       <section class="hero">
-        <p class="eyebrow">A LOCAL-FIRST RESEARCH THINKING SYSTEM</p>
-        <h1>Research that remembers<br><i>how you got there.</i></h1>
-        <p class="hero-copy">Lattice turns the papers, web passages, and questions you chose into a traceable record of evidence, uncertainty, and next actions.</p>
+        <p class="eyebrow">A LOCAL-FIRST RESEARCH WORKSPACE</p>
+        <h1>See how your evidence<br><i>fits together.</i></h1>
+        <p class="hero-copy">Lattice turns the papers you read, your own experiments, and your drafts into evidence cards anchored to exact quotes, then maps how every idea supports, contradicts, refines, or explains your hypothesis.</p>
         <div class="hero-actions"><a class="button primary" href="/">Try the local beta <b>→</b></a><a class="button quiet" href="#how-it-works">See the workflow ↓</a></div>
-        <p class="microcopy">No account. No cloud corpus. Your project stays on your device.</p>
+        <p class="microcopy">No account. Your projects stay in your browser.</p>
       </section>
 
+      <figure class="web-shot">
+        <img src="docs/images/idea-web.png" alt="Lattice's idea web for a project on vitamin C loss in orange juice: four dark hypothesis cards in the middle, with evidence cards from papers, experiments, and a draft gathered around them and coloured lines showing which ideas support or contradict each other." />
+        <figcaption>
+          <span class="legend"><i style="--c:#2b2722"></i>Your hypothesis guesses</span>
+          <span class="legend"><i style="--c:#4b6ca6"></i>External sources</span>
+          <span class="legend"><i style="--c:#3f7a63"></i>Your experiments</span>
+          <span class="legend"><i style="--c:#c98a2e"></i>Your drafts</span>
+          <span class="legend line"><i style="--c:#3f7a63"></i>supports</span>
+          <span class="legend line dashed"><i style="--c:#c4473a"></i>contradicts</span>
+        </figcaption>
+      </figure>
+
       <section class="proof-grid" aria-label="What Lattice does">
-        <article><span>01</span><h2>Keep the trail</h2><p>Every claim stays attached to the source passage and the research question it was meant to answer.</p></article>
-        <article><span>02</span><h2>Weigh the evidence</h2><p>Mark passages that support, contradict, or complicate your working hypothesis.</p></article>
-        <article><span>03</span><h2>Remember what matters</h2><p>Save only useful cards to a separate library, ready for export to your existing Anki deck.</p></article>
+        <article><span>01</span><h2>Every claim, word for word</h2><p>Each card states one of a source's main conclusions and keeps the exact passages it rests on. Lattice checks every quote against the source text, so nothing is paraphrased into existence.</p></article>
+        <article><span>02</span><h2>An idea web around your hypothesis</h2><p>Your hypothesis is split into separate guesses that sit at the centre. Evidence gathers around the guess it bears on, and the AI draws the links for you: no button to press.</p></article>
+        <article><span>03</span><h2>Know what needs attention</h2><p>Lattice lists the contradictions between your sources, the guesses nothing has tested yet, and the claims in your draft that no source or experiment supports.</p></article>
       </section>
 
       <section class="workflow" id="how-it-works">
         <div class="section-intro"><p class="eyebrow">THE WORKFLOW</p><h2>From reading to a better<br>next decision.</h2></div>
         <ol>
-          <li><span>1</span><div><h3>Frame the question</h3><p>Set a research question and a working hypothesis before the evidence begins to pile up.</p></div></li>
-          <li><span>2</span><div><h3>Add evidence</h3><p>Import text or a PDF, save a link, or capture a selected browser passage with the Chrome extension.</p></div></li>
-          <li><span>3</span><div><h3>Make a judgment</h3><p>See support, contradictions, questions, and local next actions—without claims about the literature that your sources cannot support.</p></div></li>
+          <li><span>1</span><div><h3>Frame the question</h3><p>Set a research question and a working hypothesis. Record a new version whenever your thinking changes, and see each change in a timeline.</p></div></li>
+          <li><span>2</span><div><h3>Add evidence</h3><p>Paste a link, arXiv paper, or DOI; upload a PDF; paste text; or capture a passage with the Chrome extension. Mark each piece as an external source, your experiment, or your draft.</p></div></li>
+          <li><span>3</span><div><h3>Read the web</h3><p>Follow what supports and contradicts each guess, add notes and sticky notes, and run an optional AI stress-test of your evidence.</p></div></li>
         </ol>
       </section>
 
       <section class="privacy" id="privacy">
         <div><p class="eyebrow">PRIVACY BY DEFAULT</p><h2>Your unpublished work is not the product.</h2></div>
-        <div class="privacy-copy"><p>Lattice stores research projects in your browser’s local storage. Your selected browser capture goes only to your open local Lattice tab. Anki is contacted only when you choose export.</p><p>Back up, restore, or delete your complete local workspace from the Privacy & data view.</p></div>
+        <div class="privacy-copy"><p>Projects, sources, and their full text are stored in your browser, with no Lattice account or cloud database. When you connect an OpenAI key, the text you add is sent to OpenAI to extract cards and find how ideas relate; you agree to this when you create a project, and the stress-test asks separately.</p><p>Back up, export, import, or delete your work at any time from Privacy &amp; data.</p></div>
       </section>
 
       <section class="beta" id="beta">
-        <div class="section-intro"><p class="eyebrow">PRIVATE BETA</p><h2>Start with a real<br>research problem.</h2><p>The local beta is for people actively reading, building, or investigating something they want to return to.</p></div>
-        <div class="beta-card"><p class="beta-label">CURRENT BETA</p><h3>Free while we learn</h3><p>All local workflow features, Chrome capture, project backup, and Anki export.</p><a class="button primary" href="/">Open the beta <b>→</b></a><small>Future Pro pricing is intentionally not live yet; validate weekly research value before charging.</small></div>
+        <div class="section-intro"><p class="eyebrow">PRIVATE BETA</p><h2>Start with a real<br>research problem.</h2><p>The local beta is for people reading, experimenting, and writing toward an answer they want to defend.</p></div>
+        <div class="beta-card"><p class="beta-label">CURRENT BETA</p><h3>Free while we learn</h3><p>Evidence cards with verified quotes, the idea web, hypothesis history, the draft check, Chrome capture, and Markdown and project export.</p><a class="button primary" href="/">Open the beta <b>→</b></a><small>Runs on your computer with <code>npm start</code>; AI features need your own OpenAI API key.</small></div>
       </section>
     </main>
     <footer><a class="logo" href="landing.html"><span>L</span> Lattice</a><p>Build a map of your thinking, not another pile of summaries.</p></footer>

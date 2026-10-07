@@ -26,14 +26,13 @@
         <div class="sidebar-footer">
           <div class="privacy"><span class="lock">⌁</span><div><strong>Local-first</strong><small>Your sources stay yours.</small></div></div>
           <button class="help-button" id="how-it-works" type="button">? &nbsp; How it works</button>
-          <div class="user"><span>LD</span><div><strong>Logan D.</strong><small>Researcher</small></div><i>•••</i></div>
         </div>
       </aside>
 
       <main>
         <header class="topbar">
-          <div class="breadcrumb"><span id="topbar-view">Workspace</span><em id="topbar-divider">/</em><div id="project-context"><button class="project-chip" id="project-chip" type="button" title="Switch project"><i class="color-dot" id="project-chip-dot"></i><span id="project-chip-title">Project</span><b>⌄</b></button><button class="new-project" data-new-project type="button">+ New project</button></div></div>
-          <div class="top-actions"><span class="status-dot"></span><span id="topbar-status">Saved locally</span><button class="icon-button" aria-label="More options">•••</button></div>
+          <button class="menu-button" id="menu-button" type="button" aria-label="Open menu" aria-expanded="false">☰</button><div class="breadcrumb"><span id="topbar-view">Workspace</span><em id="topbar-divider">/</em><div id="project-context"><button class="project-chip" id="project-chip" type="button" title="Switch project"><i class="color-dot" id="project-chip-dot"></i><span id="project-chip-title">Project</span><b>⌄</b></button><button class="new-project" data-new-project type="button">+ New project</button></div></div>
+          <div class="top-actions"><span class="status-dot"></span><span id="topbar-status">Saved locally</span></div>
         </header>
 
         <section class="projects-view hidden" id="projects-view" aria-labelledby="projects-view-title">
@@ -106,12 +105,6 @@
             </div>
           </form>
 
-          <section class="ob-processing hidden" id="ob-processing" aria-live="polite">
-            <h2 id="ob-processing-title">Reading your work…</h2>
-            <p class="ob-help" id="ob-processing-help">Lattice is turning your work into evidence cards. This can take up to a minute per item.</p>
-            <ul class="work-list" id="ob-processing-list"></ul>
-            <div class="ob-footer"><button class="next-button" id="ob-open" type="button" disabled>Open project <span>→</span></button></div>
-          </section>
 
           <section class="ob-danger" id="ob-danger">
             <div><h2>Delete this project</h2><p id="ob-danger-help">Removes the project, its sources, cards, and activity from this browser. This can’t be undone unless you have a backup.</p></div>
@@ -143,15 +136,15 @@
                   <div class="web-empty-actions"><button class="primary" data-add-evidence type="button">+ Add evidence</button></div>
                 </div>
                 <div class="web-stage hidden" id="web-stage">
-                  <div class="web-toolbar"><label class="sr-only" for="web-search">Find an idea</label><input id="web-search" type="search" placeholder="Find an idea… (Enter to jump to it)" /><span id="web-search-count"></span><button class="ghost-button" id="web-fit" type="button">Fit to view</button></div>
+                  <div class="web-toolbar"><label class="sr-only" for="web-search">Find an idea</label><input id="web-search" type="search" placeholder="Find an idea… (Enter to jump to it)" /><span id="web-search-count"></span><label class="web-all-toggle" for="web-show-all"><input id="web-show-all" type="checkbox" /> Show all connections</label><button class="ghost-button attention-button" id="web-attention-toggle" type="button" aria-expanded="false">⚑ Needs attention <b id="web-attention-count">0</b></button><button class="ghost-button" id="web-add-sticky" type="button">+ Sticky note</button><button class="ghost-button" id="web-fit" type="button">Fit to view</button></div>
                   <div class="web-legend" id="web-legend"></div>
-                  <div class="web-canvas"><svg id="web-svg" viewBox="-600 -380 1200 760" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Idea web"></svg><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
-                  <p class="web-help">Drag to pan, scroll to zoom. Drag an idea to pin it, double-click to unpin. Click an idea to see its quote and relations.</p>
+                  <div class="web-canvas" id="web-canvas" aria-label="Idea web"><div class="web-world" id="web-world"><svg class="web-lines" id="web-svg" aria-hidden="true"></svg><div class="web-cards" id="web-cards"></div><div class="web-stickies" id="web-stickies"></div></div><aside class="web-attention hidden" id="web-attention" aria-label="Needs attention"></aside><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
+                  <p class="web-help">Your hypothesis guesses sit in the middle; evidence gathers around the guess it bears on most. Drag the background to pan, scroll to zoom. Drag a card to pin it, double-click to unpin. Click a card for its full claim, quotes, relations, and your note. Double-click empty space to add a sticky note.</p>
                 </div>
               </section>
 
               <section class="step-panel hidden" data-panel="cards" aria-labelledby="review-title">
-                <div class="panel-heading"><div><h2 id="review-title">Evidence cards <span id="card-count">0</span></h2><p>Each card is one claim with the exact quote it rests on. Fix anything that’s off, save the useful ones, and reject the rest.</p></div><div class="review-meter"><span id="reviewed-count">0 of 0 reviewed</span><div><i id="meter-fill"></i></div></div></div>
+                <div class="panel-heading"><div><h2 id="review-title">Evidence cards <span id="card-count">0</span></h2><p>Each card is one main conclusion with the exact quotes it rests on. Fix anything that’s off, save the useful ones, and reject the rest.</p></div><div class="review-meter"><span id="reviewed-count">0 of 0 reviewed</span><div><i id="meter-fill"></i></div></div></div>
                 <label class="origin-picker cards-filter" for="cards-origin-filter"><span>Showing</span><select id="cards-origin-filter"><option value="all">All origins</option><option value="external">External source</option><option value="experiment">My experiment</option><option value="draft">My draft</option><option value="hypothesis">My hypothesis</option></select></label>
                 <div class="cards-groups" id="cards-grid"></div>
               </section>
@@ -178,17 +171,19 @@
                 <section class="rail-trail history-trail" aria-labelledby="memory-title">
                   <p class="rail-label" id="memory-title">RESEARCH TRAIL</p>
                   <ol class="activity-list" id="activity-list" aria-live="polite"></ol>
+                  <button class="rail-edit hidden" id="activity-toggle" type="button">Show all</button>
                 </section>
               </section>
 
               <section class="step-panel hidden" data-panel="insights" aria-labelledby="judge-title">
                 <div class="panel-heading"><div><h2 id="judge-title">What does your evidence say?</h2><p>Take stock of what you’ve gathered, then choose your next move.</p></div></div>
                 <div class="evidence-stats" id="evidence-stats"></div>
+                <div class="relation-stats" id="relation-stats"></div>
                 <h3 class="subhead">SUGGESTED NEXT STEPS</h3>
                 <div class="next-actions" id="next-actions"></div>
                 <section class="ai-evidence" aria-labelledby="ai-evidence-title">
-                  <div class="ai-evidence-heading"><div><p class="eyebrow">OPTIONAL · AI</p><h3 id="ai-evidence-title">Stress-test this evidence</h3><p>An AI read of how your evidence bears on your hypothesis, using your cards only, not the wider internet.</p></div><button class="ai-analyze-button" id="ai-analyze-button" type="button" disabled>Analyze evidence <span>→</span></button></div>
-                  <label class="ai-consent" for="ai-consent"><input id="ai-consent" type="checkbox" /><span>I understand this sends this project’s question, hypothesis, and card excerpts to OpenAI for this one analysis.</span></label>
+                  <div class="ai-evidence-heading"><div><p class="eyebrow">OPTIONAL · AI</p><h3 id="ai-evidence-title">Stress-test this evidence</h3><p>An AI read of how your evidence bears on each hypothesis guess, using your cards and the relations Lattice found, not the wider internet.</p></div><button class="ai-analyze-button" id="ai-analyze-button" type="button" disabled>Analyze evidence <span>→</span></button></div>
+                  <label class="ai-consent" for="ai-consent"><input id="ai-consent" type="checkbox" /><span>I understand this sends this project’s question, hypothesis guesses, card excerpts, and their relations to OpenAI for this one analysis.</span></label>
                   <p class="ai-status" id="ai-status">Keep this off to stay fully local.</p>
                   <div class="ai-results hidden" id="ai-results" aria-live="polite"></div>
                 </section>
@@ -215,6 +210,7 @@
             <section class="privacy-card"><span class="privacy-icon">✦</span><div><h2>Optional integrations</h2><p>Card extraction sends a source’s text (up to about 60,000 characters) plus the project question and hypothesis to OpenAI. Finding relationships sends each card’s claim. Evidence analysis sends card excerpts only after you opt in.</p></div></section>
           </div>
           <section class="data-tools" aria-labelledby="data-tools-title"><div><p class="eyebrow">DATA CONTROLS</p><h2 id="data-tools-title">Back up or reset your workspace</h2><p>A backup contains all local projects, sources, cards, and activity history. Store it somewhere you trust.</p></div><div class="data-actions"><button class="data-button primary-data" id="backup-button" type="button">↓ Download backup</button><label class="data-button" for="restore-input">↑ Restore backup</label><input class="sr-only" id="restore-input" type="file" accept="application/json" /><button class="data-button danger" id="delete-workspace" type="button">Delete local data</button></div></section>
+          <section class="data-tools" aria-labelledby="project-tools-title"><div><p class="eyebrow">ONE PROJECT</p><h2 id="project-tools-title">Export or import a single project</h2><p>A project file holds one project with its sources and full texts, cards, notes, sticky notes, versions, and the relations Lattice found. Importing always adds a copy, so nothing here is overwritten.</p></div><div class="data-actions"><label class="sr-only" for="export-project-select">Project to export</label><select class="data-select" id="export-project-select"></select><button class="data-button primary-data" id="export-project" type="button">↓ Export project</button><label class="data-button" for="import-project-input">↑ Import project</label><input class="sr-only" id="import-project-input" type="file" accept="application/json,.json" /></div></section>
         </section>
       </main>
     </div>
@@ -227,9 +223,11 @@
         <div class="hidden" id="text-panel"><textarea id="source-text" placeholder="Paste the abstract, paper text, or notes here…"></textarea><button class="primary text-button" id="text-button">Extract cards <span>→</span></button></div>
         <label class="origin-picker hidden" id="origin-picker" for="evidence-origin"><span>Where is this from?</span><select id="evidence-origin"><option value="external">External source</option><option value="experiment">My experiment</option><option value="draft">My draft</option></select></label>
         <p class="capture-tip"><span class="capture-icon">⌘</span><span>Browsing in Chrome? Select a passage, right-click, and choose <em>Save selection to Lattice</em>.</span></p>
-        <p class="drawer-note">Extraction can take up to a minute. The drawer closes when the cards are ready.</p>
+        <p class="drawer-note">Each item joins the import queue (bottom right) and is read in the background; you can keep working or add more.</p>
       </div>
     </div>
+    <div class="nav-backdrop" id="nav-backdrop"></div>
+    <div class="import-queue hidden" id="import-queue" aria-live="polite"></div>
     <div class="toast" id="toast" role="status"></div>
     <script src="node_modules/d3/dist/d3.min.js"></script>
     <script type="module" src="src/main.js"></script>

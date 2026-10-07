@@ -1,6 +1,6 @@
 # Lattice — Project Status
 
-*Last updated: 2026-10-07 (Parts 6 and 7). A dated record of the vision and of how far the code has got. For how to run the app, see [README.md](README.md). For the plan to build what's missing, see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md); known limitations kept for later are in [FUTURE_WORK.md](FUTURE_WORK.md). A fictional test project lives in [demo/vitamin-c/](demo/vitamin-c/).*
+*Last updated: 2026-10-08 (Parts 9 and 10). A dated record of the vision and of how far the code has got. For how to run the app, see [README.md](README.md). For the plan to build what's missing, see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md); known limitations kept for later are in [FUTURE_WORK.md](FUTURE_WORK.md). A fictional test project lives in [demo/vitamin-c/](demo/vitamin-c/).*
 
 ---
 
@@ -27,7 +27,7 @@
 | Piece | File(s) | Notes |
 |---|---|---|
 | Local server + AI proxy | [server/](server/): [index.js](server/index.js) (http + routing, static files) · [openai.js](server/openai.js) (`callOpenAI`, response schemas) · [prompts.js](server/prompts.js) (every system prompt) · [config.js](server/config.js) (limits) · [json.js](server/json.js) · [routes/](server/routes/) `extract.js`, `fetch-source.js`, `lookup-doi.js`, `hypothesis.js`, `relations.js`, `analysis.js` | Plain Node `http` (CommonJS), no framework. `npm start` runs `server/index.js`, serving the project folder on `127.0.0.1:4173` (or `PORT`). Seven API routes: `POST /api/fetch-source` (fetches a link, parses PDFs server-side), `POST /api/extract-cards` (AI card extraction with verbatim quote check), `POST /api/evidence-analysis` (AI stress-test), `POST /api/lookup-doi` (Crossref metadata by DOI), `POST /api/split-hypothesis` (splits the hypothesis into 1–5 guesses), `POST /api/embed` (claim embeddings), `POST /api/relate` (judges how pairs of claims relate). `fetch-source` also returns a source's citation details (meta tags, PDF document info, Crossref). Route modules export their pure helpers for testing. |
-| Frontend (single page) | [index.html](index.html), [styles.css](styles.css), [src/](src/): `main.js` (event wiring, startup) · `state.js` (workspace, saving, project helpers) · `db.js` (IndexedDB) · `records.js` (pure helpers: migration, store records, quote check, source metadata and citations) · `origins.js` (origin labels/colours/shapes) · `views.js` (view switching, top bar) · `projects.js` (Projects page, sidebar list) · `project-shell.js` (project tabs, Add evidence drawer) · `history.js` (Question & history: versions, timeline, hypothesis guesses) · `pipeline.js` (background relationship pipeline) · `relations.js` (pure: similarity, candidate pairs, relation labels and styles) · `web/web-view.js` (the idea web, d3) · `workspace.js` (sources and their details, activity, Markdown export) · `cards.js` (review list) · `judgment.js` (Insights tab, AI stress-test) · `library.js` (Library, Saved evidence) · `onboarding.js` (setup + settings) · `ingest.js` (links, files, paste, capture, extraction) · `privacy.js` (backup/restore/delete) · `util.js` | Vanilla JS ES modules loaded from `src/main.js`, with no build step and no framework. Each render re-sets `innerHTML`. Modules import each other in cycles, which is safe because only `main.js` runs code at load time: it awaits `initWorkspace()` and then wires up the page. |
+| Frontend (single page) | [index.html](index.html), [styles.css](styles.css), [src/](src/): `main.js` (event wiring, startup) · `state.js` (workspace, saving, project helpers) · `db.js` (IndexedDB) · `records.js` (pure helpers: migration, store records, quote check, source metadata and citations) · `origins.js` (origin labels/colours/shapes) · `views.js` (view switching, top bar) · `projects.js` (Projects page, sidebar list) · `project-shell.js` (project tabs, Add evidence drawer) · `history.js` (Question & history: versions, timeline, hypothesis guesses) · `pipeline.js` (background relationship pipeline) · `relations.js` (pure: similarity, candidate pairs, relation labels and styles) · `web/web-view.js` (the idea web, d3) · `workspace.js` (sources and their details, activity, Markdown export) · `cards.js` (review list) · `insights.js` (Insights tab: counts, suggestions, AI stress-test) · `imports.js` (the import queue) · `web/attention.js` (Needs attention panel) · `library.js` (Library, Saved evidence) · `onboarding.js` (setup + settings) · `ingest.js` (links, files, paste, capture, extraction) · `privacy.js` (backup/restore/delete) · `util.js` | Vanilla JS ES modules loaded from `src/main.js`, with no build step and no framework. Each render re-sets `innerHTML`. Modules import each other in cycles, which is safe because only `main.js` runs code at load time: it awaits `initWorkspace()` and then wires up the page. |
 | Landing page | [landing.html](landing.html), [landing.css](landing.css) | Standalone marketing page for the beta. Still advertises stance labels and Anki export (*rewrite in Part 10*). |
 | Chrome extension | [extension/](extension/) | MV3. Adds a right-click "Save selection to Lattice" item that posts the selection into an open Lattice tab. |
 | Persistence | IndexedDB database `lattice` | Stores: `projects`, `sources`, `cards`, `meta` (the workspace, rewritten on every save, one save at a time) · `texts` (full page text per source, written once at import) · `embeddings` (one 512-number vector per card and wording) and `edges` (one judged verdict per card pair, "none" included) · `annotations`, `versions` (still empty; versions live on the project). On first load, an old `localStorage` workspace (`lattice-local-workspace-v1`) is copied in; the old key is kept as a backup until **Delete local data**. A failed save shows a toast (with a specific message when storage is full). |
@@ -41,8 +41,8 @@
 
 **Data model (informal, current):**
 `workspace { activeId, projects[] }`
-→ `project { id, title, colour, question, hypothesis, cards[], sources[], activities[], versions[], aiAnalysis, acknowledgedAt, createdAt, updatedAt, placeholder? }`
-→ `card { id, claim, quote, location, sourceId, origin: external|experiment|draft|hypothesis, state: pending|approved|rejected, note, quoteMissing?, editing? }`. Old flashcards are migrated on load: `claim = answer`, `location = page`, and `question`/`tag`/`stance` are dropped.
+→ `project { id, title, colour, question, hypothesis, cards[], sources[], activities[], versions[], stickies[], aiAnalysis, acknowledgedAt, createdAt, updatedAt, placeholder? }`
+→ `card { id, claim, short?, quotes: [{ text, location, missing? }], sourceId, origin: external|experiment|draft|hypothesis, state: pending|approved|rejected, note, editing? }`. Older cards are migrated on load: flashcards get `claim = answer`, and single-quote cards `{ quote, location, quoteMissing }` become a one-item `quotes` list.
 → `source { id, title, kind: pdf|text|web|url|work, origin: external|experiment|draft, detail, originalUrl?, capturedText?, fetched?, extraction: ai|basic, addedAt?, meta? }` (`kind: work` means your own work, experiment or draft)
 → `source.meta { title?, authors[]?, year?, venue?, doi?, url? }` for external sources only (Part 4B).
 → `texts { sourceId, pages: [{ label, text }] }` in its own store.
@@ -51,10 +51,12 @@
 
 → `edge { id: "a|b", projectId, a, b, aText, bText, relation: supports|contradicts|refines|same|explains|none, direction: a_to_b|b_to_a|none, confidence, rationale, similarity }` in the `edges` store; `embedding { id, projectId, cardId, text, vector }` in `embeddings`. `project.webLayout { cardId: [x, y, pinned] }` keeps the web's positions.
 
-*Planned changes:* annotations (Part 8).
+→ `sticky { id, x, y, text, colour: yellow|pink|green|blue, createdAt }` in `project.stickies`.
 
-**UI (current):** The project header shows a status chip for the relationship pipeline ("Connecting ideas… N pairs left" / "Ideas up to date" / "Paused: AI not configured"). The left nav has five views: Projects, Workspace, Library, Saved evidence, and Privacy & data, plus a "Recent projects" list. New projects go through a four-step setup (Basics → Research focus → Your work so far → Privacy), and Project settings reuses that form. A project opens on its **Web** tab and has five tabs: **Web** (the idea web: pan/zoom, drag to pin, legend filters, search, side panel) · **Cards** (review list, origin filter) · **Sources** (remove, Edit details) · **Question & history** (question, hypothesis, Record this version, version timeline, research trail) · **Insights** (counts, next steps, AI stress-test). **+ Add evidence** opens a drawer from any tab. The URL hash remembers the tab (`#workspace/cards`).
-*Planned:* notes and sticky notes on the web (Part 8); "Needs attention" side panel and the Insights rewrite (Part 9).
+*Planned changes:* none in the data model for Part 9.
+
+**UI (current):** The project header shows a status chip for the relationship pipeline ("Connecting ideas… N pairs left" / "Ideas up to date" / "Paused: AI not configured"). The left nav has five views: Projects, Workspace, Library, Saved evidence, and Privacy & data, plus a "Recent projects" list. New projects go through a four-step setup (Basics → Research focus → Your work so far → Privacy), and Project settings reuses that form. A project opens on its **Web** tab and has five tabs: **Web** (the idea web: hypothesis hub cards on a ring with evidence cards gathered around them; pan/zoom, drag to pin, legend filters, search, Show all connections, side panel) · **Cards** (review list, origin filter) · **Sources** (remove, Edit details) · **Question & history** (question, hypothesis, Record this version, version timeline, research trail) · **Insights** (counts, next steps, AI stress-test). **+ Add evidence** opens a drawer from any tab. The URL hash remembers the tab (`#workspace/cards`).
+*Planned:* nothing further in the implementation plan; see FUTURE_WORK.md.
 
 ---
 
@@ -66,8 +68,8 @@ Legend: ✅ done · 🟡 partial / placeholder · ❌ not started · ➖ removed
 | # | Feature | Status | Plan | Notes |
 |---|---|---|---|---|
 | F1 | Import files (PDF, arXiv, others) | 🟡 | OOS | Upload: text-based PDF, `.txt`, `.md`. Paste text. **Links are fetched:** arXiv reads the full PDF; DOIs and publisher pages use `citation_pdf_url` when it's public, otherwise the landing page (usually the abstract); ordinary pages become plain text. **Source details** (title, authors, year, venue, DOI) come from page meta tags, PDF document info, Crossref, or the first page's text, and can be edited. Scanned PDFs (OCR) and `.docx` are out of scope. |
-| F2 | Browser selection capture | ✅ | 10 | Works (Chrome only). Part 10 fixes the extension's reliability issues and lets captures carry an origin. |
-| F3 | Automatic claim extraction | ✅ | FW | AI extraction for every source, with four prompts (general content, links, my experiment, my draft). Up to 8 cards per source. Each is a general, standalone scientific claim (subject, effect, conditions, numbers, hedging kept) plus the quote that best supports it. The server drops any card whose quote isn't found: every sentence must appear word-for-word, in order, on one page, and skipped text is shown as " … ". Falls back to rule-based "basic extraction" without AI. Only the first ~60k characters are read (FW). |
+| F2 | Browser selection capture | ✅ | — | Chrome extension: right-click → **Save selection to Lattice** → As an external source / As my experiment / As my draft. Finds the Lattice tab on any localhost port; a capture made while Lattice is closed is kept in session storage and delivered when it opens. Chrome only (OOS). |
+| F3 | Automatic claim extraction | ✅ | FW | AI extraction for every source, with four prompts (general content, links, my experiment, my draft). Each card is one of the source's **main conclusions**, with related findings grouped into one claim (usually 1–2 cards for a short source, 2–4 for a full paper), plus 1–3 verbatim quotes that carry the details. The server drops any quote it can't find, and any card left with none: every sentence must appear word-for-word, in order, on one page, and skipped text is shown as " … ". Falls back to rule-based "basic extraction" without AI. Only the first ~60k characters are read (FW). |
 | F4 | Source library (persistent memory) | ✅ | — | Library view across projects, with search and a project filter. Shows "Authors (year) · Venue" for each source. Limited to one browser profile (accounts/sync OOS). |
 | F5 | Your own work as evidence | ✅ | — | Uploads and pastes ask **Where is this from? External source / My experiment / My draft**, per item in setup step 3 and in the **+ Add evidence** drawer. Experiments extract results and conclusions; drafts extract the assertions the draft makes. |
 
@@ -75,21 +77,21 @@ Legend: ✅ done · 🟡 partial / placeholder · ❌ not started · ➖ removed
 | # | Feature | Status | Plan | Notes |
 |---|---|---|---|---|
 | O1 | Multiple projects | ✅ | — | Projects page (most recent first, colour tag, stats, search), recent-projects sidebar, four-step setup with a required privacy acknowledgement, Project settings, delete project. |
-| O2 | Evidence cards | ✅ | — | Each card shows its claim, quote, location, and origin badge, grouped by source. Edit changes the claim or quote. They live in the **Cards** tab (filterable by origin) and show a short citation such as "Okafor & Lindqvist 2019". |
+| O2 | Evidence cards | ✅ | — | Each card shows its claim, its quotes (each with its location), and an origin badge, grouped by source. Edit changes the claim or any quote; each quote is re-checked on its own. They live in the **Cards** tab (filterable by origin) and show a short citation such as "Okafor & Lindqvist 2019". |
 | O3 | Stance labels | ➖ | — | Removed 2026-10-05. Replaced by **origin classification** (O7) and AI relationships in the web (C2). |
 | O4 | Approve / reject cards | ✅ | — | Saved cards go to the cross-project **Saved evidence** view. Rejected cards are excluded from AI analysis and the web. |
-| O5 | Activity trail | 🟡 | 10 | Logs creation, settings changes, imports, captures, approvals, and AI runs, but only the last 30 per project. Part 10 keeps the full history and logs claim edits and version changes. |
-| O6 | Export (.md / .json) | 🟡 | 10 | Per-project Markdown and full-workspace JSON backup/restore. Part 10 adds per-project JSON export/import and puts relations and versions in Markdown. |
+| O5 | Activity trail | ✅ | — | Full history kept on the project (no 30-entry cap): creation, settings, imports, captures, approvals, card edits (logged once when a changed card is closed), versions, imports from file, and AI runs. Question & history shows the latest 8, with **Show all**. |
+| O6 | Export (.md / .json) | ✅ | — | Markdown per project (sources as references, hypothesis guesses, cards with quotes, notes and relations, version history, sticky notes). Full-workspace backup/restore, plus **one-project export/import** in Privacy & data: the file holds the project, its full texts, embeddings, and relations; importing always adds a copy with fresh ids. |
 | O7 | Origin classification | ✅ | — | External · My experiment · My draft · My hypothesis, shown as coloured badges on cards and saved evidence (defined once in `src/origins.js`). The web uses the same colours plus a shape per origin (circle, square, rounded box, diamond). |
-| O8 | Annotations | ❌ | 8 | Notes on ideas and free sticky notes on the web canvas. |
+| O8 | Annotations | ✅ | — | **Notes on ideas** (edit in the web's side panel or a card's Edit mode; ✎ on annotated cards; shown in the Cards tab). **Sticky notes** on the web canvas: double-click empty space or + Sticky note; edit, recolour, drag, delete; outside the physics. Both are in the Markdown export and backup. |
 
 ### Connect
 | # | Feature | Status | Plan | Notes |
 |---|---|---|---|---|
-| C1 | Evidence balance + suggestions | ✅ | 9 | The **Insights** tab shows counts of sources, own work, cards, and saved cards, plus rule-based next actions and the opt-in AI stress-test. Part 9 splits it: "Needs attention" in the web side panel, counts, suggestions and stress-test in an Insights tab. |
-| C2 | Idea web: automatic relationships (contradiction alerts) | 🟡 | 9 | **Done:** a background pipeline (embeddings pick each idea's most similar ideas from other sources; the AI judges supports / contradicts / refines / same / explains with a rationale) and a physics-driven web with colour/shape by origin, drag-to-pin, pan/zoom, legend filters, search, and a side panel listing each idea's relations. Relations also show under each card. **Part 9:** open contradictions listed in "Needs attention". One web per project. *Differentiator.* |
+| C1 | Evidence balance + suggestions | ✅ | — | The **Insights** tab counts ideas by origin and relations by type, suggests next steps built around the web (contradictions to resolve, guesses with no evidence, unsupported draft claims, cards to review), and runs the opt-in AI stress-test with the cards, the hypothesis guesses, and the strongest relations. |
+| C2 | Idea web: automatic relationships (contradiction alerts) | ✅ | — | Background pipeline (every idea paired with every hypothesis guess and its 3 nearest ideas from other sources; the AI judges supports / contradicts / refines / same / explains with a rationale) and a card-based web: hypothesis hubs on a ring, evidence cards gathered around the guess they bear on, important links only (Show all for the rest). **Needs attention** lists contradictions between pieces of evidence; clicking one zooms to both cards. One web per project. *Differentiator.* |
 | C3 | Hypothesis / RQ history + timeline | ✅ | 7 | **Record this version** in Question & history saves the question and hypothesis with an optional note and linked evidence cards. The timeline shows each version with a word diff, its note, its guesses, and linked evidence. When the hypothesis changes, the AI splits it into 1–5 guesses (one per sentence without AI), which become hypothesis cards; earlier guesses are marked superseded. Setup records version 1. Part 7 shows the current guesses as web nodes. *Differentiator.* |
-| C4 | Draft checker | 🟡 | 9 | Drafts are processed like any evidence, and their claims connect to the evidence in the web (supported / contradicted by …). Part 9 lists draft claims without supporting evidence in "Needs attention". *Differentiator.* |
+| C4 | Draft checker | ✅ | — | Drafts are processed like any evidence; their claims connect to the evidence in the web, and **Needs attention** lists draft claims that no source or experiment supports, plus contradictions involving the draft. *Differentiator.* |
 
 ### Cross-cutting promises in the abstract
 | Promise | Status | Plan | Notes |
@@ -105,6 +107,12 @@ Legend: ✅ done · 🟡 partial / placeholder · ❌ not started · ➖ removed
 ## 4. Known issues & tech debt
 
 **Fixed since 2026-10-05 morning:** imports no longer replace a project's cards; new projects no longer get the sample layer-norm cards; removing a source removes its cards; card IDs come from a monotonic counter; the server's startup log shows the real port; the default demo question is gone.
+
+**Done 2026-10-08 (Parts 9 and 10):**
+- Part 9: the Needs attention panel and the Insights rewrite.
+- Part 10: full activity history, one-project export/import, extension fixes, the import queue with cancel, non-blocking setup, the mobile menu, the landing page, and removing the placeholders. This also fixes these known issues: no import queue or cancel; setup blocking while it reads work; the extension's bridge file, lost captures, and fixed port; Anki and stance claims on the landing page; the placeholder user; and the missing mobile navigation.
+
+**Done 2026-10-07 (Part 8):** notes on ideas and sticky notes on the web.
 
 **Done 2026-10-07 (Parts 6 and 7):** the AI relationship pipeline and the idea web.
 
@@ -128,15 +136,9 @@ Legend: ✅ done · 🟡 partial / placeholder · ❌ not started · ➖ removed
 | Every save rewrites all project, source, and card records (full texts excluded). Fine at today's sizes; see FUTURE_WORK. | FW |
 | **Security:** the server serves every file in the project folder (incl. `.git/`, and an `.env` if one existed). | FW |
 | **Security:** any website can trigger `/api/*` while Lattice runs (cross-site `text/plain` POST), spending OpenAI credit or fetching URLs. | FW |
-| Extraction is slow (8–40 s), can't be cancelled, and has no queue. | 10 |
-| Onboarding keeps you on the progress screen while it reads your work. | 10 |
 | Only the first ~60k characters of a source are read. | FW |
 | Link fetching scrapes pages directly instead of using arXiv/Crossref/OpenAlex for full text. | OOS (metadata via Crossref in 4B) |
-| Extension: unused `lattice-bridge.js`; `pendingCapture` lost if the service worker stops; port `4173` hard-coded. | 10 |
 | Extension is Chrome only. | OOS |
-| Landing page advertises stance labels and Anki export. | 10 |
-| Sidebar user "Logan D." is hard-coded; `•••` buttons do nothing. | 10 |
-| Below 850 px the sidebar is hidden and Projects is hard to reach. | 10 |
 
 ---
 

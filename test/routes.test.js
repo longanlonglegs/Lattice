@@ -9,7 +9,7 @@ const { callRoute, stubOpenAI, withoutKey } = require("./helpers");
 
 const passage = "Dissolved oxygen, not temperature, controlled the first 72 hours of vitamin C loss.";
 const request = (fields = {}) => ({ title: "Haddad 2021", url: "https://example.org/paper", question: "What drives vitamin C loss?", hypothesis: "Oxygen matters most.", pages: [{ label: "p. 2", text: passage }], ...fields });
-const modelCard = (fields = {}) => ({ claim: "Dissolved oxygen controlled early vitamin C loss.", quote: passage, page: "p. 2", ...fields });
+const modelCard = (fields = {}) => ({ claim: "Dissolved oxygen controlled early vitamin C loss.", quotes: [{ quote: fields.quote || passage, page: "p. 2" }] });
 
 for (const [mode, prompt] of [["content", "contentExtractionPrompt"], ["experiment", "experimentExtractionPrompt"], ["work", "experimentExtractionPrompt"], ["draft", "draftExtractionPrompt"], ["link", "linkExtractionPrompt"]]) {
   test(`extract-cards uses ${prompt} for mode "${mode}"`, async t => {
@@ -116,4 +116,17 @@ test("validEvidence accepts 1 to 12 complete items and trims long fields", () =>
   assert.equal(item.id.length, 80);
   assert.equal(item.quote.length, 4000);
   assert.equal(item.origin, "external source");
+});
+
+test("evidence-analysis sends hypothesis guesses and relations between known items only", async t => {
+  const { validGuesses, validRelations } = require("../server/routes/analysis");
+  assert.deepEqual(validGuesses([{ id: "g1", claim: " Loss doubles per 10 °C. " }, { id: "", claim: "x" }, { id: "g2", claim: "" }]), [{ id: "g1", claim: "Loss doubles per 10 °C." }]);
+  const ids = new Set(["1", "g1"]);
+  assert.deepEqual(validRelations([{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Q10 differs." }, { from_id: "1", to_id: "9", relation: "supports" }, { from_id: "1", to_id: "g1", relation: "likes" }], ids), [{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Q10 differs." }]);
+  const calls = stubOpenAI(t, () => ({ summary: "s", confidence: "low", tensions: [{ title: "t", explanation: "e", evidence_ids: ["1", "g1", "zzz"] }], next_actions: [] }));
+  const { body } = await callRoute(analyzeEvidence, { question: "Q?", hypothesis: "H", evidence: [{ id: "1", claim: "Oxygen dominates early loss.", quote: "Oxygen controlled the first 72 hours.", page: "p. 2" }], guesses: [{ id: "g1", claim: "Temperature dominates." }], relations: [{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Opposite factors." }] });
+  assert.deepEqual(calls[0].payload.hypothesis_guesses, [{ id: "g1", claim: "Temperature dominates." }]);
+  assert.equal(calls[0].payload.relations.length, 1);
+  assert.equal(calls[0].payload.evidence[0].claim, "Oxygen dominates early loss.");
+  assert.deepEqual(body.analysis.tensions[0].evidence_ids, ["1", "g1"]);
 });

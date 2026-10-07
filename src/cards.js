@@ -2,11 +2,11 @@
 import { $, escapeHtml, plural } from "./util.js";
 import { currentProject, persist, saveWorkspace, sourceCode, isOwnWork, recordActivity, clearAiAnalysis } from "./state.js";
 import { renderActivityList } from "./workspace.js";
-import { renderInsights } from "./judgment.js";
+import { renderInsights } from "./insights.js";
 import { approvedCards } from "./library.js";
 import { originOf } from "./origins.js";
 import { getText } from "./db.js";
-import { quoteInPages, shortCitation } from "./records.js";
+import { cardLocation, quoteInPages, shortCitation } from "./records.js";
 import { projectEdges } from "./pipeline.js";
 import { relationTypes, describeRelation, shortText } from "./relations.js";
 
@@ -27,10 +27,11 @@ export function cardHtml(item, index, citation = "", relations = "") {
     <article class="study-card evidence-card ${escapeHtml(item.state)} ${item.editing ? "editing" : ""} ${item.superseded ? "superseded" : ""}" data-id="${escapeHtml(item.id)}">
       <div class="card-top"><div>${originBadge(item.origin)}${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}${item.superseded ? ` <span class="superseded-tag" title="From an earlier version of your hypothesis">superseded</span>` : ""}</div><div><span class="card-index">${String(index + 1).padStart(2, "0")}</span><button class="card-edit" data-card-edit type="button">${item.editing ? "Done" : "Edit"}</button></div></div>
       <div class="card-prompt"><p class="card-label">CLAIM</p><p class="card-question">${escapeHtml(item.claim)}</p><textarea class="question" data-field="claim" aria-label="Edit claim">${escapeHtml(item.claim)}</textarea></div>
-      <div class="card-quote"><span class="quote-mark">“</span><p>${escapeHtml(item.quote)}</p><textarea class="answer" data-field="quote" aria-label="Edit quote">${escapeHtml(item.quote)}</textarea>
-        <small class="card-location">${escapeHtml(item.location)}</small>
-        <span class="quote-badge ${item.quoteMissing ? "" : "hidden"}" title="This quote no longer appears word-for-word in the stored source text.">⚠ Quote not found in source</span>
-      </div>
+      ${item.quotes.map((quote, number) => `<div class="card-quote" data-quote="${number}"><span class="quote-mark">“</span><p>${escapeHtml(quote.text)}</p><textarea class="answer" data-field="quote" data-quote-index="${number}" aria-label="Edit quote ${number + 1}">${escapeHtml(quote.text)}</textarea>
+        <small class="card-location">${escapeHtml(quote.location)}</small>
+        <span class="quote-badge ${quote.missing ? "" : "hidden"}" title="This quote no longer appears word-for-word in the stored source text.">⚠ Quote not found in source</span>
+      </div>`).join("")}
+      <div class="card-note-wrap">${item.note ? `<p class="card-note">✎ ${escapeHtml(item.note)}</p>` : ""}<textarea class="note-input" data-field="note" aria-label="Your note" placeholder="Add your own note…">${escapeHtml(item.note || "")}</textarea></div>
       ${relations}
       <div class="card-actions">
         <button class="reject ${item.state === "rejected" ? "chosen" : ""}" data-action="reject">${item.state === "rejected" ? "↶ Restore" : "× Reject"}</button>
@@ -41,14 +42,17 @@ export function cardHtml(item, index, citation = "", relations = "") {
 
 // Checks an edited quote against the source's stored text. Sources saved before
 // full text was kept have nothing to check against, so they get no badge.
-async function recheckQuote(item, article) {
+async function recheckQuote(item, index, block) {
+  const quote = item.quotes[index];
   const stored = await getText(item.sourceId).catch(() => null);
-  const missing = Boolean(stored) && !quoteInPages(item.quote, stored.pages);
-  if (missing === Boolean(item.quoteMissing)) return;
-  item.quoteMissing = missing;
-  article.querySelector(".quote-badge").classList.toggle("hidden", !missing);
+  const missing = Boolean(stored) && !quoteInPages(quote.text, stored.pages);
+  if (missing === Boolean(quote.missing)) return;
+  if (missing) quote.missing = true; else delete quote.missing;
+  block.querySelector(".quote-badge").classList.toggle("hidden", !missing);
   persist();
 }
+
+const editSnapshots = new Map(); // card id -> its text when Edit was opened
 
 export function renderCards() {
   const project = currentProject();
@@ -74,20 +78,29 @@ export function renderCards() {
   const findCard = node => cards.find(candidate => candidate.id === +node.closest("article").dataset.id);
   $("#cards-grid").querySelectorAll("textarea").forEach(node => node.addEventListener("input", event => {
     const item = findCard(event.target);
-    item[event.target.dataset.field] = event.target.value;
+    if (event.target.dataset.field === "quote") item.quotes[+event.target.dataset.quoteIndex].text = event.target.value;
+    else if (event.target.dataset.field === "note") item.note = event.target.value;
+    else { item.claim = event.target.value; delete item.short; } // the AI headline no longer matches an edited claim
     clearAiAnalysis(); saveWorkspace(); renderInsights();
-    if (event.target.dataset.field === "quote") recheckQuote(item, event.target.closest("article"));
+    if (event.target.dataset.field === "quote") recheckQuote(item, +event.target.dataset.quoteIndex, event.target.closest(".card-quote"));
   }));
   $("#cards-grid").querySelectorAll("[data-card-edit]").forEach(button => button.addEventListener("click", () => {
     const item = findCard(button);
     item.editing = !item.editing;
+    // Log an edit once, when the card is closed with a changed claim, quote, or note.
+    const snapshot = JSON.stringify([item.claim, item.quotes.map(quote => quote.text), item.note]);
+    if (item.editing) editSnapshots.set(item.id, snapshot);
+    else if (editSnapshots.has(item.id)) {
+      if (editSnapshots.get(item.id) !== snapshot) { recordActivity("edit", "Edited a card", item.short || item.claim.slice(0, 80)); renderActivityList(); }
+      editSnapshots.delete(item.id);
+    }
     persist(); renderCards();
   }));
   $("#cards-grid").querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
     const item = findCard(button);
     const next = button.dataset.action === "approve" ? "approved" : "rejected";
     item.state = item.state === next ? "pending" : next;
-    recordActivity("decision", item.state === "pending" ? "Reopened a card" : `${item.state === "approved" ? "Saved" : "Rejected"} a card`, item.location);
+    recordActivity("decision", item.state === "pending" ? "Reopened a card" : `${item.state === "approved" ? "Saved" : "Rejected"} a card`, cardLocation(item));
     clearAiAnalysis(); saveWorkspace(); renderCards(); updateProgress(); renderInsights(); renderActivityList();
   }));
 }

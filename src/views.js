@@ -6,6 +6,7 @@ import { renderSourceLibrary, renderCardsLibrary } from "./library.js";
 import { renderPrivacy } from "./privacy.js";
 import { ob } from "./onboarding.js";
 import { currentTab } from "./project-shell.js";
+import { webShown } from "./web/web-view.js";
 
 export const viewSections = { projects: "#projects-view", onboarding: "#onboarding-view", workspace: "#workspace", library: "#library-view", cards: "#cards-view", privacy: "#privacy-view" };
 export let currentView = "workspace";
@@ -20,6 +21,7 @@ export function showView(view) {
   if (view === "library") renderSourceLibrary();
   if (view === "cards") { renderCardsLibrary(); updateProgress(); }
   if (view === "privacy") renderPrivacy();
+  if (view === "workspace" && currentTab === "web") webShown();
   window.scrollTo({ top: 0 });
 }
 export function updateViewContext(view) {

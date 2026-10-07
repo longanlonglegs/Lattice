@@ -104,11 +104,19 @@ const cardsSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["claim", "quote", "page"],
+        required: ["claim", "short", "quotes"],
         properties: {
           claim: { type: "string" },
-          quote: { type: "string" },
-          page: { type: "string" }
+          short: { type: "string" },
+          quotes: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["quote", "page"],
+              properties: { quote: { type: "string" }, page: { type: "string" } }
+            }
+          }
         }
       }
     }

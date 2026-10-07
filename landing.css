@@ -3,3 +3,5 @@
 
 /* Only show the text caret in genuinely editable fields */
 body{caret-color:transparent}input,textarea,select,[contenteditable]:not([contenteditable="false"]){caret-color:auto}
+.web-shot{max-width:1120px;margin:0 auto 70px;padding:0 30px}.web-shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(41,40,35,.14)}.web-shot figcaption{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 20px;margin-top:16px;color:var(--muted);font-size:12px}.legend{display:inline-flex;align-items:center;gap:7px}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--c)}.legend.line i{width:22px;height:0;border-radius:0;border-top:2px solid var(--c);background:none}.legend.dashed i{border-top-style:dashed}code{font:12px "DM Mono"}
+@media(max-width:700px){.web-shot{padding:0 16px}}

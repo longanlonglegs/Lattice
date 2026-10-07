@@ -22,14 +22,30 @@ test("normalizeForMatch folds compatibility characters and keeps non-Latin lette
 
 test("verifiedCards keeps a card whose quote is in the source", () => {
   const [result] = verifiedCards([card()], pages);
-  assert.deepEqual(result, card());
+  assert.deepEqual(result, { claim: card().claim, short: "", quotes: [{ quote: card().quote, page: "p. 2" }] });
+});
+
+test("verifiedCards keeps up to 3 verified quotes per card, dropping invented and repeated ones", () => {
+  const long = [{ label: "p. 1", text: "Copper was found in the rinse water. Copper speeds up vitamin C oxidation. Iron does the same at higher levels. Deionised water removed the effect entirely." }];
+  const quotes = [
+    { quote: "Copper was found in the rinse water.", page: "p. 1" },
+    { quote: "A sentence the source never contained at all.", page: "p. 1" },
+    { quote: "Copper was found in the rinse water.", page: "p. 1" },
+    { quote: "Copper speeds up vitamin C oxidation.", page: "p. 1" },
+    { quote: "Iron does the same at higher levels.", page: "p. 1" },
+    { quote: "Deionised water removed the effect entirely.", page: "p. 1" }
+  ];
+  const [result] = verifiedCards([{ claim: "Copper and iron speed up vitamin C oxidation.", quotes }], long);
+  assert.deepEqual(result.quotes.map(quote => quote.quote), ["Copper was found in the rinse water.", "Copper speeds up vitamin C oxidation.", "Iron does the same at higher levels."]);
+  assert.deepEqual(verifiedCards([{ claim: "A claim.", quotes: [{ quote: "A sentence the source never contained at all.", page: "p. 1" }] }], long), []);
+  assert.deepEqual(verifiedCards([{ claim: "A claim.", quotes: [] }], long), []);
 });
 
 test("verifiedCards accepts quotes that differ only in case, spacing, or punctuation", () => {
   const quote = "dissolved   oxygen not temperature — controlled the first 72 hours of vitamin c loss";
   const result = verifiedCards([card({ quote })], pages);
   assert.equal(result.length, 1);
-  assert.equal(result[0].quote, quote.replace(/\s+/g, " "));
+  assert.equal(result[0].quotes[0].quote, quote.replace(/\s+/g, " "));
 });
 
 test("verifiedCards drops paraphrased or invented quotes", () => {
@@ -52,9 +68,9 @@ test("verifiedCards accepts a quote that skips text with an ellipsis, in order",
 test("verifiedCards accepts skipped sentences and marks the gap with an ellipsis", () => {
   const long = [{ label: "p. 1", text: "Copper was found in the rinse water. The bottles were relabelled afterwards. Copper speeds up vitamin C oxidation." }];
   const [result] = verifiedCards([card({ quote: "Copper was found in the rinse water. Copper speeds up vitamin C oxidation.", page: "p. 1" })], long);
-  assert.equal(result.quote, "Copper was found in the rinse water. … Copper speeds up vitamin C oxidation.");
+  assert.equal(result.quotes[0].quote, "Copper was found in the rinse water. … Copper speeds up vitamin C oxidation.");
   const [adjacent] = verifiedCards([card({ quote: "The bottles were relabelled afterwards. Copper speeds up vitamin C oxidation.", page: "p. 1" })], long);
-  assert.equal(adjacent.quote, "The bottles were relabelled afterwards. Copper speeds up vitamin C oxidation.");
+  assert.equal(adjacent.quotes[0].quote, "The bottles were relabelled afterwards. Copper speeds up vitamin C oxidation.");
 });
 
 test("verifiedCards keeps abbreviations such as Fig. inside one piece", () => {
@@ -73,20 +89,20 @@ test("verifiedCards drops cards with an empty claim", () => {
 
 test("verifiedCards corrects a wrong page label to the page the quote is on", () => {
   const [result] = verifiedCards([card({ page: "p. 1" })], pages);
-  assert.equal(result.page, "p. 2");
+  assert.equal(result.quotes[0].page, "p. 2");
   const [unknown] = verifiedCards([card({ page: "p. 99" })], pages);
-  assert.equal(unknown.page, "p. 2");
+  assert.equal(unknown.quotes[0].page, "p. 2");
 });
 
 test("verifiedCards prefers the claimed page when the quote appears on several", () => {
   const repeated = [{ label: "p. 1", text: "The same sentence appears on both of these pages." }, { label: "p. 2", text: "The same sentence appears on both of these pages." }];
   const [result] = verifiedCards([card({ quote: "The same sentence appears on both of these pages.", page: "p. 2" })], repeated);
-  assert.equal(result.page, "p. 2");
+  assert.equal(result.quotes[0].page, "p. 2");
 });
 
-test("verifiedCards trims the claim and returns only claim, quote, and page", () => {
+test("verifiedCards trims the claim and returns only claim, short, and quotes", () => {
   const [result] = verifiedCards([card({ claim: "  A claim.  ", extra: "dropped" })], pages);
-  assert.deepEqual(Object.keys(result), ["claim", "quote", "page"]);
+  assert.deepEqual(Object.keys(result), ["claim", "short", "quotes"]);
   assert.equal(result.claim, "A claim.");
 });
 

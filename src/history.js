@@ -2,7 +2,7 @@
 import { $, escapeHtml, toast, relativeTime } from "./util.js";
 import { card, currentProject, nextCardId, persist, recordActivity, saveWorkspace } from "./state.js";
 import { renderProject } from "./workspace.js";
-import { sentenceGuesses, wordDiff } from "./records.js";
+import { cardLocation, sentenceGuesses, wordDiff } from "./records.js";
 
 export const latestVersion = project => project.versions.at(-1) || null;
 export const isHypothesis = item => item.origin === "hypothesis";
@@ -43,7 +43,7 @@ export async function recordVersion(project, { note = "", linkedCardIds = [] } =
   save(project);
   if (!hypothesisChanged || !version.hypothesis) return { version, guesses: 0 };
   const result = await splitGuesses(project, version.hypothesis);
-  project.cards.push(...result.guesses.map(item => ({ ...card(nextCardId(), item.guess, item.quote, `Hypothesis v${version.number}`, "", "hypothesis"), versionId: version.id })));
+  project.cards.push(...result.guesses.map(item => ({ ...card(nextCardId(), item.guess, [{ text: item.quote, location: `Hypothesis v${version.number}` }], "", "hypothesis"), versionId: version.id })));
   save(project);
   return { version, guesses: result.guesses.length, method: result.method };
 }
@@ -104,7 +104,7 @@ export function renderHistory() {
       ${fieldHtml("QUESTION", previous?.question, version.question, !previous)}
       ${fieldHtml("HYPOTHESIS", previous?.hypothesis, version.hypothesis, !previous)}
       ${guesses.length ? `<p class="rail-label">GUESSES</p><ul class="version-list">${guesses.map(item => `<li>${escapeHtml(item.claim)}${item.superseded ? ` <span class="superseded-tag">superseded</span>` : ""}</li>`).join("")}</ul>` : ""}
-      ${linked.length ? `<p class="rail-label">LINKED EVIDENCE</p><ul class="version-list">${linked.map(item => `<li>${escapeHtml(item.claim)} <small>${escapeHtml(item.location)}</small></li>`).join("")}</ul>` : ""}
+      ${linked.length ? `<p class="rail-label">LINKED EVIDENCE</p><ul class="version-list">${linked.map(item => `<li>${escapeHtml(item.claim)} <small>${escapeHtml(cardLocation(item))}</small></li>`).join("")}</ul>` : ""}
     </li>`;
   }).join("") : `<li class="version-empty">No versions yet. Record one to start a history of how your question and hypothesis change.</li>`;
 }

@@ -4,7 +4,7 @@ import { currentProject } from "./state.js";
 import { currentView } from "./views.js";
 import { hasUnrecordedChanges, latestVersion } from "./history.js";
 import { pipelineStatus, schedulePipeline } from "./pipeline.js";
-import { renderWeb } from "./web/web-view.js";
+import { renderWeb, webShown } from "./web/web-view.js";
 
 export const projectTabs = ["web", "cards", "sources", "history", "insights"];
 export let currentTab = "web";
@@ -18,6 +18,7 @@ export function showTab(tab) {
     if (button.dataset.projectTab === currentTab) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
   });
   if (currentView === "workspace") history.replaceState(null, "", `#workspace/${currentTab}`);
+  if (currentTab === "web") webShown();
   if ($(".project-tabs").getBoundingClientRect().top < 0) $(".project-tabs").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 

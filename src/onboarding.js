@@ -4,7 +4,7 @@ import { defaultTitle, projectColours, colourKeys, newProject, workspace, normal
 import { openProject } from "./projects.js";
 import { currentView, showView } from "./views.js";
 import { renderProject } from "./workspace.js";
-import { ingestSource, readPdf } from "./ingest.js";
+import { queueSource, readPdf } from "./ingest.js";
 import { origins, pickableOrigins, extractionMode } from "./origins.js";
 import { pdfInfoMeta } from "./records.js";
 import { recordVersion } from "./history.js";
@@ -12,7 +12,7 @@ import { forgetProject } from "./pipeline.js";
 
 const originSelect = item => `<select class="work-origin" data-work-origin="${item.id}" aria-label="Where is ${escapeHtml(item.title)} from?">${pickableOrigins.map(key => `<option value="${key}" ${key === item.origin ? "selected" : ""}>${origins[key].label}</option>`).join("")}</select>`;
 
-export const ob = { mode: "create", step: 1, projectId: null, colour: "sage", work: [], busy: false };
+export const ob = { mode: "create", step: 1, projectId: null, colour: "sage", work: [] };
 
 export function renderColourPicker() {
   $("#ob-colours").innerHTML = colourKeys.map(key => `<button class="colour-swatch" type="button" role="radio" aria-checked="${key === ob.colour}" aria-label="${key}" title="${key[0].toUpperCase()}${key.slice(1)}" data-colour="${key}" style="--swatch:${projectColours[key]}"></button>`).join("");
@@ -41,7 +41,6 @@ export function renderOnboarding() {
   $("#ob-error").textContent = "";
 }
 export function openOnboarding(mode, projectId = null) {
-  if (ob.busy) return;
   ob.mode = mode;
   ob.step = 1;
   ob.work = [];
@@ -66,7 +65,6 @@ export function openOnboarding(mode, projectId = null) {
   $("#ob-delete").disabled = onlyProject;
   $("#ob-danger-help").textContent = onlyProject ? "This is your only project. Create another one before deleting it." : "Removes the project, its sources, cards, and activity from this browser. This can’t be undone unless you have a backup.";
   $("#ob-form").classList.remove("hidden");
-  $("#ob-processing").classList.add("hidden");
   $("#ob-cancel").disabled = false;
   renderColourPicker(); renderWorkList(); renderOnboarding();
   showView("onboarding");
@@ -132,38 +130,17 @@ export async function createProject() {
   recordActivity("setup", "Created the project", "", project);
   persist(); renderProject();
   // Setup records version 1; its hypothesis guesses arrive in the background.
-  const firstVersion = recordVersion(project, { note: "Starting point, from project setup" });
+  recordVersion(project, { note: "Starting point, from project setup" });
+  // Setup doesn't wait for your work: the project opens straight away and each item is read in the import queue.
   const work = ob.work.filter(item => item.status !== "error" && item.status !== "reading" && item.pages.length);
-  if (!work.length) { openProject(project.id); toast(`${project.title} is ready. Use + Add evidence to add your first source.`); return; }
-
-  ob.busy = true;
-  $("#ob-cancel").disabled = true;
-  $("#ob-form").classList.add("hidden");
-  $("#ob-processing").classList.remove("hidden");
-  $("#ob-processing-title").textContent = "Reading your work…";
-  $("#ob-open").disabled = true;
-  const rows = work.map(item => ({ ...item, note: "Waiting…" }));
-  const renderRows = () => { $("#ob-processing-list").innerHTML = rows.map(row => `<li class="work-item ${row.state || ""}"><span class="kind-chip own-work">${row.kind === "pdf" ? "PDF" : "TXT"}</span><div><strong>${escapeHtml(row.title)}</strong><small>${escapeHtml(row.note)}</small></div></li>`).join(""); };
-  renderRows();
-  let total = 0;
-  for (const row of rows) {
-    row.note = row.origin === "draft" ? "Extracting the claims your draft makes…" : row.origin === "external" ? "Extracting evidence…" : "Extracting your findings and conclusions…"; row.state = "working"; renderRows();
-    const label = origins[row.origin].label;
-    const ownWork = row.origin !== "external";
-    const source = { id: crypto.randomUUID(), title: row.title, kind: ownWork ? "work" : row.kind, origin: row.origin, detail: row.kind === "pdf" ? `${plural(row.pages.length, "page")} · ${label.toLowerCase()}` : `${label} · pasted text`, ...(row.kind === "text" ? { capturedText: row.text } : {}), ...(row.info && !ownWork ? { meta: pdfInfoMeta(row.info) } : {}) };
-    const result = await ingestSource(project, source, row.pages, { mode: extractionMode(row.origin), activity: ["import", `Added ${label.toLowerCase()}: ${row.title}`, source.detail] });
-    total += result.cards.length;
-    row.state = result.cards.length ? "done" : "error";
-    row.note = result.cards.length ? `${plural(result.cards.length, "card")} · ${result.method === "ai" ? "AI extraction" : `basic extraction (${result.reason})`}` : "No usable findings found";
-    renderRows();
+  for (const item of work) {
+    const label = origins[item.origin].label;
+    const ownWork = item.origin !== "external";
+    const source = { id: crypto.randomUUID(), title: item.title, kind: ownWork ? "work" : item.kind, origin: item.origin, detail: item.kind === "pdf" ? `${plural(item.pages.length, "page")} · ${label.toLowerCase()}` : `${label} · pasted text`, ...(item.kind === "text" ? { capturedText: item.text } : {}), ...(item.info && !ownWork ? { meta: pdfInfoMeta(item.info) } : {}) };
+    queueSource(project, source, item.pages, { mode: extractionMode(item.origin), activity: ["import", `Added ${label.toLowerCase()}: ${item.title}`, source.detail] });
   }
-  await firstVersion;
-  ob.busy = false;
-  $("#ob-cancel").disabled = false;
-  $("#ob-processing-title").textContent = total ? `${plural(total, "evidence card")} ready` : "Your project is ready";
-  $("#ob-processing-help").textContent = total ? "Review them in the project: save the useful ones and reject anything that’s off." : "Lattice couldn’t pull findings from this work. You can add more with + Add evidence.";
-  $("#ob-open").disabled = false;
-  $("#ob-open").onclick = () => openProject(project.id);
+  openProject(project.id);
+  toast(work.length ? `${project.title} is ready. Your work is being read in the background; cards appear as each item finishes.` : `${project.title} is ready. Use + Add evidence to add your first source.`);
 }
 
 export function deleteProject() {

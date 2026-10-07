@@ -4,6 +4,7 @@ import { workspace, normalizeProject, projectsByRecent, persist, sourceKind, rec
 import { openProject } from "./projects.js";
 import { renderProject, sourceByline, sourceTitle } from "./workspace.js";
 import { originBadge } from "./cards.js";
+import { cardLocation } from "./records.js";
 
 export function sourceHref(source) {
   const candidate = String(source.originalUrl || (source.kind === "web" ? source.detail : source.title) || "").trim();
@@ -52,11 +53,11 @@ export function renderCardsLibrary() {
   filter.value = workspace.projects.some(project => project.id === previous) || previous === "all" ? previous : "all";
   const cards = approvedCards(filter.value);
   $("#approved-cards-list").innerHTML = cards.length ? cards.map(item => `
-    <article class="saved-card" data-project-id="${escapeHtml(item.projectId)}" data-card-id="${escapeHtml(item.id)}"><div class="saved-meta"><span>${escapeHtml(item.projectTitle)}</span>${originBadge(item.origin)} ${escapeHtml(item.location)}</div><div><h3>${escapeHtml(item.claim)}</h3><p>“${escapeHtml(item.quote)}”</p></div><button type="button" data-remove-card>Remove</button></article>`).join("") : `<div class="empty-cards"><strong>No saved evidence yet.</strong><p>Save a useful card in Workspace and it will appear here.</p></div>`;
+    <article class="saved-card" data-project-id="${escapeHtml(item.projectId)}" data-card-id="${escapeHtml(item.id)}"><div class="saved-meta"><span>${escapeHtml(item.projectTitle)}</span>${originBadge(item.origin)} ${escapeHtml(cardLocation(item))}</div><div><h3>${escapeHtml(item.claim)}</h3>${item.quotes.map(quote => `<p>“${escapeHtml(quote.text)}”</p>`).join("")}</div><button type="button" data-remove-card>Remove</button></article>`).join("") : `<div class="empty-cards"><strong>No saved evidence yet.</strong><p>Save a useful card in Workspace and it will appear here.</p></div>`;
   $("#approved-cards-list").querySelectorAll("[data-remove-card]").forEach(button => button.addEventListener("click", () => {
     const item = button.closest(".saved-card");
     const project = workspace.projects.find(candidate => candidate.id === item.dataset.projectId);
     const entry = project?.cards.find(candidate => candidate.id === +item.dataset.cardId);
-    if (entry) { entry.state = "pending"; recordActivity("decision", "Removed a card from saved evidence", entry.location, normalizeProject(project)); persist(); renderProject(); toast("Card removed from saved evidence."); }
+    if (entry) { entry.state = "pending"; recordActivity("decision", "Removed a card from saved evidence", cardLocation(entry), normalizeProject(project)); persist(); renderProject(); toast("Card removed from saved evidence."); }
   }));
 }

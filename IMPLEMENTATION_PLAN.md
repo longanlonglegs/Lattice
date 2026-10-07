@@ -137,6 +137,7 @@ Opening a project lands on its **idea web**: a 2D, physics-driven network of eve
 - **Server:** extraction modes are `content` / `link` / `experiment` / `draft`, and `work` is still accepted as an alias for `experiment`. The schema returns `{ claim, quote, page }`. The stress-test now receives origins of "external source", "researcher's own experiment" or "researcher's own draft".
 - **Anki** is gone from the app and README. `landing.html` still mentions it until its Part 10 rewrite.
 - **Claim style revised (2026-10-06, user feedback):** claims are now general scientific statements: subject, effect, conditions and numbers, present tense, hedging kept, with no "the study shows" or "the repeat run". A claim may combine several passages about one idea, and each card keeps the single quote that best supports it (the user chose this over several quotes or no quote). The shared rules in `cardRules` (`server/prompts.js`) include good/bad examples from an unrelated field (batteries) so the model doesn't copy the demo, plus a self-check. The experiment prompt turns an anomaly and its suspected cause into one causal claim. Expect fewer, stronger cards; Experiment 3 now gives 3–4 cards instead of 7.
+- **Main-conclusion cards (2026-10-07, user feedback):** cards were too fine-grained: one per measurement, about 55 for the demo, which made the web messy. `cardRules` now asks for the material's **main conclusions**, with related findings grouped into one claim (several conditions of one comparison, a ranking, a trend and its numbers, a result and its explanation). That usually means 1–2 cards for a short source and 2–4 for a full paper. It has no hard number in the prompt; `MAX_CARDS` was raised to 12 as a runaway backstop only. The examples are the user's RL ranking example, a battery temperature series, and an anomaly with its cause. The experiment prompt asks for one card per effect studied, and the draft prompt for its main arguments. Cards now hold **1–3 quotes** (`quotes: [{ text, location }]`, schema `quotes: [{ quote, page }]`), each verified separately; old single-quote cards are migrated. Hypothesis splitting is unchanged (still granular). On the demo: 17 cards across all 8 files (S1: 1, S2: 3, S3: 3, S4: 1, S5: 1, lab notebook: 3, Experiment 3: 1, draft: 4), with no study-scope or advice cards.
 - **Standalone-claim rule (2026-10-06, user feedback):** every claim must pass an "I claim that …" test, and another study must be able to support or contradict it. `cardRules` now lists what is never a card: what a study did, measured, or didn't test ("dissolved oxygen was not measured"); study scope and limitations as such; advice on how to do research; and measurement precision. Limitations go inside the claim they limit, phrased about the world ("has not been confirmed"), not about the study. Checked on the demo: S1–S4, Experiment 3, and the draft no longer produce "was not measured / not tested" or lab-advice cards.
 - **Quote check is now sentence-based:** every sentence of a quote (and each part around a "…") must appear word-for-word, in order, on one page. The server inserts " … " wherever the model skipped text. The browser's re-check (`quoteInPages`) uses the same rule.
 - **Verified** with real AI calls: the demo's Haddad PDF (external, 8 cards), the Experiment 3 paste (experiment, 7 cards) and `draft-discussion.txt` (draft, 7 cards, e.g. "The draft argues that temperature is the dominant factor…") each produced claim cards with the right badge. Old flashcards showed migrated, and no "Anki" text remains in the app.
@@ -278,27 +279,69 @@ Opening a project lands on its **idea web**: a 2D, physics-driven network of eve
   - **300-idea test:** 304 synthetic ideas and 302 relations injected into the stores (no AI) rendered and ran at ~200 animation frames per second while settling. That figure comes from headless Chrome, so treat it as a rough smoothness check, not a real frame rate.
   - No console errors.
 
+*Redesign (2026-10-07, user feedback):* the web now shows **cards, not shapes**, and is laid out around the hypothesis.
+- **Cards** are HTML on a pannable, zoomable canvas (`#web-world`, transformed by d3-zoom), with the lines in an SVG layer underneath. An evidence card (210 px) shows its origin, short citation, and a **short AI-written headline** (a new `short` field from extraction, at most about 12 words; it is dropped if you edit the claim, and the card then shows the shortened claim). Clicking opens the full claim, every quote, and every relation in the side panel.
+- **Hypothesis guesses are hubs:** large (300 px), dark cards with serif text and a "▲ n for / ▼ n against" tally, fixed evenly on a **ring** in the middle (drag to move, double-click to send back).
+- **Organised physics:** each evidence card's *home* is the guess it has the strongest drawn link to. A hub's evidence fans out on an arc facing away from the centre, in two staggered rows. Evidence with no hypothesis link sits in an outer band, grouped by source. New cards start at their spot. A rectangle-collision force keeps cards from overlapping (0 overlaps on the demo).
+- **Fewer random connections** (user's choice: rule-based, both ends):
+  - *Pipeline:* every idea is always compared with every current hypothesis guess. Beyond that, only its **3** nearest ideas from other sources (was 8). Demo: 66 pairs judged instead of 300+.
+  - *Web:* every link to a hypothesis guess is drawn. A link between two pieces of evidence is drawn only if it is contradicts / same / explains with confidence ≥ 0.8, or if one card has no hypothesis link (then its strongest), with at most 2 per card (`visibleEdges` in `src/relations.js`). Links to hubs other than a card's home hub are drawn faintly and light up on hover.
+  - The rest are listed in the side panel ("not drawn"), and **Show all connections** draws everything. Demo: 43 of 63 relations drawn.
+- **Verified** in Chrome on the rebuilt demo (21 ideas): cards with headline text; 4 distinct hubs; no overlaps; Show all connections went 43 → 63; the side panel listed all relations; a dragged card stayed pinned after a reload; a reload made 0 embed/relate calls; no console errors.
+
 ---
 
-## Part 8 — Annotations
+## Part 8 — Annotations ✅ Done 2026-10-07
 **Goal:** your own marks on the web.
 - **Notes on ideas:** add or edit a note in the node side panel; a small note icon on annotated nodes; notes also show in the Cards tab.
 - **Sticky notes:** double-click empty canvas (or a toolbar button) to create; drag, edit, colour, delete. They take part in pan/zoom but not in the physics. Stored in `annotations`.
 
 **Done when:** notes and stickies persist across reloads, export in the Markdown/backup, and don't disturb the layout.
 
+*As built:*
+- **Notes on ideas** use each card's existing `note` field.
+  - **Web:** edit the note in the side panel ("YOUR NOTE"). The panel isn't rebuilt while you type, so a background pipeline update can't steal focus.
+  - Annotated cards show a ✎ in their header, with the note as its tooltip.
+  - **Cards tab:** the note shows under the quotes, and Edit mode adds a note box.
+- **Sticky notes** are stored on the project as `project.stickies: [{ id, x, y, text, colour, createdAt }]`, not in the `annotations` store. Like versions, this means saving, backup, restore, and project delete need no extra code; the `annotations` store is still unused.
+  - **Create:** double-click empty canvas (the sticky appears at the pointer with the cursor in it), or **+ Sticky note** (in the centre of the view).
+  - **Edit:** type straight into it. On hover, four colours (yellow, pink, green, blue) and × to delete appear; × asks first if the note has text.
+  - Drag a sticky by its edge. Stickies pan and zoom with the web, count towards **Fit to view**, and are not part of the physics.
+- **Markdown export:** card notes as before (`Note: …`), plus a "Sticky notes" section.
+- **Fixed on the way:** dragging a card while zoomed in or out drifted away from the pointer, because d3-drag's default subject mixed world and screen coordinates. Cards and stickies now drag from the raw pointer position.
+- **Verified** in Chrome on the demo project (no AI calls):
+  - At 43% zoom a dragged card ended exactly under the pointer.
+  - Typing a note kept focus, and the card got its ✎.
+  - Double-clicking empty canvas created a focused sticky; recolouring and dragging it worked.
+  - Adding two stickies moved no cards.
+  - After a reload, the note and both stickies (text, colour, position) were still there, and the Cards tab showed the note and edited it.
+  - The Markdown export and the backup contained both. Deleting a sticky worked. No console errors.
+
 ---
 
-## Part 9 — Insights: the old Judgment, split
+## Part 9 — Insights: the old Judgment, split ✅ Done 2026-10-08
 **Goal:** keep the judgment features where they make sense.
 - **Web side panel → "Needs attention"** (`src/web/attention.js`): open contradictions (click → zoom to the pair); hypothesis guesses with no supporting or contradicting evidence yet; draft claims with no supporting evidence (this is the draft check from C4). Each item links into the web.
 - **Insights tab** (`src/insights.js`, replacing `src/judgment.js`): counts by origin and by relation type; rule-based suggestions rewritten around the web (for example "3 hypothesis guesses have no evidence"); the **AI stress-test**, updated to receive hypothesis guesses and the strongest edges as well as cards, still behind its one-time consent checkbox.
 
 **Done when:** a seeded project shows its contradiction and its unsupported draft claim in "Needs attention", clicking them focuses the web, and the stress-test runs with the new inputs.
 
+*As built:*
+- **Needs attention** (`src/web/attention.js`, pure logic in `needsAttention` in `src/relations.js`): a panel over the left of the web, opened from **⚑ Needs attention** in the toolbar, whose badge shows the count.
+  - **Contradictions between ideas**, strongest first. This **excludes evidence against a hypothesis guess**: the first demo run listed 28, mostly evidence against guesses, which the hub cards already count as "▼ against". Without them it lists 13 that need a decision, such as the draft against the evidence and Okafor against Sato. Clicking one selects the first card, keeps both lit, and zooms to fit the pair beside the side panel (`focusPair`).
+  - **Guesses with no evidence yet:** a current guess with no supports, contradicts, or same link to evidence.
+  - **Draft claims nothing supports:** no supports-towards-the-draft or same link from an external source or experiment.
+  - Clicking a guess or draft claim selects it and centres the web on it.
+- **Insights** (`src/insights.js`, which replaces `src/judgment.js`):
+  - Counts of ideas by origin (4 tiles) and of relations by type.
+  - Suggestions now include "Resolve N contradictions", "N hypothesis guesses have no evidence", and "N draft claims lack support". These open the Web tab with Needs attention.
+  - The stress-test now sends each card's claim with its quotes, the current guesses (`hypothesis_guesses`), and up to 30 of the strongest relations among them. The server validates them (`validGuesses`, `validRelations`), and `analysisPrompt` treats relations as leads to check. Tensions may cite guess ids. The consent text was updated.
+  - Insights refreshes as relations arrive, without rescheduling the pipeline (`renderInsights({ tabs: false })`).
+- **Verified** in Chrome on the demo (real AI): 13 contradictions and 2 unsupported draft claims ("first-order throughout", "DCPIP is accurate"). Clicking a contradiction lit both cards and opened the panel. The Insights suggestion opened Needs attention. The stress-test sent 12 cards, 4 guesses, and 30 relations, and returned tensions matching the answer key (first-order vs biphasic, Q10 ≈ 2 vs oxygen-dependent, temperature vs air exposure, copper, DCPIP bias). No console errors.
+
 ---
 
-## Part 10 — Smaller leftovers (any order, each independently testable)
+## Part 10 — Smaller leftovers (any order, each independently testable) ✅ Done 2026-10-08
 - **Activity trail (O5):** keep the full history in IndexedDB; "Show all" view; log claim edits and version changes.
 - **Per-project export (O6):** JSON export/import of a single project (cards, sources, edges, annotations, versions); Markdown export gains relations and versions.
 - **Extension:** configurable port (from a manifest option or by detecting the tab); store `pendingCapture` in `chrome.storage.session`; delete the unused `lattice-bridge.js`; captures can be tagged with an origin.
@@ -306,6 +349,36 @@ Opening a project lands on its **idea web**: a 2D, physics-driven network of eve
 - **Mobile navigation:** a compact menu for screens under 850 px.
 - **Landing page (after Part 7):** rewrite `landing.html` around the idea web and origin colours; remove the stance-label and Anki claims it still makes; add a screenshot of the web.
 - **Placeholders:** remove the hard-coded "Logan D." user and the dead `•••` buttons (or give them real menus).
+
+*As built:*
+- **Activity trail:** the 30-entry cap is gone; the full history stays on the project (in IndexedDB with it). Question & history shows the latest 8 with **Show all N**. A card edit is logged once ("Edited a card"), when a card closed from Edit mode has a changed claim, quote, or note. Versions were already logged.
+- **One-project export/import** (Privacy & data → *Export or import a single project*):
+  - The `.lattice.json` file holds the project (cards, sources, versions, stickies, notes, layout, activity), its sources' full texts, its embeddings, and its relations.
+  - **Importing always adds a copy with fresh ids** (`remapProjectBundle` in `src/records.js`, tested). New project, source, and card ids; relations, embeddings, texts, layout, and linked cards are re-keyed, and edges flip if the id order changes. The old AI analysis is dropped. The title gets "(imported)" if it is taken.
+  - Texts, embeddings, and relations are written before the project opens, so the pipeline makes **no** new AI calls.
+- **Markdown export** now also has the current hypothesis guesses, a "Relations:" list under each card (label, other idea, rationale), and the question/hypothesis version history.
+- **Extension (0.2.0):**
+  - Host permissions for `localhost`/`127.0.0.1` on any port. The Lattice tab is found by its title (not the landing page), and its address is remembered for next time.
+  - `pendingCapture` lives in `chrome.storage.session`.
+  - The menu has **As an external source / As my experiment / As my draft**, and the app uses that origin's extraction prompt.
+  - `lattice-bridge.js` was deleted.
+  - *Not tested by loading the extension into Chrome* (headless Chrome can't run it here); the app side was tested by posting a capture message with `origin: "experiment"`.
+- **Import queue** (`src/imports.js`):
+  - Link, upload, paste, browser capture, and setup work all become jobs in a corner panel, run one at a time. Each shows *Waiting / Reading PDF / Reading link / Extracting cards*, then the result.
+  - **Cancel** works while waiting or running. It aborts the fetch, or stops between PDF pages, and a cancelled import adds nothing.
+  - The drawer closes as soon as an item is queued. Finished items disappear after 6 s (failed ones after 12 s).
+- **Setup no longer blocks:** Create project opens the project immediately, and your work goes into the queue. The "Reading your work…" screen is gone.
+- **Mobile:** under 850 px a ☰ button in the top bar opens the sidebar as an overlay; choosing anything, or tapping the backdrop, closes it.
+- **Landing page:** rewritten around the idea web ("See how your evidence fits together"), with a screenshot of the demo web (`docs/images/idea-web.png`) and a colour legend. No Anki or stance-label claims remain. It explains what is sent to OpenAI.
+- **Placeholders:** the "Logan D." block and both `•••` buttons are removed.
+- **Also:** the web now re-fits once the layout settles after new cards arrive, so they're on screen.
+- **Verified** in Chrome:
+  - Placeholders gone; "Edited a card" logged; Show all 12/12; the mobile menu opened and closed.
+  - The Markdown export had relations, guesses, and history.
+  - The exported demo project (21 cards, 8 texts, 108 edges) re-imported as a copy with fresh ids and 63 relations, with **0** AI calls.
+  - Setup opened the project in 30 ms while the queue read the work. Two more pastes queued; cancelling the waiting one and then a running one added nothing, while the others finished.
+  - A capture tagged "experiment" was saved as one. The landing page showed the screenshot.
+  - No console errors.
 
 ---
 

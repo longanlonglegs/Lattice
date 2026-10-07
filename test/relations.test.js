@@ -81,3 +81,47 @@ test("embed returns vectors in input order and 503 without a key", async t => {
   withoutKey(t);
   assert.equal((await callRoute(embedTexts, { texts: ["x"] })).status, 503);
 });
+
+test("visibleEdges keeps every hypothesis link and only important or orphan evidence links, at most 2 per card", async () => {
+  const { visibleEdges } = await load();
+  const hypothesis = id => id >= 100;
+  const edge = (a, b, relation, confidence) => ({ id: `${a}|${b}`, a, b, relation, confidence });
+  const edges = [
+    edge(1, 100, "supports", 0.6), edge(2, 100, "contradicts", 0.9), edge(3, 101, "refines", 0.7), // hypothesis links: always
+    edge(1, 2, "supports", 0.95), // both anchored, not important: hidden
+    edge(1, 3, "contradicts", 0.85), edge(1, 4, "same", 0.9), edge(1, 5, "explains", 0.95), // important, but card 1 may only keep 2
+    edge(2, 3, "contradicts", 0.7), // important type, too unsure: hidden
+    edge(6, 7, "supports", 0.65), edge(6, 8, "refines", 0.7), edge(6, 9, "supports", 0.6) // card 6 has no hypothesis link: its 2 strongest
+  ];
+  const shown = new Set(visibleEdges(edges, hypothesis).map(e => e.id));
+  for (const id of ["1|100", "2|100", "3|101"]) assert.ok(shown.has(id), id);
+  assert.ok(!shown.has("1|2"));
+  assert.ok(!shown.has("2|3"));
+  assert.deepEqual(["1|3", "1|4", "1|5"].filter(id => shown.has(id)), ["1|4", "1|5"]);
+  assert.deepEqual(["6|7", "6|8", "6|9"].filter(id => shown.has(id)), ["6|7", "6|8"]);
+});
+
+test("hypothesisPairs pairs every idea with every hypothesis guess", async () => {
+  const { hypothesisPairs } = await load();
+  const pairs = hypothesisPairs([{ id: 5 }, { id: 7 }, { id: 1, hypothesis: true }, { id: 9, hypothesis: true }]);
+  assert.deepEqual(pairs.map(pair => pair.id).sort(), ["1|5", "1|7", "5|9", "7|9"]);
+});
+
+test("needsAttention lists contradictions, guesses without evidence, and unsupported draft claims", async () => {
+  const { needsAttention } = await load();
+  const cards = [
+    { id: 1, origin: "external" }, { id: 2, origin: "experiment" }, { id: 3, origin: "draft" }, { id: 4, origin: "draft" },
+    { id: 10, origin: "hypothesis" }, { id: 11, origin: "hypothesis" }
+  ];
+  const edge = (a, b, relation, confidence = 0.8, direction = "a_to_b") => ({ id: `${a}|${b}`, a, b, relation, confidence, direction });
+  const result = needsAttention(cards, [
+    edge(1, 2, "contradicts", 0.7), edge(1, 3, "contradicts", 0.9), edge(2, 10, "contradicts", 0.95), // between evidence, strongest first; not against a guess
+    edge(1, 3, "supports"), // external supports draft 3
+    edge(2, 4, "supports", 0.8, "b_to_a"), // draft 4 supports the experiment: not support *for* the draft
+    edge(4, 11, "refines") // a refinement is not evidence for or against guess 11
+  ]);
+  assert.deepEqual(result.contradictions.map(e => e.id), ["1|3", "1|2"]);
+  assert.deepEqual(result.unsupportedGuesses.map(c => c.id), [11]);
+  assert.deepEqual(result.unsupportedDrafts.map(c => c.id), [4]);
+  assert.equal(result.total, 4);
+});

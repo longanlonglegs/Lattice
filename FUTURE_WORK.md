@@ -70,7 +70,16 @@ Each suggested reason should cite the cards and quotes it rests on, use only the
 
 - **Ideas from the same source are never compared.** A paper's own claims (or a draft's) don't get relations between them, which keeps the web focused on cross-source connections. Some within-source links (for example a mechanism and the result it explains, both in one paper) are therefore missing.
 - **Changing the relation prompt doesn't re-judge old pairs.** Verdicts are cached by the two claims' wording, so a better prompt only affects new or edited pairs. A possible fix later: store a prompt version on each edge and re-judge when it changes.
-- **The web gets dense with a well-connected project.** The demo's 54 ideas have 180 relations. Hover-highlighting, filters, and search keep it usable, but a "show only the strongest N relations per idea" option or clustering by source may be needed for large projects.
+- **Evidence that bears on several guesses draws long lines across the ring.** Lines to hubs other than a card's home are faint (and light up on hover), but with many guesses the centre can still get busy.
+- **At "Fit to view" the text is small** on a large project; you zoom in to read. A future option: collapse each hub's evidence into a count until you zoom in.
 - **Relating is slow-ish.** Each relate call (20 pairs) takes about 30–60 s with `gpt-5-mini`; three run at once. A first import of many sources keeps the chip busy for a few minutes.
 - **Superseded hypothesis guesses are always hidden from the web.** The plan said "hidden by default"; there is no toggle to show them yet.
 - **The 300-idea smoothness check ran in headless Chrome**, where frame timing isn't representative. Rendering is SVG; switch to canvas if real projects feel slow.
+
+## Parts 9–10: what was left simple
+*Recorded 2026-10-08.*
+
+- **Contradictions can't be dismissed.** Needs attention lists every contradiction between ideas until one side changes; there's no "resolved" or "not relevant" mark yet. The "explain why ideas disagree" idea above would fit here.
+- **The import queue runs one item at a time** and isn't saved: closing the tab drops waiting items (anything finished is already saved).
+- **The extension was not tested inside Chrome** in this session (only the app's side, by simulating its message). Load it unpacked and try a capture from each menu item before relying on it.
+- **The `annotations` and `versions` IndexedDB stores are unused**; stickies and versions live on the project record. They could be dropped in a future database version.

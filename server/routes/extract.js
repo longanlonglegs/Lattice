@@ -1,5 +1,5 @@
 const { sendJson, readJson } = require("../json");
-const { MAX_SOURCE_CHARS, MAX_CARDS } = require("../config");
+const { MAX_SOURCE_CHARS, MAX_CARDS, MAX_QUOTES } = require("../config");
 const { callOpenAI, cardsSchema } = require("../openai");
 const { contentExtractionPrompt, experimentExtractionPrompt, draftExtractionPrompt, linkExtractionPrompt } = require("../prompts");
 
@@ -47,19 +47,32 @@ function capPages(input) {
   return { pages, truncated };
 }
 
+// Returns { quote, page } with the quote as found on the page, or null if it isn't there word-for-word.
+function verifiedQuote(item, normalizedPages) {
+  const pieces = quotePieces(String(item?.quote || "").replace(/\s+/g, " ").trim());
+  if (pieces.map(piece => piece.norm).join("").length < 20) return null;
+  const claimed = normalizedPages.find(page => page.label === item.page);
+  const ordered = claimed ? [claimed, ...normalizedPages.filter(page => page !== claimed)] : normalizedPages;
+  for (const page of ordered) {
+    const located = locateQuote(pieces, page.text);
+    if (located) return { quote: located, page: page.label };
+  }
+  return null;
+}
+
+// Keeps each card's quotes that appear word-for-word (up to 3, no repeats); drops cards left with none.
 function verifiedCards(cards, pages) {
   const normalizedPages = pages.map(page => ({ label: page.label, text: normalizeForMatch(page.text) }));
   return (cards || []).flatMap(item => {
-    const quote = String(item.quote || "").replace(/\s+/g, " ").trim();
-    const pieces = quotePieces(quote);
-    if (pieces.map(piece => piece.norm).join("").length < 20 || !String(item.claim || "").trim()) return [];
-    const claimed = normalizedPages.find(page => page.label === item.page);
-    const ordered = claimed ? [claimed, ...normalizedPages.filter(page => page !== claimed)] : normalizedPages;
-    for (const page of ordered) {
-      const located = locateQuote(pieces, page.text);
-      if (located) return [{ claim: item.claim.trim(), quote: located, page: page.label }];
+    if (!String(item?.claim || "").trim()) return [];
+    const candidates = Array.isArray(item.quotes) ? item.quotes : [{ quote: item.quote, page: item.page }];
+    const quotes = [];
+    for (const candidate of candidates) {
+      const found = verifiedQuote(candidate, normalizedPages);
+      if (found && !quotes.some(existing => existing.quote === found.quote)) quotes.push(found);
     }
-    return [];
+    const short = String(item.short || "").replace(/\s+/g, " ").trim().slice(0, 140);
+    return quotes.length ? [{ claim: item.claim.trim(), short, quotes: quotes.slice(0, MAX_QUOTES) }] : [];
   }).slice(0, MAX_CARDS);
 }
 

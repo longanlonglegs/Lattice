@@ -61,3 +61,55 @@ export function describeRelation(edge, cardId) {
 
 // An edge only counts while both its claims are still worded as they were when it was judged.
 export const edgeIsCurrent = (edge, claimA, claimB) => edge.aText === claimA && edge.bText === claimB;
+
+// ---------- Which links the web shows ----------
+
+// Evidence↔evidence links worth drawing: a contradiction, a repeated claim, or an explanation the model is sure of.
+const IMPORTANT = new Set(["contradicts", "same", "explains"]);
+const IMPORTANT_CONFIDENCE = 0.8;
+const MAX_EVIDENCE_LINKS = 2; // per card
+
+// Every link touching a hypothesis guess is shown. Links between two pieces of evidence are shown when they
+// are important, or when a card has no hypothesis link at all (its strongest ones, so it isn't left floating);
+// either way at most 2 per card. The rest stay listed in the side panel.
+export function visibleEdges(edges, isHypothesis) {
+  const touchesHypothesis = edge => isHypothesis(edge.a) || isHypothesis(edge.b);
+  const anchored = new Set();
+  edges.filter(touchesHypothesis).forEach(edge => { anchored.add(edge.a); anchored.add(edge.b); });
+  const important = edge => IMPORTANT.has(edge.relation) && edge.confidence >= IMPORTANT_CONFIDENCE;
+  const candidates = edges.filter(edge => !touchesHypothesis(edge) && (important(edge) || !anchored.has(edge.a) || !anchored.has(edge.b)))
+    .sort((p, q) => important(q) - important(p) || q.confidence - p.confidence);
+  const used = new Map();
+  const shown = edges.filter(touchesHypothesis);
+  for (const edge of candidates) {
+    if ((used.get(edge.a) || 0) >= MAX_EVIDENCE_LINKS || (used.get(edge.b) || 0) >= MAX_EVIDENCE_LINKS) continue;
+    used.set(edge.a, (used.get(edge.a) || 0) + 1);
+    used.set(edge.b, (used.get(edge.b) || 0) + 1);
+    shown.push(edge);
+  }
+  return shown;
+}
+
+// Pairs every idea with every current hypothesis guess, so links to the hypothesis are never missed
+// just because the wording looks different.
+export function hypothesisPairs(nodes) {
+  const guesses = nodes.filter(node => node.hypothesis);
+  return nodes.filter(node => !node.hypothesis).flatMap(node => guesses.map(guess => ({ ...pairId(node.id, guess.id), similarity: 0 })));
+}
+
+// ---------- Needs attention ----------
+
+// What deserves a look: contradictions between pieces of evidence, drafts included (strongest first; evidence
+// against a hypothesis guess is shown on the guess itself), current hypothesis guesses that no evidence supports,
+// contradicts, or repeats yet, and draft claims that no external source or experiment supports.
+// cards: the web's ideas; edges: their shown-or-not relations (projectEdges).
+export function needsAttention(cards, edges) {
+  const byId = new Map(cards.map(card => [card.id, card]));
+  const other = (edge, id) => byId.get(edge.a === id ? edge.b : edge.a);
+  const touching = id => edges.filter(edge => edge.a === id || edge.b === id);
+  const contradictions = edges.filter(edge => edge.relation === "contradicts" && byId.has(edge.a) && byId.has(edge.b) && byId.get(edge.a).origin !== "hypothesis" && byId.get(edge.b).origin !== "hypothesis").sort((p, q) => q.confidence - p.confidence);
+  const unsupportedGuesses = cards.filter(card => card.origin === "hypothesis" && !touching(card.id).some(edge => ["supports", "contradicts", "same"].includes(edge.relation) && other(edge, card.id)?.origin !== "hypothesis"));
+  const isSupportFor = (edge, id) => edge.relation === "same" || (edge.relation === "supports" && edgeEnds(edge).to === id);
+  const unsupportedDrafts = cards.filter(card => card.origin === "draft" && !touching(card.id).some(edge => isSupportFor(edge, card.id) && ["external", "experiment"].includes(other(edge, card.id)?.origin)));
+  return { contradictions, unsupportedGuesses, unsupportedDrafts, total: contradictions.length + unsupportedGuesses.length + unsupportedDrafts.length };
+}

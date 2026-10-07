@@ -4,9 +4,10 @@
 // Embeddings and edges are stored in IndexedDB, so a reload makes no new API calls.
 import { currentProject } from "./state.js";
 import { readProjectRecords, putRecords, deleteRecords } from "./db.js";
-import { candidatePairs, edgeIsCurrent } from "./relations.js";
+import { candidatePairs, edgeIsCurrent, hypothesisPairs } from "./relations.js";
 
 const EMBED_BATCH = 100;
+const NEAREST = 3; // most similar ideas from other sources, on top of every hypothesis guess
 const RELATE_BATCH = 20;
 const PARALLEL = 3; // relate calls in flight at once
 const MIN_CONFIDENCE = 0.6; // weaker verdicts are kept (so they aren't asked again) but not shown
@@ -18,6 +19,9 @@ let status = { projectId: null, state: "idle", left: 0 };
 let timer = null;
 let running = false;
 let runAgain = false;
+
+// True once a project's stored embeddings and edges have been read.
+export const graphLoaded = projectId => graphs.has(projectId);
 
 export const onPipelineChange = listener => listeners.add(listener);
 const notify = () => listeners.forEach(listener => listener());
@@ -76,9 +80,11 @@ async function run() {
     await putRecords("embeddings", records);
   }
 
-  // 2–3. Candidate pairs from different sources that haven't been judged for their current wording.
-  const nodes = cards.map(item => ({ id: item.id, group: groupOf(item), vector: graph.embeddings.get(item.id).vector }));
-  const todo = candidatePairs(nodes).filter(pair => {
+  // 2–3. Candidate pairs: every idea with every current hypothesis guess, plus its nearest ideas from other
+  // sources; skipping pairs already judged for their current wording.
+  const nodes = cards.map(item => ({ id: item.id, group: groupOf(item), hypothesis: item.origin === "hypothesis", vector: graph.embeddings.get(item.id).vector }));
+  const candidates = new Map([...hypothesisPairs(nodes), ...candidatePairs(nodes, { k: NEAREST })].map(pair => [pair.id, pair]));
+  const todo = [...candidates.values()].filter(pair => {
     const edge = graph.edges.get(pair.id);
     return !edge || !edgeIsCurrent(edge, byId.get(pair.a).claim, byId.get(pair.b).claim);
   });

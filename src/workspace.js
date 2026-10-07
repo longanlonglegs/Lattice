@@ -2,13 +2,15 @@
 import { $, escapeHtml, toast, plural, relativeTime } from "./util.js";
 import { currentProject, saveWorkspace, persist, sourceCode, sourceKind, isOwnWork, clearAiAnalysis } from "./state.js";
 import { renderProjectNav } from "./projects.js";
-import { renderInsights } from "./judgment.js";
+import { renderInsights } from "./insights.js";
 import { renderCards, updateProgress } from "./cards.js";
 import { renderSourceLibrary, renderCardsLibrary } from "./library.js";
 import { renderTabs } from "./project-shell.js";
 import { renderHistory } from "./history.js";
 import { originOf } from "./origins.js";
 import { citationLine, cleanMeta, reference } from "./records.js";
+import { projectEdges } from "./pipeline.js";
+import { describeRelation } from "./relations.js";
 
 let editingSourceId = null;
 
@@ -85,9 +87,20 @@ export function renderSourceList() {
     persist(); renderProject(); toast("Source details saved.");
   });
 }
+// The full history is kept; the trail shows the latest few until "Show all" is clicked.
+const TRAIL_PREVIEW = 8;
+let trailExpanded = false;
+export function toggleActivityList() {
+  trailExpanded = !trailExpanded;
+  renderActivityList();
+}
 export function renderActivityList() {
-  const activities = currentProject().activities;
-  const icons = { capture: "↗", decision: "✓", setup: "◆", analysis: "✦" };
+  const all = currentProject().activities;
+  const activities = trailExpanded ? all : all.slice(0, TRAIL_PREVIEW);
+  const icons = { capture: "↗", decision: "✓", setup: "◆", analysis: "✦", edit: "✎" };
+  const toggle = $("#activity-toggle");
+  toggle.classList.toggle("hidden", all.length <= TRAIL_PREVIEW);
+  toggle.textContent = trailExpanded ? "Show fewer" : `Show all ${all.length}`;
   $("#activity-list").innerHTML = activities.length ? activities.map(activity => `
     <li><span class="activity-icon ${escapeHtml(activity.type)}">${icons[activity.type] || "＋"}</span><div><strong>${escapeHtml(activity.text)}</strong><small>${escapeHtml(activity.detail ? `${activity.detail} · ` : "")}${relativeTime(activity.createdAt)}</small></div></li>`).join("") : `
     <li class="empty-activity"><span class="activity-icon">○</span><div><strong>Your research trail will appear here.</strong><small>Import a source or capture a web passage to get started.</small></div></li>`;
@@ -104,8 +117,31 @@ export function exportMarkdown() {
   const project = currentProject();
   const approved = project.cards.filter(item => item.state === "approved");
   const records = approved.length ? approved : project.cards.filter(item => item.state !== "rejected");
+  const cardById = new Map(project.cards.map(item => [item.id, item]));
+  const edges = projectEdges(project);
   const sourceLine = source => isOwnWork(source) ? `- ${sourceByline(source)}: ${source.title}` : `- ${reference(source.meta, source.title)}${Object.keys(source.meta || {}).length ? "" : ` (${sourceKind(source)}${source.originalUrl ? `, ${source.originalUrl}` : ""})`}`;
-  const body = ["# " + project.title, "", "## Research question", project.question || "Untitled research question", "", "## Working hypothesis", project.hypothesis || "Not yet stated", "", "## Sources", ...project.sources.map(sourceLine), "", `## Evidence${approved.length ? " (saved cards)" : ""}`, "", ...records.flatMap(item => [`### ${item.claim}`, "", `> ${item.quote}`, "", `${originOf(item.origin).label} · ${item.location}`, ...(item.note ? ["", `Note: ${item.note}`] : []), ""])].join("\n");
+  // "- Contradicts (My experiment): … — rationale"
+  const relationLines = item => edges.filter(edge => edge.a === item.id || edge.b === item.id).sort((p, q) => q.confidence - p.confidence).flatMap(edge => {
+    const { label, otherId } = describeRelation(edge, item.id);
+    const other = cardById.get(otherId);
+    return other ? [`- ${label} (${originOf(other.origin).label}): ${other.claim} — ${edge.rationale}`] : [];
+  });
+  const cardBlock = item => {
+    const relations = relationLines(item);
+    return [`### ${item.claim}`, "", ...item.quotes.flatMap(quote => [`> ${quote.text}`, `> — ${quote.location}`, ""]), originOf(item.origin).label, ...(item.note ? ["", `Note: ${item.note}`] : []), ...(relations.length ? ["", "Relations:", ...relations] : []), ""];
+  };
+  const guesses = project.cards.filter(item => item.origin === "hypothesis" && !item.superseded);
+  const versions = project.versions.slice().reverse().flatMap(version => [`### Version ${version.number} · ${new Date(version.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`, "", ...(version.note ? [`Note: ${version.note}`, ""] : []), `Question: ${version.question || "—"}`, "", `Hypothesis: ${version.hypothesis || "—"}`, ""]);
+  const stickies = project.stickies.filter(sticky => sticky.text.trim());
+  const body = [
+    "# " + project.title, "", "## Research question", project.question || "Untitled research question", "",
+    "## Working hypothesis", project.hypothesis || "Not yet stated", "",
+    ...(guesses.length ? ["## Hypothesis guesses", "", ...guesses.flatMap(cardBlock)] : []),
+    "## Sources", ...project.sources.map(sourceLine), "",
+    `## Evidence${approved.length ? " (saved cards)" : ""}`, "", ...records.filter(item => item.origin !== "hypothesis").flatMap(cardBlock),
+    ...(versions.length ? ["## Question and hypothesis history", "", ...versions] : []),
+    ...(stickies.length ? ["## Sticky notes", "", ...stickies.map(sticky => `- ${sticky.text.trim().replace(/\n+/g, " ")}`), ""] : [])
+  ].join("\n");
   const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([body], { type: "text/markdown" })); link.download = `${project.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "lattice-project"}.md`; link.click(); URL.revokeObjectURL(link.href);
   toast("Project exported as Markdown.");
 }

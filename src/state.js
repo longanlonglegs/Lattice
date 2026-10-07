@@ -12,8 +12,9 @@ export const colourKeys = Object.keys(projectColours);
 let cardSeq = Date.now() * 100;
 export const nextCardId = () => ++cardSeq;
 
-export function card(id, claim, quote, location, sourceId = "", origin = "external") {
-  return { id, claim, quote, location, sourceId, origin, state: "pending", note: "" };
+// quotes: [{ text, location }]
+export function card(id, claim, quotes, sourceId = "", origin = "external") {
+  return { id, claim, quotes, sourceId, origin, state: "pending", note: "" };
 }
 export function newProject(title = defaultTitle, fields = {}) {
   const now = new Date().toISOString();
@@ -48,6 +49,7 @@ export function normalizeProject(project) {
   project.sources = Array.isArray(project.sources) ? project.sources : [];
   project.activities = Array.isArray(project.activities) ? project.activities : [];
   project.versions = Array.isArray(project.versions) ? project.versions : [];
+  project.stickies = Array.isArray(project.stickies) ? project.stickies : [];
   project.question = typeof project.question === "string" ? project.question : "";
   project.hypothesis = typeof project.hypothesis === "string" ? project.hypothesis : "";
   project.colour = projectColours[project.colour] ? project.colour : "sage";
@@ -106,7 +108,6 @@ export function sourceKind(source) {
 export const isOwnWork = source => Boolean(source.origin && source.origin !== "external");
 export function recordActivity(type, text, detail = "", project = currentProject()) {
   project.activities.unshift({ id: crypto.randomUUID(), type, text, detail, createdAt: new Date().toISOString() });
-  project.activities = project.activities.slice(0, 30);
 }
 export function clearAiAnalysis() {
   currentProject().aiAnalysis = null;

@@ -1,15 +1,15 @@
 // Pure data helpers: card/source migration, workspace <-> store records, and quote checks.
 // No DOM or storage access, so node:test can import this module.
 
-// Old flashcards { tag, question, answer, page, stance, revealed } become evidence cards
-// { claim, quote, location, origin, note }. Safe to run on cards that are already migrated.
+// Old flashcards { tag, question, answer, page, stance, revealed } and single-quote cards { quote, location }
+// become evidence cards { claim, quotes: [{ text, location }], origin, note }. Safe to run on migrated cards.
 export function migrateCard(card, source) {
-  const { tag, question, answer, page, stance, revealed, ...rest } = card;
+  const { tag, question, answer, page, stance, revealed, quote, location, quoteMissing, ...rest } = card;
+  const quotes = Array.isArray(card.quotes) ? card.quotes : [{ text: String(quote || ""), location: typeof location === "string" ? location : String(page || ""), ...(quoteMissing ? { missing: true } : {}) }];
   return {
     ...rest,
-    claim: typeof card.claim === "string" && card.claim ? card.claim : String(answer || question || card.quote || ""),
-    quote: String(card.quote || ""),
-    location: typeof card.location === "string" ? card.location : String(page || ""),
+    claim: typeof card.claim === "string" && card.claim ? card.claim : String(answer || question || quote || ""),
+    quotes,
     origin: card.origin || source?.origin || "external",
     state: card.state || "pending",
     note: typeof card.note === "string" ? card.note : ""
@@ -42,6 +42,9 @@ export function joinWorkspace({ projects = [], sources = [], cards = [], meta = 
     projects: projects.slice().sort(byOrder).map(project => ({ ...strip(project), sources: ofProject(sources, project.id), cards: ofProject(cards, project.id) }))
   };
 }
+
+// Where a card's first quote is from ("p. 2 · Okafor 2019.pdf").
+export const cardLocation = card => card.quotes?.[0]?.location || "";
 
 // Same normalisation the server uses to verify quotes.
 export function normalizeForMatch(text) {
@@ -176,4 +179,40 @@ export function sentenceGuesses(hypothesis) {
   const text = String(hypothesis || "").replace(/\s+/g, " ").trim();
   const sentences = text.match(/[^.!?]+[.!?]*/g)?.map(sentence => sentence.trim()).filter(Boolean) || [];
   return sentences.slice(0, 5).map(sentence => ({ guess: sentence, quote: sentence }));
+}
+
+// ---------- Single-project export / import (Part 10) ----------
+
+// A project file: { app: "Lattice", kind: "project", version: 1, project, texts, embeddings, edges }.
+// Importing always makes a copy with fresh ids, so it can't clash with anything already in this browser.
+// ids: { projectId, sourceId(), cardId() } supplies the new ids. Returns { project, texts, embeddings, edges }.
+export function remapProjectBundle(bundle, ids) {
+  const original = bundle.project;
+  const sourceIds = new Map((original.sources || []).map(source => [source.id, ids.sourceId()]));
+  const cardIds = new Map((original.cards || []).map(card => [card.id, ids.cardId()]));
+  const project = {
+    ...original,
+    id: ids.projectId,
+    sources: (original.sources || []).map(source => ({ ...source, id: sourceIds.get(source.id) })),
+    cards: (original.cards || []).map(card => ({ ...card, id: cardIds.get(card.id), sourceId: sourceIds.get(card.sourceId) ?? card.sourceId, editing: false })),
+    versions: (original.versions || []).map(version => ({ ...version, linkedCardIds: (version.linkedCardIds || []).map(id => cardIds.get(id)).filter(id => id != null) })),
+    webLayout: Object.fromEntries(Object.entries(original.webLayout || {}).filter(([id]) => cardIds.has(Number(id))).map(([id, position]) => [cardIds.get(Number(id)), position])),
+    aiAnalysis: null // its evidence ids belong to the old cards
+  };
+  const texts = (bundle.texts || []).filter(text => sourceIds.has(text.sourceId)).map(text => ({ ...text, sourceId: sourceIds.get(text.sourceId) }));
+  const embeddings = (bundle.embeddings || []).filter(record => cardIds.has(record.cardId)).map(record => {
+    const cardId = cardIds.get(record.cardId);
+    return { ...record, id: `${project.id}:${cardId}`, projectId: project.id, cardId };
+  });
+  const flip = { a_to_b: "b_to_a", b_to_a: "a_to_b" };
+  const edges = (bundle.edges || []).filter(edge => cardIds.has(edge.a) && cardIds.has(edge.b)).map(edge => {
+    const a = cardIds.get(edge.a), b = cardIds.get(edge.b);
+    const swap = a > b; // an edge's `a` is always the lower card id
+    return { ...edge, id: `${Math.min(a, b)}|${Math.max(a, b)}`, projectId: project.id, a: swap ? b : a, b: swap ? a : b, aText: swap ? edge.bText : edge.aText, bText: swap ? edge.aText : edge.bText, direction: swap ? flip[edge.direction] || edge.direction : edge.direction };
+  });
+  return { project, texts, embeddings, edges };
+}
+
+export function isProjectBundle(bundle) {
+  return bundle?.app === "Lattice" && bundle.kind === "project" && typeof bundle.project?.title === "string" && Array.isArray(bundle.project.cards) && Array.isArray(bundle.project.sources);
 }
