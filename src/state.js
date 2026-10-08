@@ -21,27 +21,35 @@ export function newProject(title = defaultTitle, fields = {}) {
   return { id: crypto.randomUUID(), title, colour: "sage", question: "", hypothesis: "", cards: [], sources: [], activities: [], versions: [], aiAnalysis: null, createdAt: now, updatedAt: now, ...fields };
 }
 // Loads from IndexedDB. The first time, it copies the old localStorage workspace over;
-// that key is left in place as a backup until the next version.
+// that key is left in place as a backup until the next version, so a flag stops it coming back
+// once IndexedDB is in use (for example after every project has been deleted).
+const migratedKey = "lattice-indexeddb-ready";
 async function loadWorkspace() {
   const stored = await readStores(workspaceStores);
-  if (stored.projects.length) return { workspace: joinWorkspace(stored), fresh: false };
+  let ready = false;
+  try { ready = localStorage.getItem(migratedKey) === "1"; } catch { /* storage blocked: treat as not migrated */ }
+  if (stored.projects.length || ready) return { workspace: joinWorkspace(stored) };
   let saved = null;
   let legacy = null;
   try { saved = JSON.parse(localStorage.getItem(storageKey) || "null"); } catch { /* unreadable: ignore */ }
-  if (saved?.projects?.length) return { workspace: saved, fresh: false, migrated: true };
+  if (saved?.projects?.length) return { workspace: saved, migrated: true };
   try { legacy = JSON.parse(localStorage.getItem("lattice-phase-zero-session") || "null"); } catch { localStorage.removeItem("lattice-phase-zero-session"); }
-  const project = newProject(defaultTitle, { placeholder: true });
-  if (legacy) { project.question = legacy.question || ""; project.cards = legacy.cards?.length ? legacy.cards : []; project.placeholder = false; }
-  return { workspace: { activeId: project.id, projects: [project] }, fresh: !legacy };
+  if (!legacy) return { workspace: { activeId: null, projects: [] } };
+  const project = newProject(defaultTitle, { question: legacy.question || "", cards: legacy.cards?.length ? legacy.cards : [] });
+  return { workspace: { activeId: project.id, projects: [project] }, migrated: true };
 }
 
 export let loaded = null;
 export let workspace = null;
-export function setWorkspace(next) { workspace = migrateWorkspace(next); }
+export function setWorkspace(next) { workspace = migrateWorkspace({ activeId: null, ...next, projects: Array.isArray(next.projects) ? next.projects : [] }); }
 export async function initWorkspace() {
   loaded = await loadWorkspace();
   setWorkspace(loaded.workspace);
-  if (loaded.migrated) await saveNow();
+  // Earlier versions made an empty "Untitled project" on first run; drop it if it was never used.
+  const before = workspace.projects.length;
+  workspace.projects = workspace.projects.filter(project => !isPristinePlaceholder(normalizeProject(project)));
+  if (loaded.migrated || workspace.projects.length !== before) await saveNow();
+  try { localStorage.setItem(migratedKey, "1"); } catch { /* storage blocked */ }
 }
 
 export function normalizeProject(project) {
@@ -58,10 +66,11 @@ export function normalizeProject(project) {
   project.webLayout = project.webLayout && typeof project.webLayout === "object" ? project.webLayout : {};
   return project;
 }
+// The open project, or null when the workspace has no projects.
 export const currentProject = () => {
   let project = workspace.projects.find(item => item.id === workspace.activeId);
-  if (!project) { project = workspace.projects[0] || newProject(); workspace.projects = workspace.projects.length ? workspace.projects : [project]; workspace.activeId = project.id; }
-  return normalizeProject(project);
+  if (!project) { project = workspace.projects[0]; workspace.activeId = project?.id || null; }
+  return project ? normalizeProject(project) : null;
 };
 export const projectsByRecent = () => workspace.projects.map(normalizeProject).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 export const isPristinePlaceholder = project => project.placeholder && project.title === defaultTitle && !project.question && !project.hypothesis && !project.sources?.length && !project.cards?.length;
@@ -93,6 +102,7 @@ export function persist() {
 }
 export function saveWorkspace() {
   const project = currentProject();
+  if (!project) return;
   project.title = $("#project-title").value.trim() || defaultTitle;
   project.question = $("#research-question").value.trim();
   project.hypothesis = $("#working-hypothesis").value.trim();
@@ -110,5 +120,6 @@ export function recordActivity(type, text, detail = "", project = currentProject
   project.activities.unshift({ id: crypto.randomUUID(), type, text, detail, createdAt: new Date().toISOString() });
 }
 export function clearAiAnalysis() {
-  currentProject().aiAnalysis = null;
+  const project = currentProject();
+  if (project) project.aiAnalysis = null;
 }

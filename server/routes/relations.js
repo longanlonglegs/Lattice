@@ -4,6 +4,7 @@ const { relationPrompt } = require("../prompts");
 
 const MAX_TEXTS = 100;
 const MAX_PAIRS = 25;
+const MAX_EVIDENCE = 900; // characters of an idea's supporting passages
 const relations = ["supports", "contradicts", "refines", "same", "explains", "none"];
 const directed = new Set(["supports", "refines", "explains"]);
 const clip = (value, limit) => String(value || "").replace(/\s+/g, " ").trim().slice(0, limit);
@@ -34,7 +35,10 @@ async function embedTexts(req, res) {
 
 function validPairs(input) {
   if (!Array.isArray(input) || !input.length || input.length > MAX_PAIRS) return null;
-  const idea = item => ({ claim: clip(item?.claim, 1000), origin: clip(item?.origin, 40) || "external source" });
+  const idea = item => {
+    const evidence = clip(item?.evidence, MAX_EVIDENCE);
+    return { claim: clip(item?.claim, 1000), origin: clip(item?.origin, 40) || "external source", ...(evidence ? { evidence } : {}) };
+  };
   const pairs = input.map(pair => ({ id: clip(pair?.id, 120), a: idea(pair?.a), b: idea(pair?.b) }));
   return pairs.every(pair => pair.id && pair.a.claim && pair.b.claim) ? pairs : null;
 }
@@ -51,7 +55,7 @@ function cleanResults(results, pairs) {
   });
 }
 
-// POST /api/relate { question, pairs: [{ id, a: { claim, origin }, b: { claim, origin } }] } -> { results }
+// POST /api/relate { question, pairs: [{ id, a: { claim, origin, evidence? }, b: { … } }] } -> { results }
 async function relatePairs(req, res) {
   if (noKey(res)) return;
   try {

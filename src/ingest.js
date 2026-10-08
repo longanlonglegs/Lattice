@@ -7,6 +7,7 @@ import { requestReview } from "./review.js";
 import { mergeMeta, pdfInfoMeta } from "./records.js";
 import { putText } from "./db.js";
 import { enqueueImport, throwIfCancelled } from "./imports.js";
+import { webCards } from "./pipeline.js";
 import { extractionMode, originOf, pickableOrigins } from "./origins.js";
 
 export const maxAiChars = 60000;
@@ -31,7 +32,7 @@ export function capPages(pages) {
 export async function extractCards(project, source, pages, mode, signal) {
   const capped = capPages(pages);
   try {
-    const response = await fetch("/api/extract-cards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, title: source.title, url: source.originalUrl || "", question: project.question, hypothesis: project.hypothesis, pages: capped.pages, truncated: capped.truncated }), signal });
+    const response = await fetch("/api/extract-cards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode, title: source.title, url: source.originalUrl || "", question: project.question, hypothesis: project.hypothesis, guesses: webCards(project).filter(item => item.origin === "hypothesis").map(item => item.claim), pages: capped.pages, truncated: capped.truncated }), signal });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || "AI extraction is unavailable");
     if (!payload.cards?.length) throw new Error("AI found no passages it could anchor");
@@ -68,7 +69,9 @@ export function announce(result, source, truncated = false) {
   else toast(`Used basic extraction (${result.reason}). ${count} added.`);
 }
 export async function readPdf(file, signal) {
-  const pdfjsLib = await import("../node_modules/pdfjs-dist/legacy/build/pdf.mjs");
+  const pdfjsLib = await import("../node_modules/pdfjs-dist/legacy/build/pdf.mjs").catch(() => {
+    throw Object.assign(new Error("Lattice’s PDF reader is missing. Run npm install in the Lattice folder, restart the server, and reload."), { missingReader: true });
+  });
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs", import.meta.url).toString();
   const bytes = new Uint8Array(await file.arrayBuffer());
   const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
@@ -129,7 +132,7 @@ export function addLocalFile(file) {
         }
       } catch (error) {
         if (signal.aborted) throw error;
-        toast(`Lattice could not read ${file.name}. Try a text-based PDF or Markdown file.`);
+        toast(error.missingReader ? error.message : `Lattice could not read ${file.name}. Try a text-based PDF or Markdown file.`);
         throw new Error("Couldn't read this file");
       }
       if (!pages.length) throw new Error("No selectable text (scanned PDFs aren't supported)");
@@ -197,6 +200,7 @@ export function receiveBrowserCapture(payload) {
   const selection = String(payload?.selection || "").trim();
   const url = String(payload?.url || "").trim();
   if (!selection || !url) return;
+  if (!currentProject()) return toast("Create a project first, then capture passages into it.");
   const title = String(payload?.title || new URL(url).hostname).trim();
   // The extension lets the user say where the passage comes from; anything unknown counts as an external source.
   const origin = pickableOrigins.includes(payload?.origin) ? payload.origin : "external";

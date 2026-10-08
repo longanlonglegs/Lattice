@@ -15,7 +15,8 @@ export const pendingCards = project => project.cards.filter(item => item.state =
 
 // Opens the deck if the current project has cards to review; if it is already open, new cards simply join it.
 export function requestReview() {
-  if (!pendingCards(currentProject()).length) return;
+  const project = currentProject();
+  if (!project || !pendingCards(project).length) return;
   if (!open) { open = true; editing = false; tally = { accepted: 0, rejected: 0 }; }
   renderReview();
 }

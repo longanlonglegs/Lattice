@@ -9,7 +9,8 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
+      <button class="brand-peek" id="brand-peek" type="button" aria-label="Show navigation" aria-controls="sidebar"><span class="brand-mark">L</span></button>
+      <aside class="sidebar" id="sidebar">
         <a class="brand" id="brand-home" href="#workspace"><span class="brand-mark">L</span><span>Lattice</span></a>
         <nav>
           <button class="nav-item" data-view="projects" type="button"><span>▦</span> Projects <b id="projects-nav-count">0</b></button>
@@ -23,7 +24,6 @@
           <button class="sidebar-new" data-new-project type="button">＋ New project</button>
         </div>
         <div class="sidebar-footer">
-          <div class="privacy"><span class="lock">⌁</span><div><strong>Local-first</strong><small>Your sources stay yours.</small></div></div>
           <button class="help-button" id="how-it-works" type="button">? &nbsp; How it works</button>
         </div>
       </aside>
@@ -137,7 +137,7 @@
                 <div class="web-stage hidden" id="web-stage">
                   <div class="web-toolbar"><label class="sr-only" for="web-search">Find an idea</label><input id="web-search" type="search" placeholder="Find an idea… (Enter to jump to it)" /><span id="web-search-count"></span><label class="web-all-toggle" for="web-show-all"><input id="web-show-all" type="checkbox" /> Show all connections</label><button class="ghost-button attention-button" id="web-attention-toggle" type="button" aria-expanded="false">⚑ Needs attention <b id="web-attention-count">0</b></button><button class="ghost-button" id="web-add-sticky" type="button">+ Sticky note</button><button class="ghost-button" id="web-fit" type="button">Fit to view</button></div>
                   <div class="web-legend" id="web-legend"></div>
-                  <div class="web-canvas" id="web-canvas" aria-label="Idea web"><div class="web-updating hidden" id="web-updating" role="status"><i class="spinner"></i><span>Updating connections…</span></div><div class="web-world" id="web-world"><svg class="web-lines" id="web-svg" aria-hidden="true"></svg><div class="web-cards" id="web-cards"></div><div class="web-stickies" id="web-stickies"></div></div><aside class="web-attention hidden" id="web-attention" aria-label="Needs attention"></aside><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
+                  <div class="web-canvas" id="web-canvas" aria-label="Idea web"><div class="web-loading hidden" id="web-loading" role="status" aria-live="polite"><svg class="web-loading-art" viewBox="0 0 220 140" aria-hidden="true"><g class="wl-lines"><line x1="110" y1="70" x2="40" y2="34"/><line x1="110" y1="70" x2="182" y2="30"/><line x1="110" y1="70" x2="58" y2="116"/><line x1="110" y1="70" x2="170" y2="112"/><line x1="40" y1="34" x2="58" y2="116"/><line x1="182" y1="30" x2="170" y2="112"/></g><g class="wl-nodes"><rect x="88" y="58" width="44" height="24" rx="5" class="hub"/><rect x="24" y="25" width="32" height="18" rx="4"/><rect x="166" y="21" width="32" height="18" rx="4"/><rect x="42" y="107" width="32" height="18" rx="4"/><rect x="154" y="103" width="32" height="18" rx="4"/></g></svg><strong id="web-loading-title">Connecting your ideas</strong><span id="web-loading-detail"></span><div class="web-loading-bar"><i id="web-loading-progress"></i></div></div><div class="web-world" id="web-world"><svg class="web-lines" id="web-svg" aria-hidden="true"></svg><div class="web-cards" id="web-cards"></div><div class="web-stickies" id="web-stickies"></div></div><aside class="web-attention hidden" id="web-attention" aria-label="Needs attention"></aside><aside class="web-side hidden" id="web-side" aria-live="polite"></aside></div>
                   <p class="web-help">Your hypothesis guesses sit in the middle; evidence gathers around the guess it bears on most. Drag the background to pan, scroll to zoom. Drag a card to pin it, double-click to unpin. Click a card for its full claim, quotes, relations, and your note. Double-click empty space to add a sticky note.</p>
                 </div>
               </section>
@@ -175,17 +175,30 @@
                 </section>
               </section>
 
-              <section class="step-panel hidden" data-panel="insights" aria-labelledby="judge-title">
-                <div class="panel-heading"><div><h2 id="judge-title">What does your evidence say?</h2><p>Take stock of what you’ve gathered, then choose your next move.</p></div></div>
-                <div class="evidence-stats" id="evidence-stats"></div>
-                <div class="relation-stats" id="relation-stats"></div>
-                <h3 class="subhead">SUGGESTED NEXT STEPS</h3>
-                <div class="next-actions" id="next-actions"></div>
-                <section class="ai-evidence" aria-labelledby="ai-evidence-title">
-                  <div class="ai-evidence-heading"><div><p class="eyebrow">OPTIONAL · AI</p><h3 id="ai-evidence-title">Stress-test this evidence</h3><p>An AI read of how your evidence bears on each hypothesis guess, using your cards and the relations Lattice found, not the wider internet.</p></div><button class="ai-analyze-button" id="ai-analyze-button" type="button" disabled>Analyze evidence <span>→</span></button></div>
-                  <label class="ai-consent" for="ai-consent"><input id="ai-consent" type="checkbox" /><span>I understand this sends this project’s question, hypothesis guesses, card excerpts, and their relations to OpenAI for this one analysis.</span></label>
-                  <p class="ai-status" id="ai-status">Keep this off to stay fully local.</p>
-                  <div class="ai-results hidden" id="ai-results" aria-live="polite"></div>
+              <section class="step-panel hidden insights-panel" data-panel="insights" aria-labelledby="judge-title">
+                <div class="panel-heading"><div><h2 id="judge-title">What does your evidence say?</h2><p>A read of your web: where your sources stand, how each part of your hypothesis is holding up, and what still needs research. Click any card to find it in the web.</p></div></div>
+                <div class="ins-setup hidden" id="ins-setup"></div>
+                <section class="ins-ai" aria-labelledby="ins-ai-title">
+                  <div class="ins-ai-text"><p class="eyebrow" id="ins-ai-title">OPTIONAL · AI READ</p><p class="ai-status" id="ai-status">Keep this off to stay fully local.</p></div>
+                  <label class="ai-consent" for="ai-consent"><input id="ai-consent" type="checkbox" /><span>I understand this sends this project’s question, hypothesis guesses, card excerpts, and their relations to OpenAI for this one read.</span></label>
+                  <button class="ai-analyze-button" id="ai-analyze-button" type="button" disabled>Run AI read <span>→</span></button>
+                </section>
+                <div class="ins-loading hidden" id="ins-loading" role="status" aria-live="polite"><svg class="web-loading-art" viewBox="0 0 220 140" aria-hidden="true"><g class="wl-lines"><line x1="110" y1="70" x2="40" y2="34"/><line x1="110" y1="70" x2="182" y2="30"/><line x1="110" y1="70" x2="58" y2="116"/><line x1="110" y1="70" x2="170" y2="112"/><line x1="40" y1="34" x2="58" y2="116"/><line x1="182" y1="30" x2="170" y2="112"/></g><g class="wl-nodes"><rect x="88" y="58" width="44" height="24" rx="5" class="hub"/><rect x="24" y="25" width="32" height="18" rx="4"/><rect x="166" y="21" width="32" height="18" rx="4"/><rect x="42" y="107" width="32" height="18" rx="4"/><rect x="154" y="103" width="32" height="18" rx="4"/></g></svg><strong>Reading your web</strong><span id="ins-loading-step"></span><div class="ins-loading-bar"><i></i></div><small id="ins-loading-time"></small></div>
+                <section class="ins-section" aria-labelledby="ins-overview-title">
+                  <p class="ins-step">1 · THE BIG PICTURE</p>
+                  <h3 class="ins-title" id="ins-overview-title">Where your sources stand</h3>
+                  <div class="ins-overview" id="ins-overview"></div>
+                </section>
+                <section class="ins-section" aria-labelledby="ins-guesses-title">
+                  <p class="ins-step">2 · YOUR HYPOTHESIS, PART BY PART</p>
+                  <h3 class="ins-title" id="ins-guesses-title">How each part is holding up</h3>
+                  <div class="ins-guesses" id="ins-guesses"></div>
+                </section>
+                <section class="ins-section" aria-labelledby="ins-issues-title">
+                  <p class="ins-step">3 · WHAT NEEDS A CLOSER LOOK</p>
+                  <h3 class="ins-title" id="ins-issues-title">Contradictions and gaps</h3>
+                  <div class="ins-contradictions" id="ins-contradictions"></div>
+                  <div class="ins-gaps" id="ins-gaps"></div>
                 </section>
               </section>
             </div>
@@ -260,7 +273,7 @@
                 <li><b>Dark cards</b> are the guesses your hypothesis was split into. Each one counts the evidence for and against it.</li>
                 <li><b>Evidence cards</b> are coloured by origin: <span class="o" style="--o:#4b6ca6">external source</span>, <span class="o" style="--o:#3f7a63">your experiment</span>, <span class="o" style="--o:#c98a2e">your draft</span>. Each gathers around the guess it bears on most.</li>
                 <li><b>Lines</b> to your hypothesis are always drawn. Lines between two pieces of evidence appear only when they matter; <i>Show all connections</i> reveals the rest.</li>
-                <li><b>Needs attention</b> lists contradictions, untested guesses, and draft claims that nothing supports. <b>Insights</b> suggests what to do next.</li>
+                <li><b>Needs attention</b> lists contradictions, untested guesses, and draft claims that nothing supports. <b>Insights</b> reads the web back to you: where sources stand, each part of your hypothesis with its evidence for and against, and the contradictions and gaps that need more research.</li>
               </ul>
             </div>
           </section>

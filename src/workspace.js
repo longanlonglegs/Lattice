@@ -107,6 +107,7 @@ export function renderActivityList() {
 }
 export function renderProject() {
   const project = currentProject();
+  if (!project) { renderProjectNav(); renderSourceLibrary(); return; }
   $("#project-title").value = project.title;
   $("#research-question").value = project.question;
   $("#working-hypothesis").value = project.hypothesis;

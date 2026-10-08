@@ -41,7 +41,7 @@ test("extract-cards sends the source URL only for links", async t => {
 test("extract-cards sends the question, hypothesis, and cleaned passages", async t => {
   const calls = stubOpenAI(t, () => ({ cards: [] }));
   await callRoute(extractCards, request({ hypothesis: "", pages: [{ label: "p. 1", text: "  spaced \t out \n\n here " }, { label: "p. 2", text: "" }] }));
-  assert.deepEqual(calls[0].payload, { source_title: "Haddad 2021", research_question: "What drives vitamin C loss?", working_hypothesis: "Not provided", passages: [{ label: "p. 1", text: "spaced out\nhere" }] });
+  assert.deepEqual(calls[0].payload, { source_title: "Haddad 2021", research_question: "What drives vitamin C loss?", working_hypothesis: "Not provided", hypothesis_guesses: [], passages: [{ label: "p. 1", text: "spaced out\nhere" }] });
 });
 
 test("extract-cards drops cards whose quote isn't in the source and reports how many", async t => {
@@ -87,13 +87,15 @@ test("extract-cards returns 500 for invalid JSON", async t => {
 
 const evidence = [{ id: "1", quote: passage, page: "p. 2 · Haddad 2021", origin: "external source" }, { id: "2", quote: "Our sealed bottles lost 12% in a week.", page: "Your text · Notes", origin: "researcher's own work" }];
 
-test("evidence-analysis uses the analysis prompt and keeps only known evidence IDs", async t => {
-  const calls = stubOpenAI(t, () => ({ summary: "s", confidence: "medium", tensions: [{ title: "t", explanation: "e", evidence_ids: ["1", "99"] }], next_actions: [] }));
+const reading = (fields = {}) => ({ overview: "o", confidence: "medium", guesses: [], contradictions: [], gaps: [], ...fields });
+
+test("evidence-analysis uses the analysis prompt and keeps only contradictions between two known pieces of evidence", async t => {
+  const calls = stubOpenAI(t, () => reading({ contradictions: [{ title: "t", explanation: "e", resolve: "r", evidence_ids: ["1", "2"] }, { title: "u", explanation: "e", resolve: "r", evidence_ids: ["1", "99"] }] }));
   const { status, body } = await callRoute(analyzeEvidence, { question: "Q?", hypothesis: "", evidence });
   assert.equal(status, 200);
   assert.equal(calls[0].instructions, prompts.analysisPrompt);
   assert.equal(calls[0].payload.working_hypothesis, "Not provided");
-  assert.deepEqual(body.analysis.tensions[0].evidence_ids, ["1"]);
+  assert.deepEqual(body.analysis.contradictions.map(item => item.evidence_ids), [["1", "2"]]);
 });
 
 test("evidence-analysis requires a question and valid evidence", async t => {
@@ -108,8 +110,9 @@ test("evidence-analysis returns 503 without an API key", async t => {
   assert.equal((await callRoute(analyzeEvidence, { question: "Q?", evidence })).status, 503);
 });
 
-test("validEvidence accepts 1 to 12 complete items and trims long fields", () => {
-  assert.equal(validEvidence(Array.from({ length: 13 }, () => evidence[0])), null);
+test("validEvidence accepts 1 to 24 complete items and trims long fields", () => {
+  assert.equal(validEvidence(Array.from({ length: 25 }, () => evidence[0])), null);
+  assert.equal(validEvidence(Array.from({ length: 24 }, () => evidence[0])).length, 24);
   assert.equal(validEvidence([{ id: "1", quote: "", page: "p. 1" }]), null);
   assert.equal(validEvidence("nope"), null);
   const [item] = validEvidence([{ id: "x".repeat(100), quote: "q".repeat(5000), page: "p" }]);
@@ -123,10 +126,20 @@ test("evidence-analysis sends hypothesis guesses and relations between known ite
   assert.deepEqual(validGuesses([{ id: "g1", claim: " Loss doubles per 10 °C. " }, { id: "", claim: "x" }, { id: "g2", claim: "" }]), [{ id: "g1", claim: "Loss doubles per 10 °C." }]);
   const ids = new Set(["1", "g1"]);
   assert.deepEqual(validRelations([{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Q10 differs." }, { from_id: "1", to_id: "9", relation: "supports" }, { from_id: "1", to_id: "g1", relation: "likes" }], ids), [{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Q10 differs." }]);
-  const calls = stubOpenAI(t, () => ({ summary: "s", confidence: "low", tensions: [{ title: "t", explanation: "e", evidence_ids: ["1", "g1", "zzz"] }], next_actions: [] }));
+  const guess = (id, fields = {}) => ({ guess_id: id, verdict: "challenged", agreement: "", disagreement: "d", revision: "", suggestions: [], ...fields });
+  const calls = stubOpenAI(t, () => reading({ guesses: [guess("g1"), guess("g1", { verdict: "supported" }), guess("nope")], contradictions: [{ title: "t", explanation: "e", resolve: "r", evidence_ids: ["1", "g1"] }], gaps: [{ title: "g", explanation: "e", research: "r", related_ids: ["1", "g1", "zzz"] }] }));
   const { body } = await callRoute(analyzeEvidence, { question: "Q?", hypothesis: "H", evidence: [{ id: "1", claim: "Oxygen dominates early loss.", quote: "Oxygen controlled the first 72 hours.", page: "p. 2" }], guesses: [{ id: "g1", claim: "Temperature dominates." }], relations: [{ from_id: "1", to_id: "g1", relation: "contradicts", rationale: "Opposite factors." }] });
   assert.deepEqual(calls[0].payload.hypothesis_guesses, [{ id: "g1", claim: "Temperature dominates." }]);
   assert.equal(calls[0].payload.relations.length, 1);
   assert.equal(calls[0].payload.evidence[0].claim, "Oxygen dominates early loss.");
-  assert.deepEqual(body.analysis.tensions[0].evidence_ids, ["1", "g1"]);
+  assert.deepEqual(body.analysis.guesses.map(item => [item.guess_id, item.verdict]), [["g1", "challenged"]]);
+  assert.equal(body.analysis.contradictions.length, 0, "a guess is not one side of a contradiction between evidence");
+  assert.deepEqual(body.analysis.gaps[0].related_ids, ["1", "g1"]);
+});
+
+test("extract-cards sends the current hypothesis guesses, cleaned and capped at five", async t => {
+  const calls = stubOpenAI(t, () => ({ cards: [] }));
+  await callRoute(extractCards, request({ guesses: [" Temperature   dominates. ", "", 42, "b", "c", "d", "e", "f"] }));
+  assert.deepEqual(calls[0].payload.hypothesis_guesses, ["Temperature dominates.", "42", "b", "c"]);
+  assert.match(prompts.contentExtractionPrompt, /hypothesis_guesses/);
 });

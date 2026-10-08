@@ -11,6 +11,10 @@ const NEAREST = 3; // most similar ideas from other sources, on top of every hyp
 const RELATE_BATCH = 20;
 const PARALLEL = 3; // relate calls in flight at once
 const MIN_CONFIDENCE = 0.6; // weaker verdicts are kept (so they aren't asked again) but not shown
+// Bumped when the judge's input or prompt changes, so pairs judged the old way are judged again, once.
+// 2: the judge also reads each idea's supporting passages, not only its claim.
+const JUDGE_VERSION = 2;
+const EVIDENCE_CHARS = 900;
 const originNames = { external: "external source", experiment: "my experiment", draft: "my draft", hypothesis: "my hypothesis" };
 
 const graphs = new Map(); // projectId -> { embeddings: Map(cardId -> record), edges: Map(pairId -> record) }
@@ -58,6 +62,7 @@ async function post(url, body) {
 
 async function run() {
   const project = currentProject();
+  if (!project) return;
   const graph = await graphFor(project.id);
   const cards = webCards(project);
   const byId = new Map(cards.map(item => [item.id, item]));
@@ -87,11 +92,13 @@ async function run() {
   const candidates = new Map([...hypothesisPairs(nodes), ...candidatePairs(nodes, { k: NEAREST })].map(pair => [pair.id, pair]));
   const todo = [...candidates.values()].filter(pair => {
     const edge = graph.edges.get(pair.id);
-    return !edge || !edgeIsCurrent(edge, byId.get(pair.a).claim, byId.get(pair.b).claim);
+    return !edge || edge.judge !== JUDGE_VERSION || !edgeIsCurrent(edge, byId.get(pair.a).claim, byId.get(pair.b).claim);
   });
 
   // 4. Judge them in batches (a few at once) and store every verdict, "none" included, so it isn't asked again.
-  const idea = item => ({ claim: item.claim, origin: originNames[item.origin] || originNames.external });
+  // An idea's evidence is its quotes. A hypothesis guess's only quote is the hypothesis sentence it came from, so it sends none.
+  const evidenceOf = item => item.origin === "hypothesis" ? "" : (item.quotes || []).map(quote => quote.text?.trim()).filter(Boolean).join(" … ").slice(0, EVIDENCE_CHARS);
+  const idea = item => ({ claim: item.claim, origin: originNames[item.origin] || originNames.external, ...(evidenceOf(item) ? { evidence: evidenceOf(item) } : {}) });
   const batches = [];
   for (let start = 0; start < todo.length; start += RELATE_BATCH) batches.push(todo.slice(start, start + RELATE_BATCH));
   let left = todo.length;
@@ -101,7 +108,7 @@ async function run() {
     const resultById = new Map(results.map(item => [item.id, item]));
     const edges = batch.map(pair => ({
       ...resultById.get(pair.id),
-      id: pair.id, projectId: project.id, a: pair.a, b: pair.b, aText: byId.get(pair.a).claim, bText: byId.get(pair.b).claim, similarity: Math.round(pair.similarity * 1000) / 1000
+      id: pair.id, projectId: project.id, a: pair.a, b: pair.b, aText: byId.get(pair.a).claim, bText: byId.get(pair.b).claim, judge: JUDGE_VERSION, similarity: Math.round(pair.similarity * 1000) / 1000
     }));
     edges.forEach(edge => graph.edges.set(edge.id, edge));
     await putRecords("edges", edges);
@@ -121,7 +128,7 @@ async function runSafely() {
     await run();
   } catch (error) {
     console.warn("Relationship pipeline paused:", error.message);
-    setStatus({ projectId: currentProject().id, state: error.status === 503 ? "no-key" : "error", left: 0 });
+    setStatus({ projectId: currentProject()?.id || null, state: error.status === 503 ? "no-key" : "error", left: 0 });
   } finally {
     running = false;
     if (runAgain) { runAgain = false; schedulePipeline(); }

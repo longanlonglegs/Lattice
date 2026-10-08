@@ -9,11 +9,12 @@ import { requestReview } from "./review.js";
 export function renderProjectNav() {
   const project = currentProject();
   const projects = projectsByRecent();
-  $("#project-chip-title").textContent = project.title;
-  $("#project-chip-dot").style.background = projectColours[project.colour];
-  $("#ws-colour-dot").style.background = projectColours[project.colour];
+  const colour = project ? projectColours[project.colour] : "transparent";
+  $("#project-chip-title").textContent = project ? project.title : "No project";
+  $("#project-chip-dot").style.background = colour;
+  $("#ws-colour-dot").style.background = colour;
   $("#projects-nav-count").textContent = projects.length;
-  $("#recent-projects").innerHTML = projects.slice(0, 4).map(item => `<button class="recent-project ${item.id === project.id ? "active" : ""}" data-open-project="${escapeHtml(item.id)}" type="button"><i class="color-dot" style="background:${projectColours[item.colour]}"></i><span>${escapeHtml(item.title)}</span></button>`).join("");
+  $("#recent-projects").innerHTML = projects.slice(0, 4).map(item => `<button class="recent-project ${item.id === project?.id ? "active" : ""}" data-open-project="${escapeHtml(item.id)}" type="button"><i class="color-dot" style="background:${projectColours[item.colour]}"></i><span>${escapeHtml(item.title)}</span></button>`).join("");
   renderProjectsGrid();
 }
 export function renderProjectsGrid() {
@@ -34,7 +35,7 @@ export function renderProjectsGrid() {
       </button>
       <div class="project-card-footer"><small>${current ? `Edited ${relativeTime(item.updatedAt)}` : `Created ${new Date(item.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`}</small><button data-project-settings="${escapeHtml(item.id)}" type="button">Settings</button></div>
     </article>`;
-  }).join("") : `<div class="empty-sources"><strong>No projects match that search.</strong><p>Try a different word from the name or research question.</p></div>`;
+  }).join("") : !projects.length ? `<div class="empty-sources"><strong>No projects yet.</strong><p>Start one with + New project. Each project holds a research question, its sources, and the cards you pull from them.</p></div>` : `<div class="empty-sources"><strong>No projects match that search.</strong><p>Try a different word from the name or research question.</p></div>`;
 }
 export function openProject(id, tab = "web") {
   workspace.activeId = id;

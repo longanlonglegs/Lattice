@@ -6,10 +6,12 @@ import { renderPrivacy } from "./privacy.js";
 import { ob } from "./onboarding.js";
 import { currentTab } from "./project-shell.js";
 import { webShown } from "./web/web-view.js";
+import { currentProject } from "./state.js";
 
 export const viewSections = { projects: "#projects-view", onboarding: "#onboarding-view", workspace: "#workspace", library: "#library-view", how: "#how-view", privacy: "#privacy-view" };
 export let currentView = "workspace";
 export function showView(view) {
+  if (view === "workspace" && !currentProject()) view = "projects"; // nothing to open yet
   if (view !== "onboarding") currentView = view;
   const hash = view === "workspace" ? `#workspace/${currentTab}` : `#${view}`;
   if (view !== "onboarding" && window.location.hash !== hash) history.replaceState(null, "", hash);

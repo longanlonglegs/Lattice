@@ -94,7 +94,7 @@ $env:OPENAI_API_KEY = "your_key"; npm start
 
 To keep the key across terminals on Windows, save it as a user environment variable with `[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "your_key", "User")`, then open a new terminal (restart VS Code if you use its terminal). The key lives in your Windows user settings, not in the repo.
 
-You may set `OPENAI_MODEL` to choose another compatible model; the default is `gpt-5-mini`. The API key never enters browser code or browser storage. The user must check the one-time consent box and click **Analyze evidence** before any data leaves the device. The result is constrained to a short evidence read, tensions tied to supplied passage IDs, and next research actions; it is saved locally with the project.
+You may set `OPENAI_MODEL` to choose another compatible model; the default is `gpt-5-mini`. The API key never enters browser code or browser storage. The user must check the one-time consent box and click **Analyze evidence** before any data leaves the device. The result is constrained to a short overview of where the sources stand, a read of each hypothesis guess (agreements, disagreements, a suggested rewording, and next steps), contradictions between two supplied cards, and research gaps; every ID is checked against the cards sent, and the read is saved locally with the project. The Insights tab also works without it, from the web's own cards and relations.
 
 ## Privacy and beta safety
 

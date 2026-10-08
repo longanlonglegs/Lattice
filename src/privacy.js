@@ -1,6 +1,6 @@
 // Privacy & data: local backup, restore, and delete.
 import { $, toast, plural, escapeHtml } from "./util.js";
-import { storageKey, defaultTitle, newProject, workspace, setWorkspace, persist, saveNow, flushSaves, nextCardId, recordActivity, projectsByRecent } from "./state.js";
+import { storageKey, workspace, setWorkspace, persist, saveNow, flushSaves, nextCardId, recordActivity, projectsByRecent } from "./state.js";
 import { allStores, workspaceStores, readStores, replaceStores, clearAll, readProjectRecords, putRecords } from "./db.js";
 import { isProjectBundle, migrateWorkspace, remapProjectBundle } from "./records.js";
 import { openProject } from "./projects.js";
@@ -9,7 +9,6 @@ import { openProject } from "./projects.js";
 const extraStores = allStores.filter(name => !workspaceStores.includes(name));
 import { showView } from "./views.js";
 import { renderProject } from "./workspace.js";
-import { openOnboarding } from "./onboarding.js";
 import { resetPipeline } from "./pipeline.js";
 import { resetWeb } from "./web/web-view.js";
 
@@ -78,7 +77,7 @@ export async function restoreBackup(file) {
   try {
     const backup = JSON.parse(await file.text());
     const restored = backup?.workspace;
-    if (!restored?.activeId || !Array.isArray(restored.projects) || !restored.projects.length || !restored.projects.every(project => typeof project.id === "string" && typeof project.title === "string" && Array.isArray(project.cards) && Array.isArray(project.sources))) throw new Error("Invalid backup");
+    if (!restored || !Array.isArray(restored.projects) || !restored.projects.every(project => typeof project.id === "string" && typeof project.title === "string" && Array.isArray(project.cards) && Array.isArray(project.sources))) throw new Error("Invalid backup");
     if (!window.confirm("Restore this backup? It will replace the local Lattice workspace in this browser.")) return;
     await flushSaves();
     await replaceStores(Object.fromEntries(extraStores.map(name => [name, Array.isArray(backup.stores?.[name]) ? backup.stores[name] : []])));
@@ -95,9 +94,7 @@ export async function deleteWorkspace() {
   await clearAll();
   localStorage.removeItem(storageKey);
   localStorage.removeItem("lattice-phase-zero-session");
-  const project = newProject(defaultTitle, { placeholder: true });
-  setWorkspace({ activeId: project.id, projects: [project] });
+  setWorkspace({ activeId: null, projects: [] });
   resetPipeline(); resetWeb();
-  persist(); renderProject(); renderPrivacy(); toast("Local workspace deleted.");
-  openOnboarding("create");
+  persist(); renderProject(); showView("projects"); toast("Local workspace deleted.");
 }

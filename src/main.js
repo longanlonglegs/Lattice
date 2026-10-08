@@ -1,6 +1,6 @@
 // Entry point: wires up events and opens the first view.
 import { $ } from "./util.js";
-import { loaded, initWorkspace, currentProject, saveWorkspace, clearAiAnalysis } from "./state.js";
+import { initWorkspace, currentProject, saveWorkspace, clearAiAnalysis } from "./state.js";
 import { renderProjectsGrid, openProject } from "./projects.js";
 import { viewSections, currentView, showView } from "./views.js";
 import { renderProject, exportMarkdown, toggleActivityList } from "./workspace.js";
@@ -54,6 +54,9 @@ document.querySelectorAll("[data-view]").forEach(button => button.addEventListen
 const setMenu = open => { document.body.classList.toggle("nav-open", open); $("#menu-button").setAttribute("aria-expanded", String(open)); };
 $("#menu-button").addEventListener("click", () => setMenu(!document.body.classList.contains("nav-open")));
 $("#nav-backdrop").addEventListener("click", () => setMenu(false));
+// On wide screens the sidebar opens on hovering the Lattice mark; a click toggles it too (for touch), and a click elsewhere closes it.
+$("#brand-peek").addEventListener("click", () => setMenu(!document.body.classList.contains("nav-open")));
+document.addEventListener("click", event => { if (document.body.classList.contains("nav-open") && !event.target.closest(".sidebar, #brand-peek, #menu-button")) setMenu(false); });
 document.querySelector(".sidebar").addEventListener("click", event => { if (event.target.closest("button, a")) setMenu(false); });
 $("#brand-home").addEventListener("click", event => { event.preventDefault(); showView("workspace"); });
 $("#how-it-works").addEventListener("click", () => showView("how"));
@@ -80,6 +83,7 @@ $("#cards-review-button").addEventListener("click", requestReview);
 $("#pipeline-status").addEventListener("click", () => schedulePipeline(0));
 // New relations update the web and the card list (unless a card is being edited, to keep its focus).
 onPipelineChange(() => {
+  if (!currentProject()) return;
   renderPipelineStatus(); renderWeb(); renderInsights({ tabs: false });
   if (!document.activeElement?.closest("#cards-grid")) renderCards();
 });
@@ -94,7 +98,6 @@ $("#text-button").addEventListener("click", addPastedText);
 // The hash remembers the view and, for a project, its tab: #workspace/cards
 const [hashView, hashTab] = window.location.hash.slice(1).split("/");
 renderProject();
-showTab(projectTabs.includes(hashTab) ? hashTab : "web");
-if (loaded.fresh) openOnboarding("create");
-else showView(Object.keys(viewSections).filter(view => view !== "onboarding").includes(hashView) ? hashView : "workspace");
-if (!loaded.fresh) requestReview(); // cards left waiting in an earlier session
+if (currentProject()) showTab(projectTabs.includes(hashTab) ? hashTab : "web");
+showView(Object.keys(viewSections).filter(view => view !== "onboarding").includes(hashView) ? hashView : "workspace");
+requestReview(); // cards left waiting in an earlier session

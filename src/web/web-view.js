@@ -137,7 +137,11 @@ function placeTargets(project) {
 // ---------- Rendering ----------
 
 export function renderWeb() {
-  if (!d3) return;
+  if (!d3) {
+    $("#web-title").textContent = "The idea web couldn’t load";
+    $("#web-empty p").textContent = "Its drawing library (d3) is missing. Run npm install in the Lattice folder, restart the server, and reload this page.";
+    return;
+  }
   const project = currentProject();
   const cards = webCards(project);
   $("#web-empty").classList.toggle("hidden", cards.length > 0);
@@ -318,12 +322,22 @@ function tick() {
 
 // While the pipeline re-reads ideas or judges new pairs (after an import or an edited claim), a banner says so
 // and the cards involved pulse. The web stays usable meanwhile.
+// While the pipeline works on this project, a loading screen covers the canvas. The bar fills as the
+// remaining count falls; the largest count seen in this run is the 100% mark.
+let loadingTotal = 0;
 function renderUpdating() {
   const status = pipelineStatus();
   const busy = web && status.projectId === web.projectId && (status.state === "embedding" || status.state === "relating");
-  const banner = $("#web-updating");
-  banner.classList.toggle("hidden", !busy);
-  if (busy) banner.querySelector("span").textContent = status.state === "embedding" ? `Reading ${plural(status.left, "idea")}…` : `Updating connections… ${plural(status.left, "pair")} left to check`;
+  $("#web-loading").classList.toggle("hidden", !busy);
+  if (!busy) loadingTotal = 0;
+  else {
+    const reading = status.state === "embedding";
+    if (reading || status.left > loadingTotal) loadingTotal = reading ? 0 : status.left;
+    $("#web-loading-title").textContent = reading ? "Reading your ideas" : "Connecting your ideas";
+    $("#web-loading-detail").textContent = reading ? `${plural(status.left, "idea")} to read` : `${plural(status.left, "pair")} left to check`;
+    const done = reading || !loadingTotal ? 0 : 1 - status.left / loadingTotal;
+    $("#web-loading-progress").style.width = `${Math.round(5 + done * 95)}%`;
+  }
   const involved = new Set(busy ? status.cards || [] : []);
   d3.select("#web-cards").selectAll("div.web-card").classed("updating", node => involved.has(node.id));
 }

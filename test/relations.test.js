@@ -125,3 +125,13 @@ test("needsAttention lists contradictions, guesses without evidence, and unsuppo
   assert.deepEqual(result.unsupportedDrafts.map(c => c.id), [4]);
   assert.equal(result.total, 4);
 });
+
+test("relate passes each idea's evidence along, trimmed, and leaves it out when empty", async t => {
+  const calls = stubOpenAI(t, () => ({ results: [] }));
+  const pair = { id: "1|2", a: { claim: "Copper speeds loss", origin: "my experiment", evidence: `  Sealed bottles lost 22 percent.  ${"x".repeat(2000)}` }, b: { claim: "Temperature dominates", origin: "my hypothesis", evidence: "  " } };
+  await callRoute(relatePairs, { question: "Q", pairs: [pair] });
+  const sent = calls[0].payload.pairs[0];
+  assert.ok(sent.a.evidence.startsWith("Sealed bottles lost 22 percent."));
+  assert.equal(sent.a.evidence.length, 900);
+  assert.equal("evidence" in sent.b, false);
+});

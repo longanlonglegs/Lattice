@@ -61,9 +61,7 @@ export function openOnboarding(mode, projectId = null) {
   $(".ob-ack").classList.toggle("hidden", Boolean(acknowledged));
   $("#ob-acked").classList.toggle("hidden", !acknowledged);
   $("#ob-acked").textContent = acknowledged ? `✓ You acknowledged this on ${new Date(acknowledged).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}.` : "";
-  const onlyProject = workspace.projects.length < 2;
-  $("#ob-delete").disabled = onlyProject;
-  $("#ob-danger-help").textContent = onlyProject ? "This is your only project. Create another one before deleting it." : "Removes the project, its sources, cards, and activity from this browser. This can’t be undone unless you have a backup.";
+  $("#ob-danger-help").textContent = "Removes the project, its sources, cards, and activity from this browser. This can’t be undone unless you have a backup.";
   $("#ob-form").classList.remove("hidden");
   $("#ob-cancel").disabled = false;
   renderColourPicker(); renderWorkList(); renderOnboarding();
@@ -99,8 +97,8 @@ export async function addObFiles(files) {
         item.info = info;
         if (!pages.length) Object.assign(item, { status: "error", note: "No selectable text found. Scanned PDFs aren’t supported yet." });
         else Object.assign(item, { status: "ready", pages: pages.map(({ pageNo, text }) => ({ label: `p. ${pageNo}`, text })), note: `${plural(pages.length, "page")} · ${Math.max(1, Math.round(file.size / 1024))} KB` });
-      } catch {
-        Object.assign(item, { status: "error", note: "Lattice couldn’t read this PDF." });
+      } catch (error) {
+        Object.assign(item, { status: "error", note: error.missingReader ? error.message : "Lattice couldn’t read this PDF." });
       }
     }
     renderWorkList();
@@ -145,10 +143,10 @@ export async function createProject() {
 
 export function deleteProject() {
   const project = workspace.projects.find(item => item.id === ob.projectId);
-  if (!project || workspace.projects.length < 2) return;
+  if (!project) return;
   if (!window.confirm(`Delete “${project.title}” and all its sources, cards, and activity? This cannot be undone unless you have a backup.`)) return;
   workspace.projects = workspace.projects.filter(item => item.id !== project.id);
-  if (workspace.activeId === project.id) workspace.activeId = projectsByRecent()[0].id;
+  if (workspace.activeId === project.id) workspace.activeId = projectsByRecent()[0]?.id || null;
   forgetProject(project.id).catch(error => console.error("Could not remove the project’s relationships", error));
   persist(); renderProject(); showView("projects"); toast(`${project.title} deleted.`);
 }

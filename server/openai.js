@@ -49,33 +49,63 @@ async function callEmbeddings(texts) {
 const analysisSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["summary", "confidence", "tensions", "next_actions"],
+  required: ["overview", "confidence", "guesses", "contradictions", "gaps"],
   properties: {
-    summary: { type: "string" },
+    overview: { type: "string" },
     confidence: { type: "string", enum: ["low", "medium", "high"] },
-    tensions: {
+    guesses: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["title", "explanation", "evidence_ids"],
+        required: ["guess_id", "verdict", "agreement", "disagreement", "revision", "suggestions"],
         properties: {
-          title: { type: "string" },
-          explanation: { type: "string" },
-          evidence_ids: { type: "array", items: { type: "string" } }
+          guess_id: { type: "string" },
+          verdict: { type: "string", enum: ["supported", "mixed", "challenged", "untested"] },
+          agreement: { type: "string" },
+          disagreement: { type: "string" },
+          revision: { type: "string" },
+          suggestions: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["action", "reason", "priority"],
+              properties: {
+                action: { type: "string" },
+                reason: { type: "string" },
+                priority: { type: "string", enum: ["now", "next", "later"] }
+              }
+            }
+          }
         }
       }
     },
-    next_actions: {
+    contradictions: {
       type: "array",
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["action", "reason", "priority"],
+        required: ["evidence_ids", "title", "explanation", "resolve"],
         properties: {
-          action: { type: "string" },
-          reason: { type: "string" },
-          priority: { type: "string", enum: ["now", "next", "later"] }
+          evidence_ids: { type: "array", items: { type: "string" } },
+          title: { type: "string" },
+          explanation: { type: "string" },
+          resolve: { type: "string" }
+        }
+      }
+    },
+    gaps: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "explanation", "research", "related_ids"],
+        properties: {
+          title: { type: "string" },
+          explanation: { type: "string" },
+          research: { type: "string" },
+          related_ids: { type: "array", items: { type: "string" } }
         }
       }
     }

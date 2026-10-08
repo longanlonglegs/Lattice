@@ -35,19 +35,21 @@ export function renderTabs() {
   $("#tab-sources-status").textContent = plural(project.sources.length, "source");
   const latest = latestVersion(project);
   $("#tab-history-status").textContent = !question ? "Not started" : !latest ? (hypothesis ? "Question + hypothesis" : "Question set") : `Version ${latest.number}${hasUnrecordedChanges(project) ? " · edited" : ""}`;
-  $("#tab-insights-status").textContent = project.aiAnalysis ? "AI read ready" : "Counts & next steps";
+  $("#tab-insights-status").textContent = project.aiAnalysis?.overview ? "AI read ready" : "Summary & gaps";
   renderWeb();
   renderPipelineStatus();
   schedulePipeline();
 }
 
-// The header chip: what the relationship pipeline is doing for this project.
+// The header chip appears only when the relationship pipeline has paused and needs a retry;
+// progress itself is shown by the loading screen in the Web tab.
 export function renderPipelineStatus() {
   const project = currentProject();
   const status = pipelineStatus();
   const state = status.projectId === project.id ? status.state : "idle";
   const chip = $("#pipeline-status");
   chip.dataset.state = state;
+  chip.classList.toggle("hidden", state !== "no-key" && state !== "error");
   chip.textContent = {
     embedding: `Reading ideas… ${status.left} left`,
     relating: `Connecting ideas… ${status.left} pairs left`,

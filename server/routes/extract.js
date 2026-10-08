@@ -77,6 +77,11 @@ function verifiedCards(cards, pages) {
 }
 
 // Bibliographic details the model read off the page. Only used to fill gaps in a source's metadata.
+// The current hypothesis guesses, as plain claims (up to 5).
+function validGuesses(input) {
+  return (Array.isArray(input) ? input : []).slice(0, 5).map(item => String(item || "").replace(/\s+/g, " ").trim().slice(0, 1000)).filter(Boolean);
+}
+
 function sourceInfo(info) {
   const text = value => String(value || "").replace(/\s+/g, " ").trim().slice(0, 500);
   return { title: text(info?.title), authors: (Array.isArray(info?.authors) ? info.authors : []).map(text).filter(Boolean).slice(0, 50), year: text(info?.year), venue: text(info?.venue), doi: text(info?.doi) };
@@ -101,6 +106,7 @@ async function extractCards(req, res) {
       ...(mode === "link" ? { source_url: String(body.url || "").slice(0, 2000) } : {}),
       research_question: String(body.question || "").trim().slice(0, 4000) || "Not provided",
       working_hypothesis: String(body.hypothesis || "").trim().slice(0, 4000) || "Not provided",
+      hypothesis_guesses: validGuesses(body.guesses),
       passages: pages
     };
     const prompt = promptByMode[mode];
@@ -113,4 +119,4 @@ async function extractCards(req, res) {
   }
 }
 
-module.exports = { normalizeForMatch, capPages, verifiedCards, sourceInfo, extractCards };
+module.exports = { normalizeForMatch, capPages, verifiedCards, sourceInfo, validGuesses, extractCards };
