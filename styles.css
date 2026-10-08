@@ -1336,3 +1336,50 @@ kbd{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 
 .web-canvas:not(.nodes-mode) .web-card.hub .wc-text{font-size:calc(var(--fs-claim) * 1.3)}
 .web-canvas:not(.nodes-mode) .wc-tally{font-size:calc(var(--fs-label) * 1.3)}
 .web-canvas:not(.nodes-mode) .wc-dot{width:8px;height:8px}
+
+/* The workspace must not animate: a transform or opacity animation makes it the containing block / stacking context for the fixed project tabs and actions, pinning them to the centred 1240px column instead of the window on wide screens. */
+@keyframes lattice-fade-in{from{opacity:0}to{opacity:1}}
+.workspace:not(.hidden){animation:none}
+@media(prefers-reduced-motion:no-preference){.workspace:not(.hidden) .ws-title,.workspace:not(.hidden) .ws-body{animation:lattice-fade-in .24s ease both}}
+/* The tab island's reserved gutter shouldn't shorten the top bar the fixed actions sit on. */
+@media(min-width:851px){body:has(.workspace:not(.hidden):not([data-active-tab="web"])) .topbar{margin-right:-104px}}
+/* Always reserve the scrollbar's width so short and long tabs put the fixed chrome in the same place. */
+html{scrollbar-gutter:stable}
+/* The web legend sits bottom left, level with the toolbar and zoom controls. */
+@media(min-width:901px){.web-float-left{top:16px;bottom:20px;justify-content:flex-end}}
+/* Every verdict pill carries a state dot: green holding up, red under pressure, split contested, hollow untested. */
+.ins-part .ins-verdict:before,.ins-chart-verdict:before{content:"";flex:none;width:8px;height:8px;border-radius:50%;box-sizing:border-box}
+.ins-chart-verdict{display:inline-flex;align-items:center;gap:6px}
+.ins-part[data-verdict=supported] .ins-verdict:before,.ins-chart-verdict[data-verdict=supported]:before{background:var(--relation-supports)}
+.ins-part[data-verdict=challenged] .ins-verdict:before,.ins-chart-verdict[data-verdict=challenged]:before{background:var(--relation-contradicts)}
+.ins-part[data-verdict=mixed] .ins-verdict:before,.ins-chart-verdict[data-verdict=mixed]:before{background:linear-gradient(90deg,var(--relation-supports) 50%,var(--relation-contradicts) 50%)}
+.ins-part[data-verdict=untested] .ins-verdict:before,.ins-chart-verdict[data-verdict=untested]:before{border:1.5px solid var(--line-bold);background:none}
+/* Cards sit in two fixed columns (see cardColumns in cards.js) so opening one never reshuffles the others. */
+.card-group-inner,.rejected-section{container-type:inline-size}
+.cards-groups .cards-grid{display:flex;align-items:flex-start;gap:13px;columns:auto}
+.cards-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:13px}
+.cards-groups .cards-col>.study-card{margin:0}
+@container (max-width:522px){.cards-groups .cards-grid{flex-direction:column;align-items:stretch}.cards-col{display:contents}}
+/* The logo: the L monogram drawn as connected ideas, with one branching off in blue. */
+.brand-mark .logo-mark{width:100%;height:100%}
+/* Sticky notes: a roomier default size and larger type (STICKY_W / STICKY_H in web-view.js mirror these). */
+.web-sticky{width:260px;padding:8px 12px 12px}
+.web-sticky textarea{min-height:120px;font:var(--fs-lead)/1.5 var(--font-ui)}
+.sticky-bar{height:20px;margin-bottom:6px;gap:6px}
+.sticky-colour{width:14px;height:14px}
+/* A toast with an action (Undo) takes clicks while it's showing. */
+.toast{display:flex;align-items:center;gap:14px}
+.toast.show.has-action{pointer-events:auto}
+.toast-action{margin:-4px -6px -4px 0;padding:4px 8px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--accent-soft);font:600 var(--fs-small) var(--font-ui);cursor:pointer}
+.toast-action:hover{background:rgba(255,255,255,.1)}
+.toast-action:focus-visible{outline:2px solid var(--accent-soft);outline-offset:1px}
+/* Confirm dialog (confirmDialog in util.js): the AI dialog's frame, sized for a question and two buttons. */
+.confirm-dialog[open]{display:grid;gap:8px;width:min(400px,calc(100vw - 32px));margin:auto;padding:22px 22px 18px;border:0;border-radius:var(--radius-xl);background:var(--card);color:var(--ink);box-shadow:var(--shadow-overlay)}
+.confirm-dialog::backdrop{background:var(--scrim)}
+.confirm-dialog h2{margin:0;font:700 var(--fs-claim)/1.3 var(--font-ui);letter-spacing:-.01em}
+.confirm-dialog p{margin:0;color:var(--muted-strong);font-size:var(--fs-body);line-height:1.5}
+.confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.confirm-ok{padding:7px 14px;border:1px solid var(--accent-strong);border-radius:var(--radius-sm);background:var(--accent-strong);color:var(--on-accent);font:600 var(--fs-small)/1.2 var(--font-ui);cursor:pointer}
+.confirm-ok.danger{border-color:var(--against-text);background:var(--against-text)}
+.confirm-ok:hover{filter:brightness(1.1)}
+.confirm-ok:focus-visible,.confirm-actions .ghost-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

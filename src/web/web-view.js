@@ -1,6 +1,6 @@
 // The idea web: the project's ideas as cards on a pannable canvas. Hypothesis guesses are large hub cards on a
 // ring in the middle; each piece of evidence gathers around the guess it bears on most. Uses d3 (a global).
-import { $, escapeHtml, plural } from "../util.js";
+import { $, escapeHtml, plural, toast, confirmDialog } from "../util.js";
 import { currentProject, persist } from "../state.js";
 import { origins, originOf } from "../origins.js";
 import { graphLoaded, pipelineStatus, projectEdges, webCards } from "../pipeline.js";
@@ -54,7 +54,7 @@ function createWeb(project) {
   canvas.on("dblclick", event => {
     if (event.target.closest(".web-card, .web-side, .web-sticky, .web-attention")) return;
     const [x, y] = d3.zoomTransform(canvas.node()).invert(d3.pointer(event, canvas.node()));
-    addSticky(x - 95, y - 20);
+    addSticky(x - STICKY_W / 2, y - 20);
   });
 
   const simulation = d3.forceSimulation()
@@ -620,7 +620,7 @@ function fit(animate = true, only = null) {
   const width = canvas.clientWidth, height = canvas.clientHeight;
   if (!width || !height) { web.fitted = false; return; }
   // Cards and sticky notes, as boxes of { x, y } centre and size.
-  const boxes = only || [...web.nodes.values(), ...(currentProject().stickies || []).map(sticky => ({ x: sticky.x + 95, y: sticky.y + 50, w: 190, h: 100 }))];
+  const boxes = only || [...web.nodes.values(), ...(currentProject().stickies || []).map(sticky => ({ x: sticky.x + STICKY_W / 2, y: sticky.y + STICKY_H / 2, w: STICKY_W, h: STICKY_H }))];
   const x0 = d3.min(boxes, box => box.x - box.w / 2), x1 = d3.max(boxes, box => box.x + box.w / 2);
   const y0 = d3.min(boxes, box => box.y - box.h / 2), y1 = d3.max(boxes, box => box.y + box.h / 2);
   // Frame the web inside the space the floating chrome leaves: the legend panel on the left, the toolbar along the
@@ -763,7 +763,7 @@ export function initWebControls() {
   $("#web-add-sticky").addEventListener("click", () => {
     const canvas = $("#web-canvas");
     const [x, y] = d3.zoomTransform(canvas).invert([canvas.clientWidth / 2, canvas.clientHeight / 2]);
-    addSticky(x - 95, y - 50);
+    addSticky(x - STICKY_W / 2, y - STICKY_H / 2);
   });
   $("#web-show-all").addEventListener("change", event => { showAll = event.target.checked; renderWeb(); });
 }
@@ -773,6 +773,9 @@ export function initWebControls() {
 // but take no part in the physics.
 
 // Mirrors --sticky-* in tokens.css (test/tokens.test.js keeps them in step).
+// A note's default footprint on the canvas; mirrors .web-sticky's width and its textarea's min-height in styles.css.
+const STICKY_W = 260;
+const STICKY_H = 166;
 const stickyColours = { yellow: "#ffef9f", pink: "#ffc9e0", green: "#c5f2d4", blue: "#c7e4ff" };
 
 function addSticky(x, y) {
@@ -802,12 +805,18 @@ function bindSticky(element) {
   const datum = () => d3.select(element).datum();
   element.querySelector("textarea").addEventListener("input", event => { datum().text = event.target.value; persist(); });
   element.querySelectorAll("[data-colour]").forEach(button => button.addEventListener("click", () => { datum().colour = button.dataset.colour; persist(); renderStickies(); }));
-  element.querySelector(".sticky-delete").addEventListener("click", () => {
+  element.querySelector(".sticky-delete").addEventListener("click", async () => {
     const sticky = datum();
-    if (sticky.text.trim() && !window.confirm("Delete this sticky note?")) return;
+    if (sticky.text.trim() && !await confirmDialog({ title: "Delete sticky note?", message: "Are you sure you want to delete this note?" })) return;
     const project = currentProject();
+    const index = project.stickies.findIndex(item => item.id === sticky.id);
     project.stickies = project.stickies.filter(item => item.id !== sticky.id);
     persist(); renderStickies();
+    if (sticky.text.trim()) toast("Sticky note deleted.", { label: "Undo", run: () => {
+      project.stickies = [...project.stickies.slice(0, index), sticky, ...project.stickies.slice(index)];
+      persist();
+      if (currentProject() === project) renderStickies();
+    } });
   });
   element.addEventListener("dblclick", event => event.stopPropagation());
   const canvas = $("#web-canvas");

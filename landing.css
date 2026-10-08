@@ -99,3 +99,4 @@ footer .logo span{background:var(--on-dark);color:var(--ink)}
 }
 
 @media(max-width:900px){.beta-offer{padding-left:0;padding-top:32px;border-left:0;border-top:1px solid rgba(255,255,255,.18)}.workflow li{padding:0}.workflow li::after{display:none}}
+.logo span .logo-mark{width:100%;height:100%}

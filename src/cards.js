@@ -27,12 +27,17 @@ function relationsHtml(item, edges, cardById) {
   return lines.length ? `<ul class="card-relations">${lines.slice(0, 6).join("")}${lines.length > 6 ? `<li>and ${lines.length - 6} more (see the Web tab)</li>` : ""}</ul>` : "";
 }
 
+// Two fixed columns, filled alternately so cards still read left to right. Unlike CSS columns, opening or closing a
+// card only pushes down the cards beneath it; nothing jumps to the other column. On narrow screens the columns
+// dissolve and each card's order puts them back in sequence.
+const cardColumns = cards => `<div class="cards-grid">${[0, 1].map(column => `<div class="cards-col">${cards.filter((_, index) => index % 2 === column).join("")}</div>`).join("")}</div>`;
+
 export function cardHtml(item, index, citation = "", relations = "") {
   const open = openCards.has(item.id) || item.editing;
   const connections = (relations.match(/<li /g) || []).length;
   const summary = [plural(item.quotes.length, "quote"), connections ? plural(connections, "connection") : ""].filter(Boolean).join(" · ");
   return `
-    <article class="study-card evidence-card ${open ? "open" : ""} ${escapeHtml(item.state)} ${item.editing ? "editing" : ""} ${item.superseded ? "superseded" : ""}" data-id="${escapeHtml(item.id)}">
+    <article class="study-card evidence-card ${open ? "open" : ""} ${escapeHtml(item.state)} ${item.editing ? "editing" : ""} ${item.superseded ? "superseded" : ""}" style="order:${index}" data-id="${escapeHtml(item.id)}">
       <div class="card-top"><div>${originBadge(item.origin)}${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}${item.superseded ? ` <span class="superseded-tag" title="From an earlier version of your hypothesis">superseded</span>` : ""}</div><div><span class="card-index">${String(index + 1).padStart(2, "0")}</span><button class="card-edit" data-card-edit type="button">${item.editing ? "Done" : "Edit"}</button></div></div>
       <div class="card-prompt"><p class="card-label">Claim</p><p class="card-question">${escapeHtml(item.claim)}</p><textarea class="question" data-field="claim" aria-label="Edit claim">${escapeHtml(item.claim)}</textarea></div>
       <button class="card-expand" type="button" data-card-toggle aria-expanded="${open}" aria-controls="card-details-${escapeHtml(item.id)}"><span>${escapeHtml(summary)}</span><svg class="icon chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
@@ -72,7 +77,7 @@ function groupsHtml(groups, edges, cardById) {
     return `
     <section class="card-group ${open ? "open" : ""}" data-group="${escapeHtml(key)}">
       <h3 class="card-group-title"><button class="card-group-head" type="button" data-group-toggle aria-expanded="${open}" aria-controls="card-group-${number}"><span class="kind-chip ${isOwnWork(source) ? "own-work" : ""}">${source.kind === "other" ? "—" : sourceCode(source)}</span><span class="card-group-name">${escapeHtml(source.title)}</span><small>${plural(groupCards.length, "card")}</small><svg class="icon chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button></h3>
-      <div class="card-group-body" id="card-group-${number}"><div class="card-group-inner"><div class="cards-grid">${groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))).join("")}</div></div></div>
+      <div class="card-group-body" id="card-group-${number}"><div class="card-group-inner">${cardColumns(groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))))}</div></div>
     </section>`;
   }).join("");
 }
@@ -106,7 +111,7 @@ export function renderCards() {
     ? "<strong>No accepted cards yet.</strong><p>Use + Add evidence to add a source or some of your own work. You review each card Lattice extracts before it joins your project.</p>"
     : "<strong>No accepted cards from this origin.</strong><p>Choose All origins to see every card.</p>";
   const rejectedHtml = rejected.length
-    ? `<details class="rejected-section"><summary>Rejected cards · ${rejected.length}<small>Not in the web, relations, Insights, or exports. Restore one to bring it back.</small></summary><div class="cards-grid">${rejected.map((item, index) => cardHtml(item, index, shortCitation(project.sources.find(source => source.id === item.sourceId)?.meta))).join("")}</div></details>`
+    ? `<details class="rejected-section"><summary>Rejected cards · ${rejected.length}<small>Not in the web, relations, Insights, or exports. Restore one to bring it back.</small></summary>${cardColumns(rejected.map((item, index) => cardHtml(item, index, shortCitation(project.sources.find(source => source.id === item.sourceId)?.meta))))}</details>`
     : "";
   $("#cards-grid").innerHTML = (accepted.length ? groupsHtml(groupBySource(project, accepted), edges, cardById) : `<div class="empty-cards">${empty}</div>`) + rejectedHtml;
   const findCard = node => cards.find(candidate => candidate.id === +node.closest("article").dataset.id);
