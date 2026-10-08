@@ -7,13 +7,17 @@ import { graphLoaded, pipelineStatus, projectEdges, webCards } from "../pipeline
 import { relationTypes, describeRelation, edgeEnds, shortText, visibleEdges } from "../relations.js";
 import { shortCitation } from "../records.js";
 import { renderAttention, setAttentionOpen } from "./attention.js";
+import { pendingCards, requestReview } from "../review.js";
+import { icon } from "../icons.js";
 
 const d3 = window.d3;
-const SIZE = { hub: [300, 150], card: [210, 92] }; // fallback sizes until a card has been measured
+const SIZE = { hub: [390, 195], card: [273, 120] }; // fallback sizes until a card has been measured
 const hidden = { origins: new Set(), relations: new Set() };
 let web = null; // { projectId, simulation, nodes: Map, links: [], zoom, selectedId, signature, fitted }
 let searchTerm = "";
 let showAll = false;
+// "cards" shows every idea as a card; "nodes" shows each as a shape sized by how connected it is.
+let viewMode = (() => { try { return localStorage.getItem("lattice-web-view") === "nodes" ? "nodes" : "cards"; } catch { return "cards"; } })();
 
 const isHub = node => node.card.origin === "hypothesis";
 
@@ -35,10 +39,15 @@ function createWeb(project) {
 
   const canvas = d3.select("#web-canvas");
   const zoom = d3.zoom().scaleExtent([0.15, 2.5])
-    .filter(event => !event.target.closest?.(".web-card, .web-side, .web-sticky, .web-attention") && (!event.ctrlKey || event.type === "wheel") && !event.button)
+    // Scrolling or pinching zooms the web wherever the pointer is, cards included; only the side panel and the
+    // attention list keep their own scrolling. Pressing on a card drags the card instead of panning.
+    .filter(event => !event.target.closest?.(event.type === "wheel" ? ".web-side, .web-attention" : ".web-card, .web-side, .web-sticky, .web-attention") && (!event.ctrlKey || event.type === "wheel") && !event.button)
     .on("zoom", event => {
       const { x, y, k } = event.transform;
       $("#web-world").style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+      $("#web-zoom-level").textContent = `${Math.round(k * 100)}%`;
+      // Nodes view: shapes and labels partly counter the zoom, so they stay legible when the whole web is in view.
+      $("#web-canvas").style.setProperty("--zoom-inv", Math.min(3, Math.max(1, (1 / k) ** 0.7)).toFixed(3));
     });
   canvas.call(zoom).on("dblclick.zoom", null);
   canvas.on("click", event => { if (!event.target.closest(".web-card, .web-side, .web-sticky, .web-attention")) select(null); });
@@ -49,15 +58,20 @@ function createWeb(project) {
   });
 
   const simulation = d3.forceSimulation()
-    .force("target-x", d3.forceX(node => node.target?.x ?? 0).strength(node => node.target ? 0.07 : 0.02))
-    .force("target-y", d3.forceY(node => node.target?.y ?? 0).strength(node => node.target ? 0.07 : 0.02))
-    .force("link", d3.forceLink().id(node => node.id).distance(240).strength(0.02))
-    .force("charge", d3.forceManyBody().strength(-160).distanceMax(500))
-    .force("collide", rectCollide(18))
-    .alphaDecay(0.035)
+    // The layout (placeTargets) decides where everything goes; the simulation eases cards there and clears any
+    // overlap. Links carry no force, so a long connection can't drag a card out of its group.
+    .force("target-x", d3.forceX(node => node.target?.x ?? 0).strength(node => node.target ? 0.1 : 0.02))
+    .force("target-y", d3.forceY(node => node.target?.y ?? 0).strength(node => node.target ? 0.1 : 0.02))
+    // Every card pushes every other card away a little, so the web spreads out evenly instead of bunching.
+    .force("spread", d3.forceManyBody().strength(-900).distanceMin(60).distanceMax(650))
+    .force("link", d3.forceLink().id(node => node.id).strength(0))
+    .force("collide", rectCollide(14))
+    .force("edge-avoid", edgeAvoid(16))
+    .alphaDecay(0.05)
     .on("tick", tick)
     .on("end", () => { savePositions(); if (!web.fitted) { web.fitted = true; fit(false); } });
-  web = { projectId: project.id, simulation, nodes: new Map(), links: [], zoom, selectedId: null, signature: "", fitted: false };
+  web = { projectId: project.id, simulation, nodes: new Map(), links: [], zoom, selectedId: null, signature: "", fitted: false, mode: viewMode };
+  $("#web-canvas").classList.toggle("nodes-mode", viewMode === "nodes");
 }
 
 // Keeps cards from overlapping: pushes apart any two whose rectangles (plus padding) intersect,
@@ -86,55 +100,224 @@ function rectCollide(padding) {
 
 // ---------- Layout targets ----------
 
-// Hubs sit evenly on a ring. Each piece of evidence aims for a spot just outside its strongest hypothesis guess;
-// evidence with no link to the hypothesis aims for an outer band, one direction per source.
+// Each hypothesis guess is the centre of its own cluster, with the evidence that bears on it most in rings around it.
+// The layout works to keep connections from crossing cards and each other:
+//  - clusters that share many connections sit next to each other on the circle, so long links stay short;
+//  - inside a cluster, evidence that also connects elsewhere takes the slot facing what it connects to; the rest keep
+//    supporting evidence on the left and contradicting evidence on the right;
+//  - alternate rings are staggered by half a slot, so spokes to the outer ring pass between inner cards.
+// Ring spacing comes from the real card (or node) size, so nothing overlaps. Evidence with no link to the hypothesis
+// sits on an outer band, grouped by source.
+const SIDE_ORDER = { supports: 0, same: 0, explains: 1, refines: 1, contradicts: 2 };
+const SIDE_ANGLE = [Math.PI, Math.PI / 2, 0]; // for: left, conditions/causes: below, against: right
 function placeTargets(project) {
   const nodes = [...web.nodes.values()];
   const hubs = nodes.filter(isHub).sort((a, b) => a.id - b.id);
-  const ring = hubs.length > 1 ? Math.max(240, hubs.length * 115) : 0;
-  hubs.forEach((hub, index) => {
-    const angle = -Math.PI / 2 + (2 * Math.PI * index) / hubs.length;
-    hub.angle = angle;
-    hub.target = { x: Math.cos(angle) * ring, y: Math.sin(angle) * ring };
-    if (!hub.pinned) { hub.fx = hub.target.x; hub.fy = hub.target.y; }
-  });
-  const strongestHub = new Map();
-  for (const link of web.links) {
+  const evidence = nodes.filter(node => !isHub(node));
+  // The cards view and the nodes view share one layout, computed from card sizes (remembered from the cards view),
+  // so switching views never moves anything. SPREAD sets how much breathing room every distance gets.
+  const SPREAD = 1.5;
+  // Spacing is planned from fixed card sizes, not the drawn ones, so making cards bigger doesn't spread the web.
+  const PLAN = { hub: [300, 150], card: [210, 92] };
+  const cardW = PLAN.card[0];
+  const cardH = PLAN.card[1];
+  const slot = (cardW + 24) * SPREAD;
+  const depth = (cardH + 40) * SPREAD;
+  const hubReach = (Math.max(120, Math.max(...PLAN.hub) / 2) + 30) * SPREAD;
+  const gap = 100 * SPREAD;
+  const stretch = Math.max(1, cardW / cardH) * 0.62;
+  const links = web.links.filter(link => typeof link.source === "object");
+  // In the nodes view the first ring sits far enough out (hubReach) that a hub's label fits inside it.
+  const around = 2 * Math.PI;
+  const ringAround = () => around;
+
+  // Home: the guess each piece of evidence is most confidently linked to.
+  const home = new Map();
+  for (const link of links) {
     const [hub, other] = isHub(link.source) ? [link.source, link.target] : isHub(link.target) ? [link.target, link.source] : [null, null];
     if (!hub || isHub(other)) continue;
-    const best = strongestHub.get(other.id);
-    if (!best || link.edge.confidence > best.confidence) strongestHub.set(other.id, { hub, confidence: link.edge.confidence });
+    const best = home.get(other.id);
+    if (!best || link.edge.confidence > best.confidence) home.set(other.id, { hub, confidence: link.edge.confidence, relation: link.edge.relation });
   }
-  // Each hub's evidence fans out on an arc facing away from the centre (two staggered rows), so the cards
-  // around one hub don't compete for the same spot. With a single hub, the arc goes all the way round.
   const members = new Map(hubs.map(hub => [hub.id, []]));
   const loose = [];
-  const sources = project.sources.map(source => source.id);
-  const bySource = (a, b) => sources.indexOf(a.card.sourceId) - sources.indexOf(b.card.sourceId) || a.id - b.id;
-  for (const node of nodes) {
-    if (isHub(node)) continue;
-    const home = strongestHub.get(node.id)?.hub;
-    node.home = home?.id ?? null;
-    if (home) members.get(home.id).push(node); else loose.push(node);
+  for (const node of evidence) {
+    const entry = home.get(node.id);
+    node.home = entry?.hub.id ?? null;
+    node.side = entry ? SIDE_ORDER[entry.relation] ?? 1 : 1;
+    if (entry) members.get(entry.hub.id).push(node); else loose.push(node);
   }
+  const clusterOf = node => (isHub(node) ? node.id : node.home);
+
+  // Ring capacities per cluster (they depend only on how many members there are).
+  const ringsFor = count => {
+    const rings = [];
+    let left = count, radius = hubReach + depth / 2;
+    while (left > 0) {
+      const capacity = Math.max(1, Math.floor((ringAround(rings.length) * radius * Math.min(stretch, 1.4)) / slot));
+      rings.push({ radius, capacity: Math.min(capacity, left) });
+      left -= capacity;
+      radius += depth;
+    }
+    return rings;
+  };
+  const shapes = new Map(hubs.map(hub => {
+    const rings = ringsFor(members.get(hub.id).length);
+    const outer = rings.length ? rings[rings.length - 1].radius : hubReach;
+    const reach = Math.max(hubReach * stretch, outer * stretch + cardW / 2, outer + cardH / 2);
+    return [hub.id, { rings, reach }];
+  }));
+
+  // Order the clusters round the circle so the pairs with the most connections between them are neighbours.
+  const affinity = new Map();
+  for (const link of links) {
+    const a = clusterOf(link.source), b = clusterOf(link.target);
+    if (a == null || b == null || a === b) continue;
+    const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+    affinity.set(key, (affinity.get(key) || 0) + link.edge.confidence);
+  }
+  const n = hubs.length;
+  let order = hubs.map(hub => hub.id);
+  if (n > 3 && n <= 7) {
+    const cost = ids => {
+      let total = 0;
+      for (let i = 0; i < ids.length; i += 1) for (let j = i + 1; j < ids.length; j += 1) {
+        const steps = Math.min(j - i, ids.length - (j - i));
+        total += (affinity.get(ids[i] < ids[j] ? `${ids[i]}|${ids[j]}` : `${ids[j]}|${ids[i]}`) || 0) * steps;
+      }
+      return total;
+    };
+    const permute = (rest, prefix, best) => {
+      if (!rest.length) { const c = cost(prefix); if (c < best.cost) { best.cost = c; best.ids = prefix; } return best; }
+      rest.forEach((id, i) => permute([...rest.slice(0, i), ...rest.slice(i + 1)], [...prefix, id], best));
+      return best;
+    };
+    order = permute(order.slice(1), [order[0]], { cost: Infinity, ids: order }).ids;
+  }
+  const biggest = Math.max(0, ...[...shapes.values()].map(shape => shape.reach));
+  const ring = n > 1 ? (biggest + gap / 2) / Math.sin(Math.PI / n) : 0;
+  const start = n === 2 ? Math.PI : -Math.PI / 2;
+  const centre = new Map();
+  order.forEach((id, index) => {
+    const angle = start + (2 * Math.PI * index) / Math.max(1, n);
+    centre.set(id, { x: Math.cos(angle) * ring * (n > 2 ? 1.12 : 1), y: Math.sin(angle) * ring * (n > 2 ? 0.88 : 1) });
+  });
+
+  // Inside each cluster: give each member the free slot closest to the direction it wants to face.
   for (const hub of hubs) {
-    const group = members.get(hub.id).sort(bySource);
-    const arc = hubs.length > 1 ? Math.min(Math.PI * 0.9, group.length * 0.42) : Math.PI * 2 * (1 - 1 / Math.max(2, group.length));
-    group.forEach((node, index) => {
-      const angle = hub.angle + (group.length > 1 ? (index / (group.length - 1) - 0.5) * arc : 0);
-      const radius = 260 + (index % 2) * 140;
-      node.target = { x: hub.target.x + Math.cos(angle) * radius * 1.15, y: hub.target.y + Math.sin(angle) * radius * 0.85 };
+    const c = centre.get(hub.id);
+    hub.target = { ...c };
+    if (!hub.pinned) { hub.fx = c.x; hub.fy = c.y; }
+    const slots = [];
+    shapes.get(hub.id).rings.forEach(({ radius, capacity }, k) => {
+      const full = Math.max(capacity, Math.floor((ringAround(k) * radius * Math.min(stretch, 1.4)) / slot));
+      const step = ringAround(k) / full;
+      const offset = k % 2 ? step / 2 : 0; // stagger alternate rings by half a slot
+      // Slots run clockwise from straight down, all the way round.
+      for (let i = 0; i < full; i += 1) slots.push({ ring: k, radius, angle: Math.PI / 2 + offset + step * (i + 0.5), used: false });
     });
+    const wants = members.get(hub.id).map(node => {
+      let vx = 0, vy = 0, pull = 0;
+      for (const link of links) {
+        const other = link.source === node ? link.target : link.target === node ? link.source : null;
+        if (!other || clusterOf(other) === hub.id) continue;
+        const target = centre.get(clusterOf(other));
+        if (!target) continue;
+        const dx = target.x - c.x, dy = target.y - c.y, len = Math.hypot(dx, dy) || 1;
+        vx += (dx / len) * link.edge.confidence; vy += (dy / len) * link.edge.confidence; pull += link.edge.confidence;
+      }
+      const angle = pull ? Math.atan2(vy, vx) : SIDE_ANGLE[node.side];
+      return { node, angle, pull, confidence: home.get(node.id).confidence };
+    });
+    // Strongly pulled members choose first, then the most confident; inner rings fill before outer ones.
+    wants.sort((p, q) => q.pull - p.pull || q.confidence - p.confidence || p.node.id - q.node.id);
+    const capacityLeft = shapes.get(hub.id).rings.map(r => r.capacity);
+    for (const want of wants) {
+      const ringIndex = capacityLeft.findIndex(left => left > 0);
+      let best = null;
+      for (const s of slots) {
+        if (s.used || s.ring !== ringIndex) continue;
+        const diff = Math.abs(Math.atan2(Math.sin(s.angle - want.angle), Math.cos(s.angle - want.angle)));
+        if (!best || diff < best.diff) best = { s, diff };
+      }
+      best.s.used = true;
+      capacityLeft[ringIndex] -= 1;
+      want.node.target = { x: c.x + Math.cos(best.s.angle) * best.s.radius * stretch, y: c.y + Math.sin(best.s.angle) * best.s.radius };
+    }
   }
-  // Evidence with no hypothesis link: an outer band, grouped by source.
-  const outer = ring + 560;
-  loose.sort(bySource).forEach((node, index) => {
-    const angle = Math.PI / 4 + (2 * Math.PI * index) / Math.max(1, loose.length);
-    node.target = { x: Math.cos(angle) * outer * 1.2, y: Math.sin(angle) * outer * 0.85 };
+
+  // Evidence with no hypothesis link: an outer band, grouped by source, spaced by the same slot.
+  const sources = project.sources.map(source => source.id);
+  const sorted = loose.sort((a, b) => sources.indexOf(a.card.sourceId) - sources.indexOf(b.card.sourceId) || a.id - b.id);
+  const band = Math.max((n ? ring + biggest : 0) + depth, (sorted.length * slot) / (2 * Math.PI));
+  sorted.forEach((node, index) => {
+    const a = -Math.PI / 2 + (2 * Math.PI * index) / Math.max(1, sorted.length);
+    node.target = { x: Math.cos(a) * band * 1.2, y: Math.sin(a) * band * 0.85 };
   });
 }
 
+// Keeps connections from running through cards: any card a straight link passes over (other than its two ends) is
+// nudged off the line, sideways. Pinned and fixed cards stay put.
+function edgeAvoid(margin) {
+  let nodes = [];
+  const force = alpha => {
+    for (const link of web?.links || []) {
+      const a = link.source, b = link.target;
+      if (typeof a !== "object" || typeof b !== "object") continue;
+      const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy;
+      if (len2 < 1) continue;
+      const len = Math.sqrt(len2), nx = -dy / len, ny = dx / len;
+      for (const node of nodes) {
+        if (node === a || node === b || node.fx != null) continue;
+        const t = ((node.x - a.x) * dx + (node.y - a.y) * dy) / len2;
+        if (t <= 0.02 || t >= 0.98) continue;
+        const offset = (node.x - a.x) * nx + (node.y - a.y) * ny; // signed distance from the line
+        const half = (Math.abs(nx) * node.w + Math.abs(ny) * node.h) / 2 + margin; // the card's half-width across it
+        if (Math.abs(offset) >= half) continue;
+        const push = (half - Math.abs(offset)) * alpha * 1.2 * (offset < 0 ? -1 : 1);
+        node.x += nx * push; node.y += ny * push;
+      }
+    }
+  };
+  force.initialize = list => { nodes = list; };
+  return force;
+}
+
 // ---------- Rendering ----------
+
+// Before the web has any accepted ideas: the project's starting point. The question, the hypothesis as the dark card
+// everything will gather around, and what Lattice is doing with it right now, so a new project never opens on a blank.
+function renderStart(project) {
+  const start = $("#web-start");
+  const hasStart = Boolean(project.question || project.hypothesis);
+  start.classList.toggle("hidden", !hasStart);
+  $("#web-empty").classList.toggle("is-start", hasStart);
+  $("#web-empty").classList.toggle("has-review", hasStart && pendingCards(project).length > 0);
+  $("#web-title").textContent = hasStart ? "Your starting point" : "Add evidence to start your web";
+  $("#web-empty-text").textContent = hasStart
+    ? "Everything you add gathers around your hypothesis, with lines showing what supports it, contradicts it, or adds a condition."
+    : "Every claim from your sources, experiments, and hypothesis appears here as an idea, with lines showing how they relate.";
+  if (!hasStart) { start.innerHTML = ""; return; }
+  const guesses = project.cards.filter(item => item.origin === "hypothesis" && !item.superseded);
+  const waiting = pendingCards(project);
+  const waitingGuesses = waiting.filter(item => item.origin === "hypothesis").length;
+  const waitingEvidence = waiting.length - waitingGuesses;
+  const sources = project.sources.length;
+  const it = n => n === 1 ? "it" : "them";
+  const status = [];
+  if (project.hypothesis && !guesses.length) status.push(["working", "Splitting your hypothesis into parts you can test, one claim each."]);
+  if (waitingGuesses) status.push(["ready", `${plural(waitingGuesses, "part")} of your hypothesis ${waitingGuesses === 1 ? "is" : "are"} ready. Accept ${it(waitingGuesses)} to put ${it(waitingGuesses)} at the centre of your web.`]);
+  if (waitingEvidence) status.push(["ready", `${plural(waitingEvidence, "card")} from what you added ${waitingEvidence === 1 ? "is" : "are"} waiting for review.`]);
+  else if (sources) status.push(["working", `Reading ${plural(sources, "source")} you added. Cards appear for review as each one finishes.`]);
+  if (!project.hypothesis) status.push(["todo", "No hypothesis yet. Add one in Question & history when you have a guess; evidence will gather around it."]);
+  if (!sources) status.push(["todo", "Next: add a paper, a link, or your own notes with + Add evidence."]);
+  start.innerHTML = `
+    ${project.question ? `<div class="web-start-question"><p class="web-start-label">Your question</p><p>${escapeHtml(project.question)}</p></div>` : ""}
+    ${project.hypothesis ? `<div class="web-start-hub"><p class="web-start-kicker">Your hypothesis</p><p>${escapeHtml(project.hypothesis)}</p></div>` : ""}
+    <ul class="web-start-status">${status.map(([state, text]) => `<li data-state="${state}"><i aria-hidden="true"></i><span>${escapeHtml(text)}</span></li>`).join("")}</ul>
+    ${waiting.length ? `<button class="primary web-start-review" type="button">Review ${plural(waiting.length, "card")} now</button>` : ""}`;
+  start.querySelector(".web-start-review")?.addEventListener("click", requestReview);
+}
 
 export function renderWeb() {
   if (!d3) {
@@ -146,7 +329,7 @@ export function renderWeb() {
   const cards = webCards(project);
   $("#web-empty").classList.toggle("hidden", cards.length > 0);
   $("#web-stage").classList.toggle("hidden", !cards.length);
-  if (!cards.length) { web?.simulation.stop(); return; }
+  if (!cards.length) { web?.simulation.stop(); renderStart(project); return; }
   if (!web || web.projectId !== project.id) createWeb(project);
 
   const ids = new Set(cards.map(item => item.id));
@@ -200,7 +383,7 @@ export function renderWeb() {
   if (web.selectedId && !web.nodes.has(web.selectedId)) select(null); else renderSide();
 }
 
-const noteIcon = card => card.note?.trim() ? `<span class="wc-note" title="${escapeHtml(card.note)}">✎</span>` : "";
+const noteIcon = card => card.note?.trim() ? `<span class="wc-note" title="${escapeHtml(card.note)}">${icon("edit")}</span>` : "";
 
 function cardHtml(node) {
   const card = node.card;
@@ -213,7 +396,7 @@ function cardHtml(node) {
     });
     return `<p class="wc-kicker">My hypothesis · ${escapeHtml(card.quotes?.[0]?.location?.replace(/^Hypothesis /, "") || "")}${noteIcon(card)}</p>
       <p class="wc-text">${escapeHtml(card.claim)}</p>
-      <p class="wc-tally"><span class="for">▲ ${tally.for} for</span><span class="against">▼ ${tally.against} against</span></p>`;
+      <p class="wc-tally"><span class="for">${tally.for} for</span><span class="against">${tally.against} against</span></p>`;
   }
   const source = currentProject().sources.find(item => item.id === card.sourceId);
   const citation = shortCitation(source?.meta) || shortText(source?.meta?.title || source?.title || "", 28);
@@ -221,8 +404,24 @@ function cardHtml(node) {
     <p class="wc-text">${escapeHtml(card.short || shortText(card.claim, 95))}</p>`;
 }
 
+// How much an idea matters to the web: the confidence-weighted count of its connections (all of them, not only the
+// drawn ones). Drives node size and the halo in the nodes view.
+function importance() {
+  const score = new Map();
+  for (const edge of projectEdges(currentProject())) for (const id of [edge.a, edge.b]) score.set(id, (score.get(id) || 0) + edge.confidence);
+  return score;
+}
+
 function drawCards() {
   const nodes = [...web.nodes.values()];
+  const score = importance();
+  const top = Math.max(1, ...score.values());
+  const ranked = [...score.values()].sort((a, b) => b - a);
+  const keyLine = ranked[Math.max(0, Math.ceil(ranked.length * 0.2) - 1)] ?? Infinity; // top fifth gets a halo
+  const diameter = node => {
+    const share = Math.sqrt((score.get(node.id) || 0) / top);
+    return Math.round((isHub(node) ? 64 + share * 44 : 22 + share * 62) * 0.8);
+  };
   d3.select("#web-cards").selectAll("div.web-card").data(nodes, node => node.id)
     .join(enter => enter.append("div").attr("class", "web-card").each(function (node) { bindCard(this, node); }))
     .attr("data-origin", node => node.card.origin)
@@ -230,12 +429,16 @@ function drawCards() {
     .classed("pinned", node => node.pinned)
     .classed("filtered", node => hidden.origins.has(node.card.origin))
     .style("--origin", node => originOf(node.card.origin).colour)
+    .style("--d", node => `${diameter(node)}px`)
+    .classed("key", node => (score.get(node.id) || 0) >= keyLine && (score.get(node.id) || 0) > 0)
     .attr("title", node => node.card.claim)
     .each(function (node) {
       const html = cardHtml(node);
       if (this.dataset.html !== html) { this.innerHTML = html; this.dataset.html = html; }
       // Measure once the card is visible (the Web tab may be hidden); until then the default size is used.
-      if (this.offsetWidth) { node.w = this.offsetWidth; node.h = this.offsetHeight; }
+      if (this.offsetWidth) {
+        node.w = this.offsetWidth; node.h = this.offsetHeight;
+      }
     });
   applySearch();
   highlight(web.selectedId);
@@ -272,16 +475,38 @@ function bindCard(element, node) {
     d3.select(element).classed("pinned", false);
     web.simulation.alpha(0.3).restart(); savePositions(); renderSide();
   });
-  element.addEventListener("mouseenter", () => highlight(node.id));
-  element.addEventListener("mouseleave", () => highlight(web.selectedId));
+  element.addEventListener("mouseenter", () => { highlight(node.id); showPeek(node); });
+  element.addEventListener("mouseleave", () => { highlight(web.selectedId); showPeek(null); });
+}
+
+// In the nodes view, hovering a node shows its card on the right: the full claim, where it came from, its first
+// quote, and how many connections it has. Hidden again when the pointer leaves, and never in the cards view.
+function showPeek(node) {
+  const peek = $("#web-peek");
+  if (!node || web.mode !== "nodes") { peek.classList.add("hidden"); return; }
+  const card = node.card;
+  const source = currentProject().sources.find(item => item.id === card.sourceId);
+  const citation = isHub(node) ? "" : shortCitation(source?.meta) || source?.title || "";
+  const quote = !isHub(node) && card.quotes?.find(item => item.text?.trim());
+  const links = web.links.filter(link => link.from === node.id || link.to === node.id);
+  const counts = Object.entries(links.reduce((tally, link) => ({ ...tally, [link.edge.relation]: (tally[link.edge.relation] || 0) + 1 }), {}));
+  peek.style.setProperty("--origin", originOf(card.origin).colour);
+  peek.classList.toggle("hub", isHub(node));
+  peek.innerHTML = `
+    <p class="peek-kicker"><span class="legend-shape" data-origin="${card.origin}" style="--origin:${originOf(card.origin).colour}"></span>${escapeHtml(originOf(card.origin).label)}${citation ? ` · ${escapeHtml(citation)}` : ""}</p>
+    <p class="peek-claim">${escapeHtml(card.claim)}</p>
+    ${quote ? `<blockquote class="peek-quote">“${escapeHtml(shortText(quote.text, 220))}”${quote.location ? `<cite>${escapeHtml(quote.location)}</cite>` : ""}</blockquote>` : ""}
+    ${counts.length ? `<p class="peek-links">${counts.map(([relation, count]) => `<span>${lineSwatch(relationTypes[relation])}${count} ${escapeHtml(relationTypes[relation].label.toLowerCase())}</span>`).join("")}</p>` : ""}
+    <p class="peek-hint">Click to open it in the side panel</p>`;
+  peek.classList.remove("hidden");
 }
 
 function drawLinks() {
   const groups = d3.select("#web-svg .web-links").selectAll("g.web-link").data(web.links, link => link.edge.id)
     .join(enter => {
       const group = enter.append("g").attr("class", "web-link");
-      group.append("line").attr("class", "link-main");
-      group.append("line").attr("class", "link-inner");
+      group.append("path").attr("class", "link-main");
+      group.append("path").attr("class", "link-inner");
       group.append("title");
       return group;
     });
@@ -292,7 +517,9 @@ function drawLinks() {
     .classed("filtered", link => hidden.relations.has(link.edge.relation) || hidden.origins.has(link.source.card?.origin) || hidden.origins.has(link.target.card?.origin));
   groups.select(".link-main")
     .attr("stroke", link => relationTypes[link.edge.relation].colour)
-    .attr("stroke-width", link => (relationTypes[link.edge.relation].double ? 3 : 1) + link.edge.confidence * 2.5)
+    .attr("stroke-width", link => (relationTypes[link.edge.relation].double ? 3 : 1) + link.edge.confidence * (web.mode === "nodes" ? 3.5 : 2.5))
+    // Confidence also sets how strongly a line reads: shaky links recede.
+    .attr("stroke-opacity", link => 0.35 + link.edge.confidence * 0.65)
     .attr("stroke-dasharray", link => relationTypes[link.edge.relation].dash || null)
     .attr("marker-end", link => relationTypes[link.edge.relation].arrow ? `url(#arrow-${link.edge.relation})` : null);
   groups.select(".link-inner").attr("display", link => relationTypes[link.edge.relation].double ? null : "none").attr("stroke-width", 1.4);
@@ -315,7 +542,17 @@ function tick() {
     if (!source || typeof source !== "object") return;
     const [x1, y1] = borderPoint(source, target.x, target.y, 3);
     const [x2, y2] = borderPoint(target, source.x, source.y, relationTypes[link.edge.relation].arrow ? 6 : 3);
-    d3.select(this).selectAll("line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
+    // Links to a hypothesis run straight (they read as spokes); links between two pieces of evidence bow
+    // sideways, always to the same side for the same pair, so they don't run through the cards in between.
+    let d = `M${x1},${y1}L${x2},${y2}`;
+    if (!isHub(source) && !isHub(target)) {
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, len = Math.hypot(x2 - x1, y2 - y1) || 1;
+      // Bow outward, away from the middle of the web, so curves don't cut across the centre.
+      const outward = (-(y2 - y1) * mx + (x2 - x1) * my) >= 0 ? 1 : -1;
+      const bend = Math.min(80, len * 0.18) * outward;
+      d = `M${x1},${y1}Q${mx - ((y2 - y1) / len) * bend},${my + ((x2 - x1) / len) * bend} ${x2},${y2}`;
+    }
+    d3.select(this).selectAll("path").attr("d", d);
   });
   d3.select("#web-cards").selectAll("div.web-card").style("transform", node => `translate(${node.x - node.w / 2}px, ${node.y - node.h / 2}px)`);
 }
@@ -386,10 +623,25 @@ function fit(animate = true, only = null) {
   const boxes = only || [...web.nodes.values(), ...(currentProject().stickies || []).map(sticky => ({ x: sticky.x + 95, y: sticky.y + 50, w: 190, h: 100 }))];
   const x0 = d3.min(boxes, box => box.x - box.w / 2), x1 = d3.max(boxes, box => box.x + box.w / 2);
   const y0 = d3.min(boxes, box => box.y - box.h / 2), y1 = d3.max(boxes, box => box.y + box.h / 2);
-  // Leave room for the side panel when zooming to a pair.
-  const usable = only ? width - 380 : width;
-  const scale = Math.min(1.1, (usable - 60) / (x1 - x0), (height - 60) / (y1 - y0));
-  const transform = d3.zoomIdentity.translate(usable / 2, height / 2).scale(scale).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+  // Frame the web inside the space the floating chrome leaves: the legend panel on the left, the toolbar along the
+  // bottom, and the side panel on the right when zooming to a pair. Below 900px the chrome stacks outside the canvas.
+  const floating = width > 900;
+  // The tab island floats over the right edge on wide screens.
+  const left = floating ? 290 : 16, right = (only ? 380 : 24) + (floating ? 96 : 0), top = 24, bottom = floating ? 96 : 24;
+  const usableW = width - left - right, usableH = height - top - bottom;
+  // Never zoom out past the point where card text stops being readable on a projector (about 12px).
+  const MIN_READABLE = web.mode === "nodes" ? 0.15 : floating ? 0.86 : 0.5;
+  let scale = Math.min(1.1, usableW / (x1 - x0), usableH / (y1 - y0));
+  let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  if (!only && scale < MIN_READABLE) {
+    // Too big to show whole at a readable size: centre on the biggest cluster, so the first view is full of content.
+    const hubs = [...web.nodes.values()].filter(isHub);
+    const size = hub => [...web.nodes.values()].filter(node => node.home === hub.id).length;
+    const biggest = hubs.sort((a, b) => size(b) - size(a))[0];
+    if (biggest) { cx = biggest.x; cy = biggest.y; }
+    scale = MIN_READABLE;
+  }
+  const transform = d3.zoomIdentity.translate(left + usableW / 2, top + usableH / 2).scale(scale).translate(-cx, -cy);
   const selection = d3.select(canvas);
   (animate ? selection.transition().duration(450) : selection).call(web.zoom.transform, transform);
 }
@@ -430,13 +682,13 @@ function renderSide() {
       return other ? `<li class="${drawn.has(edge.id) ? "" : "undrawn"}"><button type="button" data-web-goto="${escapeHtml(otherId)}"><span class="rel-dot" style="--rel:${relationTypes[edge.relation].colour}"></span><span><b>${escapeHtml(label)}</b> · ${escapeHtml(originOf(other.origin).label)}: ${escapeHtml(other.short || shortText(other.claim, 90))}</span></button><p>${escapeHtml(edge.rationale)} <small>${Math.round(edge.confidence * 100)}% sure${drawn.has(edge.id) ? "" : " · not drawn"}</small></p></li>` : "";
     }).join("");
   side.innerHTML = `
-    <button class="drawer-close web-side-close" type="button" aria-label="Close" data-web-close>×</button>
+    <button class="drawer-close web-side-close" type="button" aria-label="Close" data-web-close>${icon("close")}</button>
     <div class="web-side-meta"><span class="origin-badge" style="--origin:${originOf(card.origin).colour}">${escapeHtml(originOf(card.origin).label)}</span>${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}</div>
     <h3>${escapeHtml(card.claim)}</h3>
     ${card.quotes.map(quote => `<blockquote>“${escapeHtml(quote.text)}”</blockquote><p class="web-side-location">${escapeHtml(quote.location)}</p>`).join("")}
-    <p class="rail-label">YOUR NOTE</p>
+    <p class="rail-label">Your note</p>
     <textarea class="web-note" id="web-note" placeholder="Add your own note on this idea…">${escapeHtml(card.note || "")}</textarea>
-    <p class="rail-label">RELATIONS</p>
+    <p class="rail-label">Relations</p>
     ${relations ? `<ul class="web-relations">${relations}</ul>` : `<p class="version-muted">No relations found yet.</p>`}
     <p class="web-side-hint">${node.pinned ? "Pinned where you dropped it. Double-click the card to unpin it." : "Drag the card to pin it in place."}</p>`;
   side.querySelector("[data-web-close]").addEventListener("click", () => select(null));
@@ -449,7 +701,7 @@ const lineSwatch = type => `<svg viewBox="0 0 26 10" aria-hidden="true"><line x1
 function renderLegend() {
   const nodes = [...web.nodes.values()];
   $("#web-legend").innerHTML = `
-    <div class="legend-row">${Object.keys(origins).map(key => `<button type="button" class="legend-chip ${hidden.origins.has(key) ? "off" : ""}" data-toggle-origin="${key}"><span class="legend-dot" style="--origin:${origins[key].colour}"></span>${escapeHtml(origins[key].label)} <small>${nodes.filter(node => node.card.origin === key).length}</small></button>`).join("")}</div>
+    <div class="legend-row">${Object.keys(origins).map(key => `<button type="button" class="legend-chip ${hidden.origins.has(key) ? "off" : ""}" data-toggle-origin="${key}"><span class="legend-shape" data-origin="${key}" style="--origin:${origins[key].colour}"></span>${escapeHtml(origins[key].label)} <small>${nodes.filter(node => node.card.origin === key).length}</small></button>`).join("")}</div>
     <div class="legend-row">${Object.entries(relationTypes).map(([key, type]) => `<button type="button" class="legend-chip ${hidden.relations.has(key) ? "off" : ""}" data-toggle-relation="${key}">${lineSwatch(type)}${escapeHtml(type.label)} <small>${web.links.filter(link => link.edge.relation === key).length}</small></button>`).join("")}</div>`;
   $("#web-legend").querySelectorAll("[data-toggle-origin]").forEach(button => button.addEventListener("click", () => toggle(hidden.origins, button.dataset.toggleOrigin)));
   $("#web-legend").querySelectorAll("[data-toggle-relation]").forEach(button => button.addEventListener("click", () => toggle(hidden.relations, button.dataset.toggleRelation)));
@@ -462,6 +714,8 @@ function toggle(set, key) {
 
 // One-time wiring of the toolbar.
 export function initWebControls() {
+  // A trackpad pinch arrives as ctrl+wheel; over the web it must never zoom the whole page instead.
+  $("#web-stage").addEventListener("wheel", event => { if (event.ctrlKey) event.preventDefault(); }, { passive: false });
   $("#web-search").addEventListener("input", event => { searchTerm = event.target.value; applySearch(); });
   $("#web-search").addEventListener("keydown", event => {
     if (event.key !== "Enter" || !web) return;
@@ -470,6 +724,41 @@ export function initWebControls() {
     if (match) select(match.id, true);
   });
   $("#web-fit").addEventListener("click", () => fit());
+  // Crossing between the floating (wide) and stacked (narrow) layouts changes the free space, so refit then.
+  let wideLayout = innerWidth > 900;
+  addEventListener("resize", () => { const wide = innerWidth > 900; if (wide !== wideLayout) { wideLayout = wide; fit(false); } });
+  const setMode = mode => {
+    viewMode = mode;
+    try { localStorage.setItem("lattice-web-view", mode); } catch { /* storage blocked: the choice lasts this session */ }
+    document.querySelectorAll("[data-web-mode]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.webMode === mode)));
+    if (!web) return;
+    web.mode = mode;
+    $("#web-canvas").classList.toggle("nodes-mode", mode === "nodes");
+    // Both views share one layout, so switching only redraws: every idea stays exactly where it was.
+    web.simulation.stop();
+    drawCards();
+    drawLinks();
+  };
+  document.querySelectorAll("[data-web-mode]").forEach(button => button.addEventListener("click", () => setMode(button.dataset.webMode)));
+  document.querySelectorAll("[data-web-mode]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.webMode === viewMode)));
+  // Reset: every card and node goes back to its computed spot; pins and dragged positions are cleared.
+  $("#web-reset").addEventListener("click", () => {
+    if (!web) return;
+    const project = currentProject();
+    const nodes = [...web.nodes.values()];
+    for (const node of nodes) { node.pinned = false; node.fx = null; node.fy = null; }
+    project.webLayout = {};
+    placeTargets(project); // also re-fixes each hub on its spot
+    web.simulation.force("target-x").initialize(nodes);
+    web.simulation.force("target-y").initialize(nodes);
+    d3.select("#web-cards").selectAll("div.web-card").classed("pinned", false);
+    web.fitted = false;
+    web.simulation.alpha(1).restart();
+    persist();
+  });
+  const zoomBy = factor => { if (web) d3.select("#web-canvas").transition().duration(200).call(web.zoom.scaleBy, factor); };
+  $("#web-zoom-in").addEventListener("click", () => zoomBy(1.25));
+  $("#web-zoom-out").addEventListener("click", () => zoomBy(0.8));
   $("#web-attention-toggle").addEventListener("click", () => setAttentionOpen($("#web-attention").classList.contains("hidden")));
   $("#web-add-sticky").addEventListener("click", () => {
     const canvas = $("#web-canvas");
@@ -483,7 +772,8 @@ export function initWebControls() {
 // Free notes on the canvas: { id, x, y, text, colour }, stored on the project. They pan and zoom with the web
 // but take no part in the physics.
 
-const stickyColours = { yellow: "#fbe9a6", pink: "#f6cfd6", green: "#d5ebd0", blue: "#d2e2f4" };
+// Mirrors --sticky-* in tokens.css (test/tokens.test.js keeps them in step).
+const stickyColours = { yellow: "#ffef9f", pink: "#ffc9e0", green: "#c5f2d4", blue: "#c7e4ff" };
 
 function addSticky(x, y) {
   const project = currentProject();
@@ -508,7 +798,7 @@ function renderStickies() {
 }
 
 function bindSticky(element) {
-  element.innerHTML = `<div class="sticky-bar">${Object.entries(stickyColours).map(([key, colour]) => `<button class="sticky-colour" type="button" data-colour="${key}" style="--swatch:${colour}" aria-label="${key}"></button>`).join("")}<button class="sticky-delete" type="button" aria-label="Delete sticky note" title="Delete">×</button></div><textarea aria-label="Sticky note" placeholder="Write a note…"></textarea>`;
+  element.innerHTML = `<div class="sticky-bar">${Object.entries(stickyColours).map(([key, colour]) => `<button class="sticky-colour" type="button" data-colour="${key}" style="--swatch:${colour}" aria-label="${key}"></button>`).join("")}<button class="sticky-delete" type="button" aria-label="Delete sticky note" title="Delete">${icon("close")}</button></div><textarea aria-label="Sticky note" placeholder="Write a note…"></textarea>`;
   const datum = () => d3.select(element).datum();
   element.querySelector("textarea").addEventListener("input", event => { datum().text = event.target.value; persist(); });
   element.querySelectorAll("[data-colour]").forEach(button => button.addEventListener("click", () => { datum().colour = button.dataset.colour; persist(); renderStickies(); }));

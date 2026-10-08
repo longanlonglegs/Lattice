@@ -1,6 +1,6 @@
 // The project workspace: sources (with their details), activity trail, rendering, and Markdown export.
 import { $, escapeHtml, toast, plural, relativeTime } from "./util.js";
-import { currentProject, saveWorkspace, persist, sourceCode, sourceKind, isOwnWork, clearAiAnalysis } from "./state.js";
+import { currentProject, saveWorkspace, persist, sourceCode, sourceKind, isOwnWork } from "./state.js";
 import { renderProjectNav } from "./projects.js";
 import { renderInsights } from "./insights.js";
 import { renderCards, updateProgress } from "./cards.js";
@@ -11,6 +11,7 @@ import { originOf } from "./origins.js";
 import { citationLine, cleanMeta, reference } from "./records.js";
 import { projectEdges } from "./pipeline.js";
 import { describeRelation } from "./relations.js";
+import { icon } from "./icons.js";
 
 let editingSourceId = null;
 
@@ -66,7 +67,6 @@ export function renderSourceList() {
     if (linked && !window.confirm(`Remove this source and its ${plural(linked, "card")}?`)) return;
     project.sources = project.sources.filter(source => source.id !== button.dataset.removeSource);
     project.cards = project.cards.filter(item => item.sourceId !== button.dataset.removeSource);
-    clearAiAnalysis();
     saveWorkspace(); renderProject(); toast(linked ? `Source and ${plural(linked, "card")} removed.` : "Source removed from this project.");
   }));
   $("#source-list").querySelectorAll("[data-edit-source]").forEach(button => button.addEventListener("click", () => {
@@ -97,13 +97,13 @@ export function toggleActivityList() {
 export function renderActivityList() {
   const all = currentProject().activities;
   const activities = trailExpanded ? all : all.slice(0, TRAIL_PREVIEW);
-  const icons = { capture: "↗", decision: "✓", setup: "◆", analysis: "✦", edit: "✎" };
+  const icons = { capture: icon("external"), decision: icon("check"), setup: icon("dot"), analysis: icon("spark"), edit: icon("edit") };
   const toggle = $("#activity-toggle");
   toggle.classList.toggle("hidden", all.length <= TRAIL_PREVIEW);
   toggle.textContent = trailExpanded ? "Show fewer" : `Show all ${all.length}`;
   $("#activity-list").innerHTML = activities.length ? activities.map(activity => `
     <li><span class="activity-icon ${escapeHtml(activity.type)}">${icons[activity.type] || "＋"}</span><div><strong>${escapeHtml(activity.text)}</strong><small>${escapeHtml(activity.detail ? `${activity.detail} · ` : "")}${relativeTime(activity.createdAt)}</small></div></li>`).join("") : `
-    <li class="empty-activity"><span class="activity-icon">○</span><div><strong>Your research trail will appear here.</strong><small>Import a source or capture a web passage to get started.</small></div></li>`;
+    <li class="empty-activity"><span class="activity-icon">${icon("clock")}</span><div><strong>Your research trail will appear here.</strong><small>Import a source or capture a web passage to get started.</small></div></li>`;
 }
 export function renderProject() {
   const project = currentProject();

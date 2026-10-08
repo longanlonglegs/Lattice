@@ -104,10 +104,10 @@ export function renderHistory() {
     return `<li class="version-item">
       <header><strong>Version ${version.number}</strong><small>${new Date(version.createdAt).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} · ${relativeTime(version.createdAt)}</small></header>
       ${version.note ? `<p class="version-note">${escapeHtml(version.note)}</p>` : ""}
-      ${fieldHtml("QUESTION", previous?.question, version.question, !previous)}
-      ${fieldHtml("HYPOTHESIS", previous?.hypothesis, version.hypothesis, !previous)}
-      ${guesses.length ? `<p class="rail-label">GUESSES</p><ul class="version-list">${guesses.map(item => `<li>${escapeHtml(item.claim)}${item.superseded ? ` <span class="superseded-tag">superseded</span>` : ""}</li>`).join("")}</ul>` : ""}
-      ${linked.length ? `<p class="rail-label">LINKED EVIDENCE</p><ul class="version-list">${linked.map(item => `<li>${escapeHtml(item.claim)} <small>${escapeHtml(cardLocation(item))}</small></li>`).join("")}</ul>` : ""}
+      ${fieldHtml("Question", previous?.question, version.question, !previous)}
+      ${fieldHtml("Hypothesis", previous?.hypothesis, version.hypothesis, !previous)}
+      ${guesses.length ? `<p class="rail-label">Guesses</p><ul class="version-list">${guesses.map(item => `<li>${escapeHtml(item.claim)}${item.superseded ? ` <span class="superseded-tag">superseded</span>` : ""}</li>`).join("")}</ul>` : ""}
+      ${linked.length ? `<p class="rail-label">Linked evidence</p><ul class="version-list">${linked.map(item => `<li>${escapeHtml(item.claim)} <small>${escapeHtml(cardLocation(item))}</small></li>`).join("")}</ul>` : ""}
     </li>`;
   }).join("") : `<li class="version-empty">No versions yet. Record one to start a history of how your question and hypothesis change.</li>`;
 }

@@ -3,6 +3,7 @@ import { $, escapeHtml, plural } from "./util.js";
 import { workspace, projectsByRecent, sourceKind } from "./state.js";
 import { openProject } from "./projects.js";
 import { sourceByline, sourceTitle } from "./workspace.js";
+import { icon } from "./icons.js";
 
 export function sourceHref(source) {
   const candidate = String(source.originalUrl || (source.kind === "web" ? source.detail : source.title) || "").trim();
@@ -37,7 +38,7 @@ export function renderSourceLibrary() {
   $("#source-library-list").innerHTML = sources.length ? sources.map(source => {
     const href = sourceHref(source);
     const preview = source.capturedText ? `<p class="source-preview">${escapeHtml(source.capturedText.slice(0, 260))}${source.capturedText.length > 260 ? "…" : ""}</p>` : "";
-    return `<article class="library-source"><div class="library-source-kind">${sourceKind(source)}</div><div class="library-source-main"><div class="library-source-meta"><span>${escapeHtml(source.projectTitle)}</span><small>${plural(source.passages, "card")} extracted</small></div><h2>${escapeHtml(sourceTitle(source))}</h2>${sourceByline(source) ? `<p class="source-cite">${escapeHtml(sourceByline(source))}</p>` : ""}<p class="library-source-origin">${escapeHtml(sourceOrigin(source))}</p>${preview}</div><div class="library-source-actions">${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">Open source ↗</a>` : ""}<button type="button" data-open-source-project="${escapeHtml(source.projectId)}">Open project</button></div></article>`;
+    return `<article class="library-source"><div class="library-source-kind">${sourceKind(source)}</div><div class="library-source-main"><div class="library-source-meta"><span>${escapeHtml(source.projectTitle)}</span><small>${plural(source.passages, "card")} extracted</small></div><h2>${escapeHtml(sourceTitle(source))}</h2>${sourceByline(source) ? `<p class="source-cite">${escapeHtml(sourceByline(source))}</p>` : ""}<p class="library-source-origin">${escapeHtml(sourceOrigin(source))}</p>${preview}</div><div class="library-source-actions">${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">Open source ${icon("external")}</a>` : ""}<button type="button" data-open-source-project="${escapeHtml(source.projectId)}">Open project</button></div></article>`;
   }).join("") : `<div class="empty-sources"><strong>${query ? "No sources match that search." : "Your source library is empty."}</strong><p>${query ? "Try a different title, URL, or phrase from a capture." : "Use + Add evidence in a project to keep a link, file, pasted text, or web capture here."}</p></div>`;
   $("#source-library-list").querySelectorAll("[data-open-source-project]").forEach(button => button.addEventListener("click", () => openProject(button.dataset.openSourceProject, "sources")));
 }

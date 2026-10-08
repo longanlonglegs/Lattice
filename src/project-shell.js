@@ -18,8 +18,23 @@ export function showTab(tab) {
     if (button.dataset.projectTab === currentTab) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
   });
   if (currentView === "workspace") history.replaceState(null, "", `#workspace/${currentTab}`);
-  if (currentTab === "web") webShown();
+  if (currentTab === "web") { webShown(); $("#toast").classList.remove("show"); } else $("#web-back-insights")?.classList.add("hidden");
   if ($(".project-tabs").getBoundingClientRect().top < 0) $(".project-tabs").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Number keys 1–5 switch project tabs, except while typing, with a modifier held, or when a dialog or drawer is open.
+export function initTabHotkeys() {
+  document.addEventListener("keydown", event => {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+    const index = Number(event.key) - 1;
+    if (!(index >= 0 && index < projectTabs.length)) return;
+    const target = event.target;
+    if (target.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+    if (currentView !== "workspace" || document.querySelector("dialog[open], .drawer:not(.hidden), .review-deck:not(.hidden)")) return;
+    event.preventDefault();
+    showTab(projectTabs[index]);
+    document.querySelector(`[data-project-tab="${projectTabs[index]}"]`)?.focus({ preventScroll: true });
+  });
 }
 
 export function renderTabs() {

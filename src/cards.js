@@ -1,6 +1,6 @@
 // The Cards tab: accepted cards by source, a banner for cards waiting in the review deck, and the rejected ones at the bottom.
 import { $, escapeHtml, plural } from "./util.js";
-import { currentProject, persist, saveWorkspace, sourceCode, isOwnWork, recordActivity, clearAiAnalysis } from "./state.js";
+import { currentProject, persist, saveWorkspace, sourceCode, isOwnWork, recordActivity } from "./state.js";
 import { renderActivityList } from "./workspace.js";
 import { renderInsights } from "./insights.js";
 import { pendingCards } from "./review.js";
@@ -9,6 +9,11 @@ import { getText } from "./db.js";
 import { cardLocation, quoteInPages, shortCitation } from "./records.js";
 import { projectEdges } from "./pipeline.js";
 import { relationTypes, describeRelation, shortText } from "./relations.js";
+import { icon } from "./icons.js";
+
+// Which source groups and cards are open. Kept across re-renders; everything starts closed.
+const openGroups = new Set();
+const openCards = new Set();
 
 export const originBadge = origin => `<span class="origin-badge" style="--origin:${originOf(origin).colour}">${escapeHtml(originOf(origin).label)}</span>`;
 
@@ -23,19 +28,25 @@ function relationsHtml(item, edges, cardById) {
 }
 
 export function cardHtml(item, index, citation = "", relations = "") {
+  const open = openCards.has(item.id) || item.editing;
+  const connections = (relations.match(/<li /g) || []).length;
+  const summary = [plural(item.quotes.length, "quote"), connections ? plural(connections, "connection") : ""].filter(Boolean).join(" · ");
   return `
-    <article class="study-card evidence-card ${escapeHtml(item.state)} ${item.editing ? "editing" : ""} ${item.superseded ? "superseded" : ""}" data-id="${escapeHtml(item.id)}">
+    <article class="study-card evidence-card ${open ? "open" : ""} ${escapeHtml(item.state)} ${item.editing ? "editing" : ""} ${item.superseded ? "superseded" : ""}" data-id="${escapeHtml(item.id)}">
       <div class="card-top"><div>${originBadge(item.origin)}${citation ? `<span class="card-cite">${escapeHtml(citation)}</span>` : ""}${item.superseded ? ` <span class="superseded-tag" title="From an earlier version of your hypothesis">superseded</span>` : ""}</div><div><span class="card-index">${String(index + 1).padStart(2, "0")}</span><button class="card-edit" data-card-edit type="button">${item.editing ? "Done" : "Edit"}</button></div></div>
-      <div class="card-prompt"><p class="card-label">CLAIM</p><p class="card-question">${escapeHtml(item.claim)}</p><textarea class="question" data-field="claim" aria-label="Edit claim">${escapeHtml(item.claim)}</textarea></div>
+      <div class="card-prompt"><p class="card-label">Claim</p><p class="card-question">${escapeHtml(item.claim)}</p><textarea class="question" data-field="claim" aria-label="Edit claim">${escapeHtml(item.claim)}</textarea></div>
+      <button class="card-expand" type="button" data-card-toggle aria-expanded="${open}" aria-controls="card-details-${escapeHtml(item.id)}"><span>${escapeHtml(summary)}</span><svg class="icon chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+      <div class="card-details" id="card-details-${escapeHtml(item.id)}"><div class="card-details-inner">
       ${item.quotes.map((quote, number) => `<div class="card-quote" data-quote="${number}"><span class="quote-mark">“</span><p>${escapeHtml(quote.text)}</p><textarea class="answer" data-field="quote" data-quote-index="${number}" aria-label="Edit quote ${number + 1}">${escapeHtml(quote.text)}</textarea>
         <small class="card-location">${escapeHtml(quote.location)}</small>
         <span class="quote-badge ${quote.missing ? "" : "hidden"}" title="This quote no longer appears word-for-word in the stored source text.">⚠ Quote not found in source</span>
       </div>`).join("")}
-      <div class="card-note-wrap">${item.note ? `<p class="card-note">✎ ${escapeHtml(item.note)}</p>` : ""}<textarea class="note-input" data-field="note" aria-label="Your note" placeholder="Add your own note…">${escapeHtml(item.note || "")}</textarea></div>
+      <div class="card-note-wrap">${item.note ? `<p class="card-note">${icon("edit")} ${escapeHtml(item.note)}</p>` : ""}<textarea class="note-input" data-field="note" aria-label="Your note" placeholder="Add your own note…">${escapeHtml(item.note || "")}</textarea></div>
       ${relations}
       <div class="card-actions">
-        ${item.state === "rejected" ? `<button class="approve" data-action="restore">↶ Restore</button>` : `<button class="reject" data-action="reject">× Reject</button>`}
+        ${item.state === "rejected" ? `<button class="approve" data-action="restore">${icon("undo")} Restore</button>` : `<button class="reject" data-action="reject">${icon("close")} Reject</button>`}
       </div>
+      </div></div>
     </article>`;
 }
 
@@ -53,12 +64,17 @@ async function recheckQuote(item, index, block) {
 
 const editSnapshots = new Map(); // card id -> its text when Edit was opened
 
+const groupKey = source => source.id || source.title;
 function groupsHtml(groups, edges, cardById) {
-  return groups.map(({ source, cards: groupCards }) => `
-    <section class="card-group">
-      <header class="card-group-head"><span class="kind-chip ${isOwnWork(source) ? "own-work" : ""}">${source.kind === "other" ? "—" : sourceCode(source)}</span><h3>${escapeHtml(source.title)}</h3><small>${plural(groupCards.length, "card")}</small></header>
-      <div class="cards-grid">${groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))).join("")}</div>
-    </section>`).join("");
+  return groups.map(({ source, cards: groupCards }, number) => {
+    const key = groupKey(source);
+    const open = openGroups.has(key) || groupCards.some(item => item.editing);
+    return `
+    <section class="card-group ${open ? "open" : ""}" data-group="${escapeHtml(key)}">
+      <h3 class="card-group-title"><button class="card-group-head" type="button" data-group-toggle aria-expanded="${open}" aria-controls="card-group-${number}"><span class="kind-chip ${isOwnWork(source) ? "own-work" : ""}">${source.kind === "other" ? "—" : sourceCode(source)}</span><span class="card-group-name">${escapeHtml(source.title)}</span><small>${plural(groupCards.length, "card")}</small><svg class="icon chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button></h3>
+      <div class="card-group-body" id="card-group-${number}"><div class="card-group-inner"><div class="cards-grid">${groupCards.map((item, index) => cardHtml(item, index, shortCitation(source.meta), relationsHtml(item, edges, cardById))).join("")}</div></div></div>
+    </section>`;
+  }).join("");
 }
 
 // Cards by source; hypothesis guesses first, superseded guesses last.
@@ -94,12 +110,27 @@ export function renderCards() {
     : "";
   $("#cards-grid").innerHTML = (accepted.length ? groupsHtml(groupBySource(project, accepted), edges, cardById) : `<div class="empty-cards">${empty}</div>`) + rejectedHtml;
   const findCard = node => cards.find(candidate => candidate.id === +node.closest("article").dataset.id);
+  // Toggles flip in place (no re-render), so the open and close animations play.
+  const toggle = (button, element, set, key) => {
+    const open = !element.classList.contains("open");
+    element.classList.toggle("open", open);
+    button.setAttribute("aria-expanded", String(open));
+    if (open) set.add(key); else set.delete(key);
+  };
+  $("#cards-grid").querySelectorAll("[data-group-toggle]").forEach(button => button.addEventListener("click", () => {
+    const group = button.closest(".card-group");
+    toggle(button, group, openGroups, group.dataset.group);
+  }));
+  $("#cards-grid").querySelectorAll("[data-card-toggle]").forEach(button => button.addEventListener("click", () => {
+    const article = button.closest("article");
+    toggle(button, article, openCards, +article.dataset.id);
+  }));
   $("#cards-grid").querySelectorAll("textarea").forEach(node => node.addEventListener("input", event => {
     const item = findCard(event.target);
     if (event.target.dataset.field === "quote") item.quotes[+event.target.dataset.quoteIndex].text = event.target.value;
     else if (event.target.dataset.field === "note") item.note = event.target.value;
     else { item.claim = event.target.value; delete item.short; } // the AI headline no longer matches an edited claim
-    clearAiAnalysis(); saveWorkspace(); renderInsights();
+    saveWorkspace(); renderInsights();
     if (event.target.dataset.field === "quote") recheckQuote(item, +event.target.dataset.quoteIndex, event.target.closest(".card-quote"));
   }));
   $("#cards-grid").querySelectorAll("[data-card-edit]").forEach(button => button.addEventListener("click", () => {
@@ -119,7 +150,7 @@ export function renderCards() {
     item.state = button.dataset.action === "restore" ? "approved" : "rejected";
     item.editing = false;
     recordActivity("decision", item.state === "approved" ? "Restored a rejected card" : "Rejected a card", item.short || cardLocation(item));
-    clearAiAnalysis(); saveWorkspace(); renderCards(); updateProgress(); renderInsights(); renderActivityList();
+    saveWorkspace(); renderCards(); updateProgress(); renderInsights(); renderActivityList();
   }));
 }
 export function updateProgress() {

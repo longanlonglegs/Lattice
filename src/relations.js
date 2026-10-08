@@ -2,12 +2,13 @@
 // No DOM or storage access, so node:test can import this module.
 
 // How each relation reads and looks. `from`/`to` label a directed relation from each end.
+// Colours mirror --relation-* in tokens.css (test/tokens.test.js keeps them in step).
 export const relationTypes = {
-  supports: { label: "Supports", from: "Supports", to: "Supported by", colour: "#3f7a63", dash: "", arrow: true, distance: 95, strength: 0.5 },
-  contradicts: { label: "Contradicts", from: "Contradicts", to: "Contradicts", colour: "#c4473a", dash: "6 4", arrow: false, distance: 200, strength: 0.15 },
-  refines: { label: "Refines", from: "Refines", to: "Refined by", colour: "#8a857c", dash: "", arrow: true, distance: 125, strength: 0.3 },
-  same: { label: "Same claim", from: "Same claim as", to: "Same claim as", colour: "#85579a", dash: "", arrow: false, double: true, distance: 60, strength: 0.8 },
-  explains: { label: "Explains", from: "Explains", to: "Explained by", colour: "#d07a2c", dash: "", arrow: true, distance: 125, strength: 0.3 }
+  supports: { label: "Supports", from: "Supports", to: "Supported by", colour: "#14ae5c", dash: "", arrow: true, distance: 95, strength: 0.5 },
+  contradicts: { label: "Contradicts", from: "Contradicts", to: "Contradicts", colour: "#f24822", dash: "6 4", arrow: false, distance: 200, strength: 0.15 },
+  refines: { label: "Refines", from: "Refines", to: "Refined by", colour: "#8f8f8f", dash: "", arrow: true, distance: 125, strength: 0.3 },
+  same: { label: "Same claim", from: "Same claim as", to: "Same claim as", colour: "#9747ff", dash: "", arrow: false, double: true, distance: 60, strength: 0.8 },
+  explains: { label: "Explains", from: "Explains", to: "Explained by", colour: "#0f9fa8", dash: "", arrow: true, distance: 125, strength: 0.3 }
 };
 
 export const shortText = (text, limit) => {
@@ -99,17 +100,13 @@ export function hypothesisPairs(nodes) {
 
 // ---------- Needs attention ----------
 
-// What deserves a look: contradictions between pieces of evidence, drafts included (strongest first; evidence
-// against a hypothesis guess is shown on the guess itself), current hypothesis guesses that no evidence supports,
-// contradicts, or repeats yet, and draft claims that no external source or experiment supports.
-// cards: the web's ideas; edges: their shown-or-not relations (projectEdges).
+// What deserves a look: contradictions between pieces of evidence (strongest first), and hypothesis guesses that no
+// evidence supports, contradicts, or repeats yet.
 export function needsAttention(cards, edges) {
   const byId = new Map(cards.map(card => [card.id, card]));
   const other = (edge, id) => byId.get(edge.a === id ? edge.b : edge.a);
   const touching = id => edges.filter(edge => edge.a === id || edge.b === id);
   const contradictions = edges.filter(edge => edge.relation === "contradicts" && byId.has(edge.a) && byId.has(edge.b) && byId.get(edge.a).origin !== "hypothesis" && byId.get(edge.b).origin !== "hypothesis").sort((p, q) => q.confidence - p.confidence);
   const unsupportedGuesses = cards.filter(card => card.origin === "hypothesis" && !touching(card.id).some(edge => ["supports", "contradicts", "same"].includes(edge.relation) && other(edge, card.id)?.origin !== "hypothesis"));
-  const isSupportFor = (edge, id) => edge.relation === "same" || (edge.relation === "supports" && edgeEnds(edge).to === id);
-  const unsupportedDrafts = cards.filter(card => card.origin === "draft" && !touching(card.id).some(edge => isSupportFor(edge, card.id) && ["external", "experiment"].includes(other(edge, card.id)?.origin)));
-  return { contradictions, unsupportedGuesses, unsupportedDrafts, total: contradictions.length + unsupportedGuesses.length + unsupportedDrafts.length };
+  return { contradictions, unsupportedGuesses, total: contradictions.length + unsupportedGuesses.length };
 }

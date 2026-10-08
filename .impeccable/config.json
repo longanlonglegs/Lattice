@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-08T05:12:06.331Z",
+        "reason": "User chose the category-standard direction with Figma/Miro/Obsidian as the craft bar (2026-10-08); Inter is that category's standard UI face"
+      }
+    ]
+  }
+}

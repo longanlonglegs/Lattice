@@ -2,7 +2,7 @@
 
 A small, **entirely fictional** research project for testing Lattice. Every paper, author, journal, and result here was made up for testing. None of it is real literature, so don't cite it.
 
-The sources disagree with each other, and with the student's own experiments and draft, in deliberate ways (see the [answer key](#answer-key-the-built-in-tensions)), so the extraction, connection, and judgment features all have something to find.
+The sources disagree with each other, and with the student's own experiments, in deliberate ways (see the [answer key](#answer-key-the-built-in-tensions)), so the extraction, connection, and judgment features all have something to find.
 
 ---
 
@@ -30,12 +30,11 @@ Then tick the privacy acknowledgement and create the project.
 | `sources/S3-sato-2020-biphasic.pdf` | Upload file | External |
 | `sources/S4-ivanova-2018-copper.md` | Upload file (tests `.md`) | External |
 | `sources/S5-dcpip-method-note-PASTE.txt` | Paste text | External |
-| `your-work/draft-discussion.txt` | Upload file, **Where is this from?** = My draft | My draft |
 | `https://en.wikipedia.org/wiki/Vitamin_C` | Link tab (a real page, to test link fetching) | External |
 
 **Browser capture:** with the extension loaded, select a paragraph about oxidation or stability on the Wikipedia page above and use *Save selection to Lattice*.
 
-That gives 2 pieces of your own work, 1 draft, 5 fictional sources, and 1 real web page. Expect roughly 40–60 cards.
+That gives 2 pieces of your own work, 5 fictional sources, and 1 real web page. Expect roughly 40–60 cards.
 
 ## 3. What each file contains
 
@@ -48,7 +47,6 @@ That gives 2 pieces of your own work, 1 draft, 5 fictional sources, and 1 real w
 | **S5** DCPIP method note | DCPIP end points are hard to see in orange juice; overestimates vitamin C, so losses look smaller than they are. | **Undermines** the student's measurement method (Experiments 1–3 used DCPIP). |
 | **Lab notebook** (Exp. 1–2) | Exp 1: 4/20/40 °C lose 9/24/51% in 7 days; bigger day-1 drop. Exp 2: open beakers lose 41% vs 15% sealed full bottles. | Exp 1 **supports** the temperature part; Exp 2 **contradicts** "temperature matters more"; the day-1 drop **agrees with** S3. |
 | **Experiment 3** | Repeat run lost 38% (vs 24%); bottles rinsed with copper-pipe tap water; redo gave 22%. | **Explained by** S4; copper never measured, so unconfirmed. |
-| **Draft discussion** | Six claims, some backed by the evidence and some not (see below). | Tests the draft checking (C4). |
 
 ## Answer key: the built-in tensions
 
@@ -61,7 +59,7 @@ Use this to judge whether Lattice is finding the right things. It's the target f
 4. H4 — Refrigeration is the best way to preserve vitamin C. → **S1 supports**; **S2 contradicts** (oxygen barrier as important).
 
 **Same claim / supports across origins:**
-- S1 "fridge cuts loss by about two-thirds" ≈ Exp 1 "4 °C reduced loss by about two-thirds" ≈ Draft claim 2.
+- S1 "fridge cuts loss by about two-thirds" ≈ Exp 1 "4 °C reduced loss by about two-thirds".
 - S3 "fast early phase" ≈ Exp 1 "bigger first-day drop" ≈ S2 "most loss in the first 24 h".
 
 **Explains / refines:**
@@ -70,15 +68,6 @@ Use this to judge whether Lattice is finding the right things. It's the target f
 - S3 "studies that first sample after day 1 miss the fast phase" **refines** S1's first-order conclusion.
 - S2 "sealed studies hide the oxygen effect" **refines** S1 and Exp 1.
 
-**Draft claims → expected verdict:**
-| Draft claim | Expected |
-|---|---|
-| 1. Temperature is the dominant factor | **Contradicted** by Exp 2 and S2 |
-| 2. Fridge cut loss by about two-thirds | **Supported** by Exp 1 and S1 |
-| 3. First-order kinetics throughout | **Contradicted** by S3 and Exp 1's day-1 drop |
-| 4. DCPIP was accurate and comparable with HPLC | **Contradicted** by S5 |
-| 5. Anomaly best explained by copper | **Supported** by S4, but unconfirmed (Exp 3 never measured copper) |
-| 6. Prioritise cold storage over oxygen-barrier packaging | **Contradicted** by S2 and Exp 2 |
 
 ## Regenerating the PDFs
 

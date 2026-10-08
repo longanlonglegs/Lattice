@@ -1,7 +1,7 @@
 // Lattice Capture: right-click a selection and send it to an open Lattice tab, tagged with where it came from.
 // Lattice runs on localhost at any port; the extension finds its tab by title and remembers where it last saw it.
 const DEFAULT_ORIGIN = "http://localhost:4173";
-const choices = { "save-external": "external", "save-experiment": "experiment", "save-draft": "draft" };
+const choices = { "save-external": "external", "save-experiment": "experiment" };
 
 function isLatticeTab(tab) {
   try {
@@ -16,7 +16,6 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: "save-selection", title: "Save selection to Lattice", contexts: ["selection"] });
   chrome.contextMenus.create({ id: "save-external", parentId: "save-selection", title: "As an external source", contexts: ["selection"] });
   chrome.contextMenus.create({ id: "save-experiment", parentId: "save-selection", title: "As my experiment", contexts: ["selection"] });
-  chrome.contextMenus.create({ id: "save-draft", parentId: "save-selection", title: "As my draft", contexts: ["selection"] });
 });
 
 async function deliverCapture(capture) {

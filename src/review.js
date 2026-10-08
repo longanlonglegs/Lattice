@@ -5,11 +5,13 @@ import { currentProject, persist, recordActivity } from "./state.js";
 import { originOf } from "./origins.js";
 import { shortCitation } from "./records.js";
 import { renderProject } from "./workspace.js";
+import { icon } from "./icons.js";
 
 let open = false;
 let editing = false;
 let tally = { accepted: 0, rejected: 0 };
 
+let remindedLater = false; // the "still waiting" toast is said once per session
 // Cards waiting for a decision, in the order they were added. Superseded guesses no longer need one.
 export const pendingCards = project => project.cards.filter(item => item.state === "pending" && !item.superseded);
 
@@ -33,7 +35,10 @@ export function closeReview() {
   }
   renderProject();
   const left = pendingCards(project).length;
-  if (left) toast(`${plural(left, "card")} still waiting for review. Use “Review” in the Cards tab when you're ready.`);
+  // Said once per session; after that the Cards tab and the web's starting point carry the count.
+  // Not over the web canvas: there the Cards tab count already says it.
+  const onCanvas = $("#workspace")?.dataset.activeTab === "web";
+  if (left && !remindedLater && !onCanvas) { remindedLater = true; toast(`${plural(left, "card")} still waiting for review. Use “Review” in the Cards tab when you're ready.`); }
 }
 
 function decide(state) {
@@ -89,8 +94,8 @@ function renderReview() {
   const citation = shortCitation(source?.meta);
   const version = project.versions.find(entry => entry.id === item.versionId);
   const header = hypothesis
-    ? `<p class="deck-kicker">YOUR HYPOTHESIS · GUESS FROM VERSION ${version?.number ?? "?"}</p><p class="deck-note">This is a guess split from your own hypothesis, not evidence from a source. Accept it to test it against your evidence.</p>`
-    : `<p class="deck-kicker"><span class="origin-badge" style="--origin:${originOf(item.origin).colour}">${escapeHtml(originOf(item.origin).label)}</span> ${escapeHtml(citation || source?.meta?.title || source?.title || "")}</p>`;
+    ? `<p class="deck-meta"><span class="origin-badge" style="--origin:${originOf("hypothesis").colour}">Your hypothesis</span> Guess from version ${version?.number ?? "?"}</p><p class="deck-note">This is a guess split from your own hypothesis, not evidence from a source. Accept it to test it against your evidence.</p>`
+    : `<p class="deck-meta"><span class="origin-badge" style="--origin:${originOf(item.origin).colour}">${escapeHtml(originOf(item.origin).label)}</span> ${escapeHtml(citation || source?.meta?.title || source?.title || "")}</p>`;
   const quotes = item.quotes.map((quote, index) => editing
     ? `<textarea class="deck-quote-input" data-deck-quote="${index}" aria-label="Quote ${index + 1}">${escapeHtml(quote.text)}</textarea>`
     : `<blockquote>“${escapeHtml(quote.text)}”<small>${escapeHtml(quote.location)}</small></blockquote>`).join("");
@@ -103,12 +108,12 @@ function renderReview() {
           ${editing ? `<textarea class="deck-claim-input" id="deck-claim-input" aria-label="Claim">${escapeHtml(item.claim)}</textarea>` : `<h2 class="deck-claim">${escapeHtml(item.claim)}</h2>`}
           ${hypothesis ? `<p class="deck-from">From your hypothesis:</p>` : ""}
           <div class="deck-quotes">${quotes}</div>
-          <button class="deck-edit" type="button" data-deck="edit">${editing ? "Done editing" : "✎ Edit"}</button>
+          <button class="deck-edit" type="button" data-deck="edit">${editing ? "Done editing" : `${icon("edit")} Edit`}</button>
         </article>
       </div>
       <div class="deck-actions">
-        <button class="deck-reject" type="button" data-deck="reject"><b>×</b> Reject <small>←</small></button>
-        <button class="deck-accept" type="button" data-deck="accept"><b>✓</b> Accept <small>→</small></button>
+        <button class="deck-reject" type="button" data-deck="reject">${icon("close")} Reject <kbd aria-hidden="true">←</kbd></button>
+        <button class="deck-accept" type="button" data-deck="accept">${icon("check")} Accept <kbd aria-hidden="true">→</kbd></button>
       </div>
       <button class="deck-all" type="button" data-deck="all">Accept all ${queue.length} remaining</button>
     </div>`;

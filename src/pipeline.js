@@ -15,7 +15,7 @@ const MIN_CONFIDENCE = 0.6; // weaker verdicts are kept (so they aren't asked ag
 // 2: the judge also reads each idea's supporting passages, not only its claim.
 const JUDGE_VERSION = 2;
 const EVIDENCE_CHARS = 900;
-const originNames = { external: "external source", experiment: "my experiment", draft: "my draft", hypothesis: "my hypothesis" };
+const originNames = { external: "external source", experiment: "my experiment", hypothesis: "my hypothesis" };
 
 const graphs = new Map(); // projectId -> { embeddings: Map(cardId -> record), edges: Map(pairId -> record) }
 const listeners = new Set();

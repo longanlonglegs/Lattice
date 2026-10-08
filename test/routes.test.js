@@ -11,7 +11,7 @@ const passage = "Dissolved oxygen, not temperature, controlled the first 72 hour
 const request = (fields = {}) => ({ title: "Haddad 2021", url: "https://example.org/paper", question: "What drives vitamin C loss?", hypothesis: "Oxygen matters most.", pages: [{ label: "p. 2", text: passage }], ...fields });
 const modelCard = (fields = {}) => ({ claim: "Dissolved oxygen controlled early vitamin C loss.", quotes: [{ quote: fields.quote || passage, page: "p. 2" }] });
 
-for (const [mode, prompt] of [["content", "contentExtractionPrompt"], ["experiment", "experimentExtractionPrompt"], ["work", "experimentExtractionPrompt"], ["draft", "draftExtractionPrompt"], ["link", "linkExtractionPrompt"]]) {
+for (const [mode, prompt] of [["content", "contentExtractionPrompt"], ["experiment", "experimentExtractionPrompt"], ["work", "experimentExtractionPrompt"], ["link", "linkExtractionPrompt"]]) {
   test(`extract-cards uses ${prompt} for mode "${mode}"`, async t => {
     const calls = stubOpenAI(t, () => ({ cards: [modelCard()] }));
     const { status, body } = await callRoute(extractCards, request({ mode }));

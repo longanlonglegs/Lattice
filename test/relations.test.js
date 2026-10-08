@@ -40,7 +40,7 @@ test("describeRelation reads a directed edge from either end", async () => {
 test("validPairs and cleanResults keep requests and answers well-formed", () => {
   assert.equal(validPairs([]), null);
   assert.equal(validPairs([{ id: "1|2", a: { claim: "x" }, b: { claim: "" } }]), null);
-  const pairs = validPairs([{ id: "1|2", a: { claim: "Oxygen speeds loss", origin: "external source" }, b: { claim: "Temperature dominates", origin: "my draft" } }, { id: "3|4", a: { claim: "p" }, b: { claim: "q" } }]);
+  const pairs = validPairs([{ id: "1|2", a: { claim: "Oxygen speeds loss", origin: "external source" }, b: { claim: "Temperature dominates", origin: "my experiment" } }, { id: "3|4", a: { claim: "p" }, b: { claim: "q" } }]);
   assert.equal(pairs[1].a.origin, "external source");
   const results = cleanResults([{ id: "1|2", relation: "contradicts", direction: "a_to_b", confidence: 1.7, rationale: " Opposite factors " }, { id: "x", relation: "supports" }], pairs);
   assert.deepEqual(results, [
@@ -52,7 +52,7 @@ test("validPairs and cleanResults keep requests and answers well-formed", () => 
 
 test("relate sends the pairs and question and returns cleaned results", async t => {
   const calls = stubOpenAI(t, () => ({ results: [{ id: "1|2", relation: "supports", direction: "b_to_a", confidence: 0.8, rationale: "Both report a two-thirds cut." }] }));
-  const pair = { id: "1|2", a: { claim: "Fridge cuts loss by two-thirds", origin: "my draft" }, b: { claim: "4 °C cuts 21-day loss by about two-thirds", origin: "external source" } };
+  const pair = { id: "1|2", a: { claim: "Fridge cuts loss by two-thirds", origin: "my experiment" }, b: { claim: "4 °C cuts 21-day loss by about two-thirds", origin: "external source" } };
   const { status, body } = await callRoute(relatePairs, { question: "What drives loss?", pairs: [pair] });
   assert.equal(status, 200);
   assert.deepEqual(body.results[0], { id: "1|2", relation: "supports", direction: "b_to_a", confidence: 0.8, rationale: "Both report a two-thirds cut." });
@@ -107,23 +107,20 @@ test("hypothesisPairs pairs every idea with every hypothesis guess", async () =>
   assert.deepEqual(pairs.map(pair => pair.id).sort(), ["1|5", "1|7", "5|9", "7|9"]);
 });
 
-test("needsAttention lists contradictions, guesses without evidence, and unsupported draft claims", async () => {
+test("needsAttention lists contradictions between evidence and guesses without evidence", async () => {
   const { needsAttention } = await load();
   const cards = [
-    { id: 1, origin: "external" }, { id: 2, origin: "experiment" }, { id: 3, origin: "draft" }, { id: 4, origin: "draft" },
+    { id: 1, origin: "external" }, { id: 2, origin: "experiment" }, { id: 3, origin: "external" }, { id: 4, origin: "experiment" },
     { id: 10, origin: "hypothesis" }, { id: 11, origin: "hypothesis" }
   ];
   const edge = (a, b, relation, confidence = 0.8, direction = "a_to_b") => ({ id: `${a}|${b}`, a, b, relation, confidence, direction });
   const result = needsAttention(cards, [
     edge(1, 2, "contradicts", 0.7), edge(1, 3, "contradicts", 0.9), edge(2, 10, "contradicts", 0.95), // between evidence, strongest first; not against a guess
-    edge(1, 3, "supports"), // external supports draft 3
-    edge(2, 4, "supports", 0.8, "b_to_a"), // draft 4 supports the experiment: not support *for* the draft
     edge(4, 11, "refines") // a refinement is not evidence for or against guess 11
   ]);
   assert.deepEqual(result.contradictions.map(e => e.id), ["1|3", "1|2"]);
   assert.deepEqual(result.unsupportedGuesses.map(c => c.id), [11]);
-  assert.deepEqual(result.unsupportedDrafts.map(c => c.id), [4]);
-  assert.equal(result.total, 4);
+  assert.equal(result.total, 3);
 });
 
 test("relate passes each idea's evidence along, trimmed, and leaves it out when empty", async t => {

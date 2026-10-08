@@ -7,7 +7,8 @@ import { originOf } from "./origins.js";
 
 export const storageKey = "lattice-local-workspace-v1";
 export const defaultTitle = "Untitled project";
-export const projectColours = { terracotta: "#d95d39", amber: "#c98a2e", olive: "#7d8c34", sage: "#3f7a63", teal: "#2f7f8a", blue: "#4b6ca6", plum: "#85579a", rose: "#bf5577" };
+// Mirrors --project-* in tokens.css (test/tokens.test.js keeps them in step).
+export const projectColours = { terracotta: "#e5533d", amber: "#f08c00", olive: "#7a9a01", sage: "#14ae5c", teal: "#0f9fa8", blue: "#0c8ce9", plum: "#9747ff", rose: "#e03e8c" };
 export const colourKeys = Object.keys(projectColours);
 let cardSeq = Date.now() * 100;
 export const nextCardId = () => ++cardSeq;
@@ -118,8 +119,4 @@ export function sourceKind(source) {
 export const isOwnWork = source => Boolean(source.origin && source.origin !== "external");
 export function recordActivity(type, text, detail = "", project = currentProject()) {
   project.activities.unshift({ id: crypto.randomUUID(), type, text, detail, createdAt: new Date().toISOString() });
-}
-export function clearAiAnalysis() {
-  const project = currentProject();
-  if (project) project.aiAnalysis = null;
 }

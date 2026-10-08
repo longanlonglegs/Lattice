@@ -1,0 +1,1454 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T05:30:49.491Z",
+  "title": "Design System: Lattice",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1e1e1e",
+        "oklch": "oklch(23.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Ink Soft",
+        "canonical": "#2c2c2c",
+        "oklch": "oklch(29.3% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "ink-body": {
+        "role": "neutral",
+        "displayName": "Body Ink",
+        "canonical": "#444444",
+        "oklch": "oklch(38.7% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "muted-strong": {
+        "role": "neutral",
+        "displayName": "Muted Strong",
+        "canonical": "#595959",
+        "oklch": "oklch(46.4% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#6b6b6b",
+        "oklch": "oklch(52.8% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "ornament": {
+        "role": "neutral",
+        "displayName": "Ornament Grey",
+        "canonical": "#b3b3b3",
+        "oklch": "oklch(76.7% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised",
+        "canonical": "#fafafa",
+        "oklch": "oklch(98.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Canvas Grey",
+        "canonical": "#f5f5f5",
+        "oklch": "oklch(97.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "sidebar-paper": {
+        "role": "neutral",
+        "displayName": "Sidebar White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Well",
+        "canonical": "#f0f0f0",
+        "oklch": "oklch(95.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "selected": {
+        "role": "primary",
+        "displayName": "Selected Wash",
+        "canonical": "#e5f4ff",
+        "oklch": "oklch(95.9% 0.022 239)",
+        "tonalRamp": [
+          "#040c13",
+          "#1a262e",
+          "#35424a",
+          "#536069",
+          "#75828c",
+          "#99a7b1",
+          "#becdd7",
+          "#e2f1fc"
+        ]
+      },
+      "track": {
+        "role": "neutral",
+        "displayName": "Track",
+        "canonical": "#e6e6e6",
+        "oklch": "oklch(92.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Match Cream",
+        "canonical": "#fff4d6",
+        "oklch": "oklch(96.8% 0.041 90)",
+        "tonalRamp": [
+          "#120a00",
+          "#2c230a",
+          "#483f26",
+          "#665d43",
+          "#8a8065",
+          "#aea488",
+          "#d5caad",
+          "#f9eed0"
+        ]
+      },
+      "line-soft": {
+        "role": "neutral",
+        "displayName": "Hairline Soft",
+        "canonical": "#f0f0f0",
+        "oklch": "oklch(95.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e6e6e6",
+        "oklch": "oklch(92.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Control Outline",
+        "canonical": "#d9d9d9",
+        "oklch": "oklch(88.5% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "line-bold": {
+        "role": "neutral",
+        "displayName": "Hover Outline",
+        "canonical": "#b3b3b3",
+        "oklch": "oklch(76.7% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "hub-ink": {
+        "role": "neutral",
+        "displayName": "Charcoal",
+        "canonical": "#262626",
+        "oklch": "oklch(26.9% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "hub-ink-deep": {
+        "role": "neutral",
+        "displayName": "Deep Charcoal",
+        "canonical": "#1a1a1a",
+        "oklch": "oklch(21.8% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "on-dark": {
+        "role": "neutral",
+        "displayName": "On Dark",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "on-dark-accent": {
+        "role": "neutral",
+        "displayName": "Magenta On Dark",
+        "canonical": "#ff9ccb",
+        "oklch": "oklch(80.7% 0.130 350)",
+        "tonalRamp": [
+          "#250010",
+          "#4c002c",
+          "#6e1749",
+          "#913967",
+          "#b85c8a",
+          "#e181af",
+          "#ffa6d6",
+          "#ffd3f8"
+        ]
+      },
+      "on-dark-for": {
+        "role": "neutral",
+        "displayName": "For On Dark",
+        "canonical": "#6fdc9a",
+        "oklch": "oklch(81.3% 0.139 155)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#00531a",
+          "#007338",
+          "#1e985a",
+          "#4fbe7e",
+          "#79e5a3",
+          "#b7ffd1"
+        ]
+      },
+      "on-dark-against": {
+        "role": "neutral",
+        "displayName": "Against On Dark",
+        "canonical": "#ff8f78",
+        "oklch": "oklch(76.6% 0.140 33)",
+        "tonalRamp": [
+          "#290000",
+          "#540000",
+          "#791000",
+          "#9d3724",
+          "#c65c47",
+          "#ef816a",
+          "#ffa890",
+          "#ffd6c3"
+        ]
+      },
+      "on-dark-note": {
+        "role": "neutral",
+        "displayName": "Note On Dark",
+        "canonical": "#ffd166",
+        "oklch": "oklch(88.0% 0.135 86)",
+        "tonalRamp": [
+          "#1d0300",
+          "#3f1800",
+          "#5e3600",
+          "#7f5500",
+          "#a47900",
+          "#ca9d2a",
+          "#f1c458",
+          "#ffea9e"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Selection Blue",
+        "canonical": "#0c8ce9",
+        "oklch": "oklch(62.7% 0.170 249)",
+        "tonalRamp": [
+          "#000533",
+          "#001f62",
+          "#003c93",
+          "#005eb7",
+          "#0083e0",
+          "#3caaff",
+          "#80d1ff",
+          "#b9f5ff"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#0768c4",
+        "oklch": "oklch(52.1% 0.164 254)",
+        "tonalRamp": [
+          "#000334",
+          "#001d63",
+          "#003a92",
+          "#005bb6",
+          "#2c80df",
+          "#54a7ff",
+          "#8aceff",
+          "#bff3ff"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Blue",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Soft Blue",
+        "canonical": "#9ccfff",
+        "oklch": "oklch(83.6% 0.086 247)",
+        "tonalRamp": [
+          "#00082d",
+          "#00254b",
+          "#10426a",
+          "#32618c",
+          "#5485b1",
+          "#78aad8",
+          "#9dd0ff",
+          "#c0f5ff"
+        ]
+      },
+      "accent-ember": {
+        "role": "primary",
+        "displayName": "Blue Text",
+        "canonical": "#0768c4",
+        "oklch": "oklch(52.1% 0.164 254)",
+        "tonalRamp": [
+          "#000334",
+          "#001d63",
+          "#003a92",
+          "#005bb6",
+          "#2c80df",
+          "#54a7ff",
+          "#8aceff",
+          "#bff3ff"
+        ]
+      },
+      "accent-rust": {
+        "role": "primary",
+        "displayName": "Pressed Blue",
+        "canonical": "#055aab",
+        "oklch": "oklch(47.1% 0.148 254)",
+        "tonalRamp": [
+          "#000334",
+          "#001d63",
+          "#003c8a",
+          "#0a5dae",
+          "#3881d6",
+          "#5ea7ff",
+          "#8aceff",
+          "#bff3ff"
+        ]
+      },
+      "accent-line-strong": {
+        "role": "primary",
+        "displayName": "Blue Line Strong",
+        "canonical": "#66b8f5",
+        "oklch": "oklch(75.5% 0.119 243)",
+        "tonalRamp": [
+          "#000731",
+          "#002458",
+          "#004379",
+          "#00639b",
+          "#3387c1",
+          "#5bade9",
+          "#81d4ff",
+          "#b2f7ff"
+        ]
+      },
+      "accent-line": {
+        "role": "primary",
+        "displayName": "Blue Line",
+        "canonical": "#b8dcfa",
+        "oklch": "oklch(87.8% 0.056 244)",
+        "tonalRamp": [
+          "#000c21",
+          "#06263d",
+          "#23435b",
+          "#41617b",
+          "#6384a0",
+          "#87a9c6",
+          "#accfed",
+          "#cff4ff"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Blue Wash",
+        "canonical": "#dcefff",
+        "oklch": "oklch(94.3% 0.030 243)",
+        "tonalRamp": [
+          "#020c17",
+          "#172631",
+          "#32424e",
+          "#50606d",
+          "#728391",
+          "#95a7b6",
+          "#bbcddd",
+          "#def1ff"
+        ]
+      },
+      "accent-tint": {
+        "role": "primary",
+        "displayName": "Blue Tint",
+        "canonical": "#f2f9ff",
+        "oklch": "oklch(97.9% 0.011 244)",
+        "tonalRamp": [
+          "#070c0f",
+          "#202529",
+          "#3b4045",
+          "#595e63",
+          "#7b8186",
+          "#9fa5ab",
+          "#c5cbd1",
+          "#e9eff5"
+        ]
+      },
+      "origin-external": {
+        "role": "secondary",
+        "displayName": "External Violet",
+        "canonical": "#6e56cf",
+        "oklch": "oklch(54.2% 0.179 288)",
+        "tonalRamp": [
+          "#0e0032",
+          "#260860",
+          "#422093",
+          "#5d43ba",
+          "#7e68e3",
+          "#a18fff",
+          "#c6bcff",
+          "#eae4ff"
+        ]
+      },
+      "origin-experiment": {
+        "role": "secondary",
+        "displayName": "Experiment Green",
+        "canonical": "#14ae5c",
+        "oklch": "oklch(66.0% 0.168 152)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#005500",
+          "#007627",
+          "#009b4a",
+          "#37c26e",
+          "#7fe49e",
+          "#baffcd"
+        ]
+      },
+      "origin-hypothesis": {
+        "role": "secondary",
+        "displayName": "Hypothesis Magenta",
+        "canonical": "#e03e8c",
+        "oklch": "oklch(62.4% 0.208 356)",
+        "tonalRamp": [
+          "#26000d",
+          "#4f0026",
+          "#7c0043",
+          "#ad0062",
+          "#d83585",
+          "#f66fa9",
+          "#ffa3ce",
+          "#ffd2f1"
+        ]
+      },
+      "external-line": {
+        "role": "secondary",
+        "displayName": "External Line",
+        "canonical": "#d5cdf5",
+        "oklch": "oklch(86.7% 0.055 294)",
+        "tonalRamp": [
+          "#0d0520",
+          "#261e3c",
+          "#413a5a",
+          "#5f587a",
+          "#827a9f",
+          "#a69ec5",
+          "#ccc4ec",
+          "#f0e8ff"
+        ]
+      },
+      "external-tint": {
+        "role": "secondary",
+        "displayName": "External Tint",
+        "canonical": "#f3f0fd",
+        "oklch": "oklch(96.1% 0.018 297)",
+        "tonalRamp": [
+          "#0c0a12",
+          "#25222c",
+          "#403e48",
+          "#5e5c67",
+          "#817e8a",
+          "#a5a3af",
+          "#cbc8d5",
+          "#efecf9"
+        ]
+      },
+      "relation-supports": {
+        "role": "tertiary",
+        "displayName": "Supports Green",
+        "canonical": "#14ae5c",
+        "oklch": "oklch(66.0% 0.168 152)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#005500",
+          "#007627",
+          "#009b4a",
+          "#37c26e",
+          "#7fe49e",
+          "#baffcd"
+        ]
+      },
+      "relation-contradicts": {
+        "role": "tertiary",
+        "displayName": "Contradicts Red",
+        "canonical": "#f24822",
+        "oklch": "oklch(64.2% 0.212 34)",
+        "tonalRamp": [
+          "#290000",
+          "#540000",
+          "#830000",
+          "#b60000",
+          "#e3380b",
+          "#ff7456",
+          "#ffa88f",
+          "#ffd6c2"
+        ]
+      },
+      "relation-refines": {
+        "role": "tertiary",
+        "displayName": "Refines Grey",
+        "canonical": "#8f8f8f",
+        "oklch": "oklch(65.0% 0.000 90)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "relation-same": {
+        "role": "tertiary",
+        "displayName": "Same-claim Purple",
+        "canonical": "#9747ff",
+        "oklch": "oklch(59.8% 0.254 298)",
+        "tonalRamp": [
+          "#13002f",
+          "#2f025b",
+          "#4e198c",
+          "#7031c0",
+          "#9357ec",
+          "#b388ff",
+          "#d5b6ff",
+          "#f6e0ff"
+        ]
+      },
+      "relation-explains": {
+        "role": "tertiary",
+        "displayName": "Explains Teal",
+        "canonical": "#0f9fa8",
+        "oklch": "oklch(64.0% 0.107 202)",
+        "tonalRamp": [
+          "#00131d",
+          "#00303a",
+          "#004e58",
+          "#006e77",
+          "#00929b",
+          "#3cb8c1",
+          "#69dfe8",
+          "#95ffff"
+        ]
+      },
+      "for-text": {
+        "role": "tertiary",
+        "displayName": "For Text",
+        "canonical": "#0b7a3e",
+        "oklch": "oklch(50.9% 0.130 152)",
+        "tonalRamp": [
+          "#001400",
+          "#003300",
+          "#005117",
+          "#007136",
+          "#359658",
+          "#5ebc7b",
+          "#85e3a0",
+          "#bbffcd"
+        ]
+      },
+      "for-line": {
+        "role": "tertiary",
+        "displayName": "For Line",
+        "canonical": "#7fd1a3",
+        "oklch": "oklch(79.5% 0.105 158)",
+        "tonalRamp": [
+          "#001500",
+          "#00310e",
+          "#004f29",
+          "#136f47",
+          "#409368",
+          "#67b98c",
+          "#8de0b1",
+          "#b3ffd5"
+        ]
+      },
+      "for-line-soft": {
+        "role": "tertiary",
+        "displayName": "For Line Soft",
+        "canonical": "#cdeedb",
+        "oklch": "oklch(92.0% 0.043 160)",
+        "tonalRamp": [
+          "#001005",
+          "#0e2a1d",
+          "#2b4738",
+          "#486555",
+          "#6a8978",
+          "#8ead9c",
+          "#b3d4c1",
+          "#d7f8e5"
+        ]
+      },
+      "for-tint": {
+        "role": "tertiary",
+        "displayName": "For Tint",
+        "canonical": "#e6f7ed",
+        "oklch": "oklch(96.1% 0.022 160)",
+        "tonalRamp": [
+          "#040e08",
+          "#1b2720",
+          "#36443c",
+          "#536259",
+          "#75857c",
+          "#99a9a0",
+          "#bfcfc6",
+          "#e2f3e9"
+        ]
+      },
+      "for-wash": {
+        "role": "tertiary",
+        "displayName": "For Wash",
+        "canonical": "#f3fbf6",
+        "oklch": "oklch(98.1% 0.011 159)",
+        "tonalRamp": [
+          "#080d09",
+          "#202622",
+          "#3b423e",
+          "#59605b",
+          "#7b827e",
+          "#9fa7a2",
+          "#c5cdc8",
+          "#e9f1ec"
+        ]
+      },
+      "against-text": {
+        "role": "tertiary",
+        "displayName": "Against Text",
+        "canonical": "#c4320a",
+        "oklch": "oklch(54.1% 0.188 34)",
+        "tonalRamp": [
+          "#290000",
+          "#540000",
+          "#830000",
+          "#ae1700",
+          "#d94725",
+          "#ff7455",
+          "#ffa88e",
+          "#ffd6c1"
+        ]
+      },
+      "against-tint": {
+        "role": "tertiary",
+        "displayName": "Against Tint",
+        "canonical": "#fdeeea",
+        "oklch": "oklch(96.0% 0.017 35)",
+        "tonalRamp": [
+          "#120907",
+          "#2c211e",
+          "#483d3a",
+          "#675a57",
+          "#8a7d79",
+          "#afa19d",
+          "#d5c7c3",
+          "#faebe7"
+        ]
+      },
+      "sage": {
+        "role": "neutral",
+        "displayName": "Sage",
+        "canonical": "#07703a",
+        "oklch": "oklch(47.9% 0.121 153)",
+        "tonalRamp": [
+          "#001500",
+          "#003200",
+          "#00511c",
+          "#08703a",
+          "#3c955c",
+          "#63ba80",
+          "#8ae2a4",
+          "#baffce"
+        ]
+      },
+      "sage-bright": {
+        "role": "neutral",
+        "displayName": "Sage Bright",
+        "canonical": "#14ae5c",
+        "oklch": "oklch(66.0% 0.168 152)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#005500",
+          "#007627",
+          "#009b4a",
+          "#37c26e",
+          "#7fe49e",
+          "#baffcd"
+        ]
+      },
+      "project-terracotta": {
+        "role": "neutral",
+        "displayName": "Project Terracotta",
+        "canonical": "#e5533d",
+        "oklch": "oklch(63.5% 0.185 31)",
+        "tonalRamp": [
+          "#290000",
+          "#540000",
+          "#830000",
+          "#ae1701",
+          "#d84732",
+          "#ff735c",
+          "#ffa793",
+          "#ffd5c5"
+        ]
+      },
+      "project-amber": {
+        "role": "neutral",
+        "displayName": "Project Amber",
+        "canonical": "#f08c00",
+        "oklch": "oklch(73.1% 0.167 63)",
+        "tonalRamp": [
+          "#250000",
+          "#4d0000",
+          "#781900",
+          "#9b3e00",
+          "#c36300",
+          "#ec8800",
+          "#ffb565",
+          "#ffe0a7"
+        ]
+      },
+      "project-olive": {
+        "role": "neutral",
+        "displayName": "Project Olive",
+        "canonical": "#7a9a01",
+        "oklch": "oklch(63.9% 0.157 123)",
+        "tonalRamp": [
+          "#050f00",
+          "#192b00",
+          "#314a00",
+          "#4e6a00",
+          "#6f8e00",
+          "#92b432",
+          "#b9d970",
+          "#e1faae"
+        ]
+      },
+      "project-sage": {
+        "role": "neutral",
+        "displayName": "Project Sage",
+        "canonical": "#14ae5c",
+        "oklch": "oklch(66.0% 0.168 152)",
+        "tonalRamp": [
+          "#001500",
+          "#003400",
+          "#005500",
+          "#007627",
+          "#009b4a",
+          "#37c26e",
+          "#7fe49e",
+          "#baffcd"
+        ]
+      },
+      "project-teal": {
+        "role": "neutral",
+        "displayName": "Project Teal",
+        "canonical": "#0f9fa8",
+        "oklch": "oklch(64.0% 0.107 202)",
+        "tonalRamp": [
+          "#00131d",
+          "#00303a",
+          "#004e58",
+          "#006e77",
+          "#00929b",
+          "#3cb8c1",
+          "#69dfe8",
+          "#95ffff"
+        ]
+      },
+      "project-blue": {
+        "role": "neutral",
+        "displayName": "Project Blue",
+        "canonical": "#0c8ce9",
+        "oklch": "oklch(62.7% 0.170 249)",
+        "tonalRamp": [
+          "#000533",
+          "#001f62",
+          "#003c93",
+          "#005eb7",
+          "#0083e0",
+          "#3caaff",
+          "#80d1ff",
+          "#b9f5ff"
+        ]
+      },
+      "project-plum": {
+        "role": "neutral",
+        "displayName": "Project Plum",
+        "canonical": "#9747ff",
+        "oklch": "oklch(59.8% 0.254 298)",
+        "tonalRamp": [
+          "#13002f",
+          "#2f025b",
+          "#4e198c",
+          "#7031c0",
+          "#9357ec",
+          "#b388ff",
+          "#d5b6ff",
+          "#f6e0ff"
+        ]
+      },
+      "project-rose": {
+        "role": "neutral",
+        "displayName": "Project Rose",
+        "canonical": "#e03e8c",
+        "oklch": "oklch(62.4% 0.208 356)",
+        "tonalRamp": [
+          "#26000d",
+          "#4f0026",
+          "#7c0043",
+          "#ad0062",
+          "#d83585",
+          "#f66fa9",
+          "#ffa3ce",
+          "#ffd2f1"
+        ]
+      },
+      "sticky-yellow": {
+        "role": "neutral",
+        "displayName": "Sticky Yellow",
+        "canonical": "#ffef9f",
+        "oklch": "oklch(94.7% 0.101 98)",
+        "tonalRamp": [
+          "#170700",
+          "#312200",
+          "#4e3f00",
+          "#6d5d00",
+          "#908131",
+          "#b5a557",
+          "#dccc7d",
+          "#fff0a0"
+        ]
+      },
+      "sticky-pink": {
+        "role": "neutral",
+        "displayName": "Sticky Pink",
+        "canonical": "#ffc9e0",
+        "oklch": "oklch(89.0% 0.068 351)",
+        "tonalRamp": [
+          "#1e000e",
+          "#3b1428",
+          "#5a3044",
+          "#7b4d62",
+          "#a07085",
+          "#c694aa",
+          "#eeb9d0",
+          "#ffddf4"
+        ]
+      },
+      "sticky-green": {
+        "role": "neutral",
+        "displayName": "Sticky Green",
+        "canonical": "#c5f2d4",
+        "oklch": "oklch(92.1% 0.062 156)",
+        "tonalRamp": [
+          "#001202",
+          "#012c17",
+          "#214932",
+          "#40684f",
+          "#628c71",
+          "#86b194",
+          "#abd7ba",
+          "#cefcdd"
+        ]
+      },
+      "sticky-blue": {
+        "role": "neutral",
+        "displayName": "Sticky Blue",
+        "canonical": "#c7e4ff",
+        "oklch": "oklch(90.6% 0.048 246)",
+        "tonalRamp": [
+          "#000c1e",
+          "#0e263a",
+          "#2a4258",
+          "#476178",
+          "#69839c",
+          "#8da8c2",
+          "#b2cee9",
+          "#d5f2ff"
+        ]
+      },
+      "scrim-light": {
+        "role": "neutral",
+        "displayName": "Scrim Light",
+        "canonical": "rgba(0, 0, 0, .32)"
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "canonical": "rgba(0, 0, 0, .5)"
+      },
+      "notice": {
+        "role": "secondary",
+        "displayName": "Notice Amber",
+        "canonical": "#f08c00",
+        "oklch": "oklch(73.1% 0.167 63)",
+        "tonalRamp": [
+          "#250000",
+          "#4d0000",
+          "#781900",
+          "#9b3e00",
+          "#c36300",
+          "#ec8800",
+          "#ffb565",
+          "#ffe0a7"
+        ]
+      },
+      "notice-text": {
+        "role": "secondary",
+        "displayName": "Notice Text",
+        "canonical": "#9a5b00",
+        "oklch": "oklch(53.1% 0.119 65)",
+        "tonalRamp": [
+          "#240000",
+          "#470c00",
+          "#682d00",
+          "#8a4c00",
+          "#b06f24",
+          "#d8944d",
+          "#ffba74",
+          "#ffe1a5"
+        ]
+      },
+      "notice-line": {
+        "role": "secondary",
+        "displayName": "Notice Line",
+        "canonical": "#f7d6a6",
+        "oklch": "oklch(89.2% 0.072 77)",
+        "tonalRamp": [
+          "#1b0400",
+          "#371e00",
+          "#553a08",
+          "#75582b",
+          "#997b4d",
+          "#be9f71",
+          "#e6c596",
+          "#ffe9b8"
+        ]
+      },
+      "notice-tint": {
+        "role": "secondary",
+        "displayName": "Notice Tint",
+        "canonical": "#fff6e8",
+        "oklch": "oklch(97.6% 0.021 79)",
+        "tonalRamp": [
+          "#100a03",
+          "#292319",
+          "#463f33",
+          "#645c51",
+          "#877f73",
+          "#aca396",
+          "#d2c9bc",
+          "#f6eddf"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page headings outside a project (--fs-display)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Panel headings inside a project tab (--fs-title-l)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Project title and section headings (--fs-title); --fs-title-s for project names."
+      },
+      "claim": {
+        "displayName": "Claim",
+        "purpose": "Hub guesses, inspector heading, card questions (--fs-claim)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Interface copy and canvas card text (--fs-body)."
+      },
+      "body-ui": {
+        "displayName": "Body UI",
+        "purpose": "Navigation and panel intros at a 68ch measure (--fs-ui)."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Buttons, tabs, legend rows, breadcrumbs, field labels (--fs-small)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Metadata; the 12px floor of the scale (--fs-label)."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Codes, counts, dates, zoom level, keycaps only."
+      },
+      "landing-hero": {
+        "displayName": "Landing hero",
+        "purpose": "The landing page's single hero headline."
+      }
+    },
+    "fontScale": {
+      "fs-label": "12px",
+      "fs-small": "13px",
+      "fs-body": "14px",
+      "fs-ui": "15px",
+      "fs-lead": "16px",
+      "fs-claim": "18px",
+      "fs-title-s": "20px",
+      "fs-title": "24px",
+      "fs-title-l": "28px",
+      "fs-heading": "32px",
+      "fs-headline": "34px",
+      "fs-display": "44px",
+      "fs-display-xl": "56px"
+    },
+    "shadows": [
+      {
+        "name": "shadow-rest",
+        "value": "0 1px 2px rgba(0, 0, 0, .05)",
+        "purpose": "Barely-there lift for small static items."
+      },
+      {
+        "name": "shadow-card",
+        "value": "0 1px 3px rgba(0, 0, 0, .08), 0 0 0 .5px rgba(0, 0, 0, .05)",
+        "purpose": "Canvas cards, Insights cards, help card, docked chrome."
+      },
+      {
+        "name": "shadow-lift",
+        "value": "0 6px 16px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .06)",
+        "purpose": "Hover on canvas and project cards."
+      },
+      {
+        "name": "shadow-control",
+        "value": "0 2px 8px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .1)",
+        "purpose": "Active segment of the tab control."
+      },
+      {
+        "name": "shadow-float",
+        "value": "0 4px 14px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .08)",
+        "purpose": "Floating canvas chrome, sticky notes, import queue."
+      },
+      {
+        "name": "shadow-hub",
+        "value": "0 10px 28px rgba(0, 0, 0, .28)",
+        "purpose": "The dark hypothesis hub card only."
+      },
+      {
+        "name": "shadow-overlay",
+        "value": "0 18px 48px rgba(0, 0, 0, .22), 0 0 0 .5px rgba(0, 0, 0, .08)",
+        "purpose": "Review deck card and dialogs."
+      },
+      {
+        "name": "shadow-drawer",
+        "value": "-8px 0 28px rgba(0, 0, 0, .14)",
+        "purpose": "Right-hand drawers."
+      },
+      {
+        "name": "shadow-sidebar",
+        "value": "8px 0 28px rgba(0, 0, 0, .14)",
+        "purpose": "The hover-reveal sidebar."
+      },
+      {
+        "name": "shadow-toast",
+        "value": "0 8px 24px rgba(0, 0, 0, .22)",
+        "purpose": "The toast."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control",
+        "value": ".12s ease",
+        "purpose": "Button and input background, border and ring changes."
+      },
+      {
+        "name": "card-hover",
+        "value": ".15s ease",
+        "purpose": "Shadow lift on canvas and Insights cards."
+      },
+      {
+        "name": "landing-shot",
+        "value": ".9s cubic-bezier(.16,1,.3,1)",
+        "purpose": "The landing product shot rising into place; removed under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tabs-in-topbar",
+        "value": "1100px",
+        "note": "min-width: project tabs and actions move into the 48px top bar."
+      },
+      {
+        "name": "canvas-docked",
+        "value": "900px",
+        "note": "max-width: floating canvas chrome docks into a column above a 62vh canvas."
+      },
+      {
+        "name": "sidebar-menu",
+        "value": "850px",
+        "note": "max-width: hover sidebar replaced by a menu button."
+      },
+      {
+        "name": "stacked",
+        "value": "650px",
+        "note": "max-width: headers and forms stack."
+      },
+      {
+        "name": "narrow",
+        "value": "520px",
+        "note": "max-width: smallest phone adjustments."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one blue action per view (Add evidence, Accept, Extract cards).",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M8 3.5v9M3.5 8h9\"/></svg>Add evidence</button>",
+      "css": ".ds-icon{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none} .ds-btn-primary{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent-strong);border-radius:var(--radius-sm);background:var(--accent-strong);color:var(--on-accent);padding:8px 14px;font:600 var(--fs-small)/1.2 var(--font-ui);cursor:pointer;transition:background .12s ease,border-color .12s ease} .ds-btn-primary:hover{background:var(--accent-rust);border-color:var(--accent-rust)} .ds-btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary actions: white field, hairline outline, ink label.",
+      "html": "<button class=\"ds-btn-ghost\"><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M8 2.5v8M4.5 7 8 10.5 11.5 7M3 13.5h10\"/></svg>Export Markdown</button>",
+      "css": ".ds-icon{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none} .ds-btn-ghost{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--field);color:var(--ink-soft);padding:7px 12px;font:500 var(--fs-small)/1.2 var(--font-ui);cursor:pointer;transition:background .12s ease,border-color .12s ease} .ds-btn-ghost:hover{border-color:var(--line-bold);background:var(--raised);color:var(--ink)} .ds-btn-ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline field; focus turns the border blue with a 1px ring.",
+      "html": "<label class=\"ds-field\"><span>Research question</span><input placeholder=\"Why does bottled juice lose vitamin C?\"></label>",
+      "css": ".ds-field{display:grid;gap:6px;width:320px;font-family:var(--font-ui)} .ds-field span{color:var(--ink-soft);font:600 var(--fs-small) var(--font-ui)} .ds-field input{border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--field);color:var(--ink);padding:8px 10px;font:400 var(--fs-body) var(--font-ui);transition:border-color .12s ease,box-shadow .12s ease} .ds-field input::placeholder{color:var(--muted)} .ds-field input:hover{border-color:var(--line-bold)} .ds-field input:focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);outline:0}"
+    },
+    {
+      "name": "Segmented Tabs",
+      "kind": "nav",
+      "refersTo": "tabs-segmented",
+      "description": "Project tabs as a segmented control in the 48px top bar.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"on\">Web</button><button>Cards</button><button>Sources</button><button>Question &amp; history</button><button>Insights</button></nav>",
+      "css": ".ds-tabs{display:inline-flex;gap:2px;padding:3px;border-radius:var(--radius-md);background:var(--sunken)} .ds-tabs button{border:0;border-radius:var(--radius-sm);background:transparent;color:var(--muted-strong);padding:6px 12px;font:600 var(--fs-small) var(--font-ui);cursor:pointer} .ds-tabs button:hover:not(.on){background:rgba(255,255,255,.6);color:var(--ink)} .ds-tabs button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow-control)} .ds-tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Legend Panel",
+      "kind": "custom",
+      "refersTo": "floating-panel",
+      "description": "Floating layer-list legend: colour in dots and line samples, words in ink, counts in mono.",
+      "html": "<div class=\"ds-legend\"><button style=\"--c:var(--origin-external)\"><i></i>External source<small>4</small></button><button style=\"--c:var(--origin-experiment)\"><i></i>My experiment<small>2</small></button><button style=\"--c:var(--origin-hypothesis)\"><i></i>My hypothesis<small>3</small></button><hr><button style=\"--c:var(--relation-supports)\"><b></b>Supports<small>3</small></button><button class=\"dash\" style=\"--c:var(--relation-contradicts)\"><b></b>Contradicts<small>3</small></button></div>",
+      "css": ".ds-legend{width:248px;padding:10px;border-radius:var(--radius-lg);background:var(--card);box-shadow:var(--shadow-float);font-family:var(--font-ui)} .ds-legend hr{border:0;border-top:1px solid var(--line-soft);margin:8px 0} .ds-legend button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:var(--radius-sm);background:transparent;padding:6px 8px;color:var(--ink-soft);font:500 var(--fs-small) var(--font-ui);cursor:pointer} .ds-legend button:hover{background:var(--sunken)} .ds-legend button:focus-visible{outline:2px solid var(--accent);outline-offset:0} .ds-legend i{width:10px;height:10px;border-radius:50%;background:var(--c)} .ds-legend b{width:14px;border-top:2px solid var(--c)} .ds-legend .dash b{border-top-style:dashed} .ds-legend small{margin-left:auto;color:var(--muted);font:500 var(--fs-label) var(--font-mono)}"
+    },
+    {
+      "name": "Canvas Toolbar and Zoom",
+      "kind": "custom",
+      "refersTo": "zoom-button",
+      "description": "Floating bottom chrome: drawn icons, transparent buttons, mono zoom level.",
+      "html": "<div class=\"ds-hud\"><button><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3 2.5h10v8l-3 3H3ZM10 13.5v-3h3\"/></svg>Sticky note</button><button><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10\"/></svg>Fit to view</button><span class=\"sep\"></span><button class=\"sq\" aria-label=\"Zoom out\"><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M3.5 8h9\"/></svg></button><output>86%</output><button class=\"sq\" aria-label=\"Zoom in\"><svg class=\"ds-icon\" viewBox=\"0 0 16 16\" aria-hidden=\"true\"><path d=\"M8 3.5v9M3.5 8h9\"/></svg></button></div>",
+      "css": ".ds-icon{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none} .ds-hud{display:inline-flex;align-items:center;gap:4px;padding:6px;border-radius:var(--radius-lg);background:var(--card);box-shadow:var(--shadow-float)} .ds-hud button{display:inline-flex;align-items:center;gap:6px;height:32px;border:0;border-radius:var(--radius-sm);background:transparent;padding:0 10px;color:var(--ink-soft);font:500 var(--fs-small) var(--font-ui);cursor:pointer} .ds-hud button.sq{width:32px;padding:0;justify-content:center} .ds-hud button:hover{background:var(--sunken)} .ds-hud button:focus-visible{outline:2px solid var(--accent);outline-offset:0} .ds-hud .sep{width:1px;height:20px;background:var(--line);margin:0 4px} .ds-hud output{min-width:48px;text-align:center;color:var(--ink-soft);font:500 var(--fs-small) var(--font-mono)}"
+    },
+    {
+      "name": "Evidence Card",
+      "kind": "card",
+      "refersTo": "web-card",
+      "description": "Canvas card: origin dot and citation over the claim; blue outline when selected.",
+      "html": "<article class=\"ds-wc\" tabindex=\"0\"><p><i></i>Source · Haddad 2021</p><h4>Open containers lose far more than sealed ones</h4></article>",
+      "css": ".ds-wc{width:210px;padding:9px 11px 10px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--card);box-shadow:var(--shadow-card);transition:box-shadow .15s ease;cursor:pointer} .ds-wc:hover{box-shadow:var(--shadow-lift)} .ds-wc:focus-visible{outline:2px solid var(--accent);outline-offset:2px} .ds-wc p{display:flex;align-items:center;gap:6px;margin:0 0 4px;color:var(--ink-soft);font:500 var(--fs-label) var(--font-ui)} .ds-wc i{width:7px;height:7px;border-radius:50%;background:var(--origin-external)} .ds-wc h4{margin:0;color:var(--ink);font:500 var(--fs-body)/1.38 var(--font-ui)}"
+    },
+    {
+      "name": "Hypothesis Hub Card",
+      "kind": "card",
+      "refersTo": "web-card-hub",
+      "description": "The one dark object on the canvas: charcoal, magenta outline, white guess.",
+      "html": "<article class=\"ds-hub\" tabindex=\"0\"><p>My hypothesis</p><h4>Oxygen exposure is the main driver of vitamin C loss.</h4><footer><span class=\"f\">2 for</span><span class=\"a\">1 against</span></footer></article>",
+      "css": ".ds-hub{width:300px;padding:16px 18px;border:2px solid var(--origin-hypothesis);border-radius:var(--radius-xl);background:var(--hub-ink);box-shadow:var(--shadow-hub);cursor:pointer} .ds-hub:focus-visible{outline:2px solid var(--accent);outline-offset:2px} .ds-hub p{margin:0 0 6px;color:rgba(255,255,255,.72);font:500 var(--fs-label) var(--font-ui)} .ds-hub h4{margin:0;color:var(--on-dark);font:600 var(--fs-claim)/1.3 var(--font-ui);letter-spacing:-.01em} .ds-hub footer{display:flex;gap:12px;margin-top:10px;font:500 var(--fs-label) var(--font-mono)} .ds-hub .f{color:var(--on-dark-for)} .ds-hub .a{color:var(--on-dark-against)}"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Charcoal notice dropping in below the top bar.",
+      "html": "<div class=\"ds-toast\" role=\"status\">1 card still waiting for review.</div>",
+      "css": ".ds-toast{display:inline-block;padding:10px 16px;border-radius:var(--radius-md);background:var(--hub-ink);color:var(--on-dark);font:500 var(--fs-small) var(--font-ui);box-shadow:var(--shadow-toast)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Research Canvas",
+    "overview": "Lattice is the category standard for canvas-first tools, executed at the craft level of Figma, Miro and Obsidian's graph view. The idea web is a full-bleed, dotted, infinite canvas; everything that operates on it floats above it as white panels with 12px corners and a soft two-layer shadow. Every other tab (Cards, Sources, Question & history, Insights) is a calm, dense white panel in the same chrome. Conventions are embraced, not themed: a 48px top bar, a segmented tab control, a layer-list legend, a bottom-centre toolbar, zoom controls bottom-right, an inspector on the right.\n\nThe chrome is neutral and cool so that colour can carry meaning. One blue is reserved for selection, focus and primary actions. Saturated origin and relation colours only ever say where an idea came from or how two ideas relate, and they live in dots and lines, never in the words beside them. The hypothesis is the one dark object on the canvas: a charcoal hub card outlined in hypothesis magenta, which the eye finds first even from the back of a room.\n\nAll values live in `tokens.css` as CSS custom properties with the same names as the frontmatter keys (`--ink`, `--paper`, `--accent-strong`, `--origin-external`, `--fs-body`, `--radius-lg`, `--shadow-float`). The landing page (`landing.html`, `landing.css`) runs on the same tokens. The look must never feel playful and must read well projected, which is why the type scale bottoms out at 12px and text colours down to `--muted` pass WCAG AA on every surface. This world replaces the warm-paper, serif, terracotta \"academic notebook\" look; none of that vocabulary carries forward.",
+    "keyCharacteristics": [
+      "Full-bleed dotted canvas (`--paper` with a 24px dot grid in `--line-bold`) under floating white chrome.",
+      "One UI typeface (Inter) at projector-friendly sizes; JetBrains Mono only for codes, counts and dates.",
+      "One blue, for selection, focus and primary actions only.",
+      "Origin and relation colours as dots and lines; words stay ink.",
+      "Flat panels at rest; floating chrome and canvas cards carry soft two-layer shadows.",
+      "A single dark object per canvas: the hypothesis hub."
+    ],
+    "rules": [
+      {
+        "name": "The One Blue Rule",
+        "body": "`accent` and `accent-strong` mean selection, focus, or the primary action, and nothing else. A screen has one blue button; status, decoration and headings are never blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Colour Lives In Dots And Lines Rule",
+        "body": "Origin and relation colours only mean origin or relation, and they appear as dots, line strokes, meters and outlines. The words beside them stay in `ink-soft` or `ink`, so they pass AA at any size.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Dark Object Rule",
+        "body": "The charcoal hub card with its magenta outline is the only dark object on the canvas. Outside the canvas, charcoal is used only for the toast and the landing page's closing CTA band and footer.",
+        "section": "colors"
+      },
+      {
+        "name": "The Twelve Pixel Floor Rule",
+        "body": "Nothing is set below `--fs-label` (12px). The app is judged on a projector.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Means Numbers Rule",
+        "body": "JetBrains Mono is only for codes, counts, dates, the zoom percentage and keycaps (with tabular figures). Prose, labels and citations are set in Inter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "Labels, tabs, buttons and headings are sentence case at normal tracking. No uppercase tracked labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Float Means Chrome Rule",
+        "body": "`--shadow-float` belongs to tool chrome hovering over the canvas. Panels in the page flow stay flat with a `--line` border.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every value from `tokens.css` custom properties; styles carry no raw colours, and the JS colour maps are kept in step by `test/tokens.test.js`.",
+      "Do use blue (`--accent` / `--accent-strong`) only for selection, focus and primary actions, with one primary button per view.",
+      "Do put origin and relation colour in dots, line strokes and meters, and keep the words beside them in ink.",
+      "Do pair every relation colour with its line style (solid, dashed, doubled).",
+      "Do float canvas chrome: legend panel top-left, toolbar bottom-centre, zoom HUD bottom-right, inspector on the right, all white with 12px corners and `--shadow-float`.",
+      "Do keep the project tabs and project actions in the 48px top bar on wide screens.",
+      "Do write labels, tabs and buttons in sentence case.",
+      "Do draw icons from the one set in `src/icons.js` (16px, 1.6 stroke, round caps).",
+      "Do keep panels in the page flow flat with a 1px `--line` border."
+    ],
+    "donts": [
+      "Don't set any text below `--fs-label` (12px).",
+      "Don't use blue for status, decoration, headings or a second button.",
+      "Don't colour words with origin or relation hues.",
+      "Don't add a second dark object to the canvas; charcoal belongs to the hypothesis hub, the toast and the landing CTA band and footer.",
+      "Don't put kickers or eyebrows above headings.",
+      "Don't use mono for prose, labels or citations; it is for codes, counts and dates.",
+      "Don't use Unicode glyphs (arrows, stars, check marks, bullets) as icons; draw them or take them from `src/icons.js`.",
+      "Don't put thick coloured side borders on cards.",
+      "Don't use `--ornament` for words; it is for decorative strokes only.",
+      "Don't bring back the replaced world's warm paper, serif display face or terracotta accent."
+    ]
+  }
+}

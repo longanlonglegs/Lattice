@@ -1,6 +1,6 @@
 # Lattice Capture extension
 
-This extension adds **Save selection to Lattice** to Chrome's right-click menu, with a choice of where the passage comes from: **As an external source**, **As my experiment**, or **As my draft**.
+This extension adds **Save selection to Lattice** to Chrome's right-click menu, with a choice of where the passage comes from: **As an external source** or **As my experiment**.
 
 ## Load it locally
 

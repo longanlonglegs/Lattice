@@ -58,12 +58,14 @@ const analysisSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["guess_id", "verdict", "agreement", "disagreement", "revision", "suggestions"],
+        required: ["guess_id", "verdict", "agreement", "agreement_ids", "disagreement", "disagreement_ids", "revision", "suggestions"],
         properties: {
           guess_id: { type: "string" },
           verdict: { type: "string", enum: ["supported", "mixed", "challenged", "untested"] },
           agreement: { type: "string" },
+          agreement_ids: { type: "array", items: { type: "string" } },
           disagreement: { type: "string" },
+          disagreement_ids: { type: "array", items: { type: "string" } },
           revision: { type: "string" },
           suggestions: {
             type: "array",

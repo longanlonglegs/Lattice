@@ -1,6 +1,6 @@
 // Entry point: wires up events and opens the first view.
 import { $ } from "./util.js";
-import { initWorkspace, currentProject, saveWorkspace, clearAiAnalysis } from "./state.js";
+import { initWorkspace, currentProject, saveWorkspace } from "./state.js";
 import { renderProjectsGrid, openProject } from "./projects.js";
 import { viewSections, currentView, showView } from "./views.js";
 import { renderProject, exportMarkdown, toggleActivityList } from "./workspace.js";
@@ -8,13 +8,13 @@ import { projectTabs, showTab, openDrawer, closeDrawer } from "./project-shell.j
 import { renderCards } from "./cards.js";
 import { recordFromForm, renderVersionStatus } from "./history.js";
 import { onPipelineChange, schedulePipeline } from "./pipeline.js";
-import { renderPipelineStatus } from "./project-shell.js";
+import { renderPipelineStatus, initTabHotkeys } from "./project-shell.js";
 import { initWebControls, renderWeb } from "./web/web-view.js";
 import { renderInsights, analyzeEvidence } from "./insights.js";
 import { renderSourceLibrary } from "./library.js";
 import { initReviewKeys, requestReview } from "./review.js";
 import { downloadBackup, restoreBackup, deleteWorkspace, exportProject, importProject } from "./privacy.js";
-import { ob, renderOnboarding, openOnboarding, validateObStep, addObText, addObFiles, saveSettings, createProject, deleteProject } from "./onboarding.js";
+import { ob, renderOnboarding, openOnboarding, validateObStep, addObText, addObFiles, saveSettings, createProject, deleteProject, focusObStep, clearObError } from "./onboarding.js";
 import { addLocalFile, addPastedText, addUrlSource, receiveBrowserCapture } from "./ingest.js";
 
 await initWorkspace();
@@ -41,9 +41,11 @@ $("#project-chip").addEventListener("click", () => showView("projects"));
 $("#project-settings").addEventListener("click", () => openOnboarding("edit", currentProject().id));
 $("#projects-search").addEventListener("input", renderProjectsGrid);
 $("#ob-cancel").addEventListener("click", () => showView(currentView));
-$("#ob-next").addEventListener("click", () => { if (!validateObStep(ob.step)) return; ob.step += 1; renderOnboarding(); });
-$("#ob-back").addEventListener("click", () => { ob.step -= 1; renderOnboarding(); });
-$("#ob-ack").addEventListener("change", () => { $("#ob-submit").disabled = ob.mode === "create" && !$("#ob-ack").checked; $("#ob-error").textContent = ""; });
+$("#ob-next").addEventListener("click", () => { if (!validateObStep(ob.step)) return; ob.step += 1; renderOnboarding(); focusObStep(); });
+$("#ob-back").addEventListener("click", () => { ob.step -= 1; renderOnboarding(); focusObStep(); });
+$("#ob-ack").addEventListener("change", clearObError);
+$("#ob-question").addEventListener("input", clearObError);
+$("#ob-upload").addEventListener("click", () => $("#ob-file").click());
 $("#ob-add-text").addEventListener("click", addObText);
 $("#ob-file").addEventListener("change", event => addObFiles([...event.target.files]));
 $("#ob-form").addEventListener("submit", event => { event.preventDefault(); if (ob.mode === "create") createProject(); else saveSettings(); });
@@ -74,10 +76,11 @@ $("#restore-input").addEventListener("change", event => restoreBackup(event.targ
 $("#delete-workspace").addEventListener("click", deleteWorkspace);
 $("#export-project").addEventListener("click", exportProject);
 $("#import-project-input").addEventListener("change", event => importProject(event.target.files[0]));
-["#project-title", "#research-question", "#working-hypothesis"].forEach(selector => $(selector).addEventListener("input", () => { $("#save-status").textContent = "Saving…"; clearAiAnalysis(); saveWorkspace(); renderInsights(); renderVersionStatus(); }));
+["#project-title", "#research-question", "#working-hypothesis"].forEach(selector => $(selector).addEventListener("input", () => { $("#save-status").textContent = "Saving…"; saveWorkspace(); renderInsights(); renderVersionStatus(); }));
 $("#record-version").addEventListener("click", recordFromForm);
 $("#activity-toggle").addEventListener("click", toggleActivityList);
 initWebControls();
+initTabHotkeys();
 initReviewKeys();
 $("#cards-review-button").addEventListener("click", requestReview);
 $("#pipeline-status").addEventListener("click", () => schedulePipeline(0));
@@ -88,7 +91,7 @@ onPipelineChange(() => {
   if (!document.activeElement?.closest("#cards-grid")) renderCards();
 });
 $("#version-link-list").addEventListener("change", () => { $("#version-link-count").textContent = `(${document.querySelectorAll("#version-link-list input:checked").length} selected)`; });
-$("#ai-consent").addEventListener("change", event => { $("#ai-analyze-button").disabled = !event.target.checked; });
+$("#ai-consent").addEventListener("change", () => renderInsights({ tabs: false }));
 $("#ai-analyze-button").addEventListener("click", analyzeEvidence);
 $("#markdown-export").addEventListener("click", exportMarkdown);
 $("#analyze-button").addEventListener("click", addUrlSource);

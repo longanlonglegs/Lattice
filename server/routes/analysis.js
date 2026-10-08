@@ -39,7 +39,9 @@ function keepKnownIds(result, evidenceIds, guessIds) {
   const seen = new Set();
   return {
     ...result,
-    guesses: (result.guesses || []).filter(item => guessIds.has(item.guess_id) && !seen.has(item.guess_id) && seen.add(item.guess_id)),
+    guesses: (result.guesses || [])
+      .filter(item => guessIds.has(item.guess_id) && !seen.has(item.guess_id) && seen.add(item.guess_id))
+      .map(item => ({ ...item, agreement_ids: [...new Set((item.agreement_ids || []).filter(id => evidenceIds.has(id)))], disagreement_ids: [...new Set((item.disagreement_ids || []).filter(id => evidenceIds.has(id)))] })),
     contradictions: (result.contradictions || [])
       .map(item => ({ ...item, evidence_ids: [...new Set((item.evidence_ids || []).filter(id => evidenceIds.has(id)))].slice(0, 2) }))
       .filter(item => item.evidence_ids.length === 2),

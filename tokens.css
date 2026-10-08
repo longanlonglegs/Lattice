@@ -1,0 +1,128 @@
+/* Lattice design tokens: a canvas-first research tool at the craft level of Figma, Miro, and Obsidian's graph view
+   (see DESIGN.md and PRODUCT.md). Neutral cool chrome, one UI typeface, one blue for selection and action, and
+   saturated colours that only ever mean where an idea came from (origin) or how two ideas relate (relation).
+   The origin, relation, project, and sticky colours are mirrored as hex in src/origins.js, src/relations.js,
+   src/state.js, and src/web/web-view.js (SVG attributes can't read CSS variables); test/tokens.test.js keeps
+   them in step. */
+
+:root {
+  /* ---------- Type faces ---------- */
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  /* ---------- Ink: text, darkest first. Everything down to --muted passes WCAG AA on every surface below. ---------- */
+  --ink: #1e1e1e;          /* body text, headings */
+  --ink-soft: #2c2c2c;     /* strong secondary text */
+  --ink-body: #444444;     /* running text in panels and explanations */
+  --muted-strong: #595959; /* secondary text, ghost-button labels */
+  --muted: #6b6b6b;        /* the quietest readable text: metadata, footnotes, hints */
+  --ornament: #b3b3b3;     /* decorative glyphs only; never for words */
+
+  /* ---------- Surfaces ---------- */
+  --card: #ffffff;          /* cards, panels, floating chrome */
+  --field: #ffffff;         /* inputs, ghost buttons, chips */
+  --raised: #fafafa;        /* a quiet step off the canvas: footers, hover rows */
+  --paper: #f5f5f5;         /* the canvas and page ground */
+  --sidebar-paper: #ffffff; /* navigation and side panels */
+  --sunken: #f0f0f0;        /* wells, count pills, segmented-control track */
+  --selected: #e5f4ff;      /* selected rows and the active navigation item */
+  --track: #e6e6e6;         /* empty bars and meters */
+  --cream: #fff4d6;         /* warm highlight (search matches) */
+
+  /* ---------- Lines ---------- */
+  --line-soft: #f0f0f0;     /* dividers inside a panel */
+  --line: #e6e6e6;          /* card and panel borders */
+  --line-strong: #d9d9d9;   /* control outlines */
+  --line-bold: #b3b3b3;     /* hover borders, pinned outlines */
+
+  /* ---------- Dark objects: hypothesis hub cards and the toast ---------- */
+  --hub-ink: #262626;
+  --hub-ink-deep: #1a1a1a;
+  --on-dark: #ffffff;
+  --on-dark-accent: #ff9ccb;   /* hub kicker: the hypothesis colour, lightened for a dark ground */
+  --on-dark-for: #6fdc9a;
+  --on-dark-against: #ff8f78;
+  --on-dark-note: #ffd166;
+
+  /* ---------- Accent: blue, only for selection, focus, and primary actions ---------- */
+  --accent: #0c8ce9;            /* focus rings, selection outlines, active markers */
+  --accent-strong: #0768c4;     /* primary button fill and links (AA with white and on white) */
+  --on-accent: #ffffff;
+  --accent-soft: #9ccfff;
+  --accent-ember: #0768c4;      /* accent as text: labels, step numbers */
+  --accent-rust: #055aab;       /* accent as text on hover */
+  --accent-line-strong: #66b8f5;
+  --accent-line: #b8dcfa;
+  --accent-wash: #dcefff;
+  --accent-tint: #f2f9ff;
+
+  /* ---------- Origins: where an idea came from ---------- */
+  --origin-external: #6e56cf;
+  --origin-experiment: #14ae5c;
+  --origin-hypothesis: #e03e8c;
+  --external-line: #d5cdf5;  --external-tint: #f3f0fd;
+
+
+  /* ---------- Notices: amber for things that need the user's attention (search matches, banners, out-of-date reads) ---------- */
+  --notice: #f08c00;
+  --notice-text: #9a5b00;  --notice-line: #f7d6a6;  --notice-tint: #fff6e8;
+
+  /* ---------- Relations: how two ideas relate (always paired with a line style) ---------- */
+  --relation-supports: #14ae5c;
+  --relation-contradicts: #f24822;
+  --relation-refines: #8f8f8f;
+  --relation-same: #9747ff;
+  --relation-explains: #0f9fa8;
+  --for-text: #0b7a3e;  --for-line: #7fd1a3;  --for-line-soft: #cdeedb;  --for-tint: #e6f7ed;  --for-wash: #f3fbf6;
+  --against-text: #c4320a;  --against-line: #f6c9bd;  --against-tint: #fdeeea;
+
+  /* ---------- Progress and acceptance ---------- */
+  --sage: #07703a;
+  --sage-bright: #14ae5c;
+
+  /* ---------- Project colours (the tag a user picks for a project) ---------- */
+  --project-terracotta: #e5533d;  --project-amber: #f08c00;  --project-olive: #7a9a01;  --project-sage: #14ae5c;
+  --project-teal: #0f9fa8;        --project-blue: #0c8ce9;   --project-plum: #9747ff;   --project-rose: #e03e8c;
+
+  /* ---------- Sticky notes (FigJam-style paper on the web) ---------- */
+  --sticky-yellow: #ffef9f;  --sticky-pink: #ffc9e0;  --sticky-green: #c5f2d4;  --sticky-blue: #c7e4ff;
+
+  /* ---------- Scrims ---------- */
+  --scrim-light: rgba(0, 0, 0, .32);
+  --scrim: rgba(0, 0, 0, .5);
+
+  /* ---------- Type scale (px), sized to read on a projector. Nothing smaller than --fs-label. ---------- */
+  --fs-label: 12px;      /* mono labels, counts, metadata */
+  --fs-small: 13px;      /* buttons, secondary copy */
+  --fs-body: 14px;       /* interface copy, card text */
+  --fs-ui: 15px;         /* navigation, emphasised interface text */
+  --fs-lead: 16px;       /* panel titles, lead text */
+  --fs-claim: 18px;      /* claims and hub guesses */
+  --fs-title-s: 20px;
+  --fs-title: 24px;      /* section headings */
+  --fs-title-l: 28px;    /* panel headings */
+  --fs-heading: 32px;
+  --fs-headline: 34px;   /* page titles */
+  --fs-display: 44px;
+  --fs-display-xl: 56px;
+
+  /* ---------- Corners ---------- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;      /* inputs, buttons, badges */
+  --radius-md: 8px;      /* cards, list items */
+  --radius-lg: 12px;     /* panels and floating chrome */
+  --radius-xl: 16px;     /* hub cards, dialogs */
+  --radius-pill: 999px;
+
+  /* ---------- Depth: flat chrome; floating panels and canvas cards carry soft two-layer shadows ---------- */
+  --shadow-rest: 0 1px 2px rgba(0, 0, 0, .05);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, .08), 0 0 0 .5px rgba(0, 0, 0, .05);
+  --shadow-lift: 0 6px 16px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .06);
+  --shadow-control: 0 2px 8px rgba(0, 0, 0, .12), 0 0 0 .5px rgba(0, 0, 0, .1);
+  --shadow-float: 0 4px 14px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .08);
+  --shadow-hub: 0 10px 28px rgba(0, 0, 0, .28);
+  --shadow-overlay: 0 18px 48px rgba(0, 0, 0, .22), 0 0 0 .5px rgba(0, 0, 0, .08);
+  --shadow-drawer: -8px 0 28px rgba(0, 0, 0, .14);
+  --shadow-sidebar: 8px 0 28px rgba(0, 0, 0, .14);
+  --shadow-toast: 0 8px 24px rgba(0, 0, 0, .22);
+}

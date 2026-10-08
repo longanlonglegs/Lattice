@@ -10,13 +10,15 @@ export function migrateCard(card, source) {
     ...rest,
     claim: typeof card.claim === "string" && card.claim ? card.claim : String(answer || question || quote || ""),
     quotes,
-    origin: card.origin || source?.origin || "external",
+    // "My draft" was retired: draft cards are the researcher's own work, so they become experiments.
+    origin: ((card.origin || source?.origin || "external") === "draft" ? "experiment" : card.origin || source?.origin || "external"),
     state: card.state || "pending",
     note: typeof card.note === "string" ? card.note : ""
   };
 }
 
 export function migrateSource(source) {
+  if (source.origin === "draft") return { ...source, origin: "experiment" }; // "My draft" was retired
   return source.origin ? source : { ...source, origin: source.kind === "work" ? "experiment" : "external" };
 }
 

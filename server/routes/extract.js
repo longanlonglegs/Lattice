@@ -1,9 +1,9 @@
 const { sendJson, readJson } = require("../json");
 const { MAX_SOURCE_CHARS, MAX_CARDS, MAX_QUOTES } = require("../config");
 const { callOpenAI, cardsSchema } = require("../openai");
-const { contentExtractionPrompt, experimentExtractionPrompt, draftExtractionPrompt, linkExtractionPrompt } = require("../prompts");
+const { contentExtractionPrompt, experimentExtractionPrompt, linkExtractionPrompt } = require("../prompts");
 
-const promptByMode = { content: contentExtractionPrompt, link: linkExtractionPrompt, experiment: experimentExtractionPrompt, work: experimentExtractionPrompt, draft: draftExtractionPrompt };
+const promptByMode = { content: contentExtractionPrompt, link: linkExtractionPrompt, experiment: experimentExtractionPrompt, work: experimentExtractionPrompt };
 
 function normalizeForMatch(text) {
   return String(text).normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");

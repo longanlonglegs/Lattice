@@ -1,11 +1,12 @@
 // The import queue: every source being read or extracted, one at a time, shown in a corner panel with a
 // Cancel button. Adding evidence never blocks the page; cards appear in the project as each import finishes.
 import { $, escapeHtml } from "./util.js";
+import { icon } from "./icons.js";
 
 const jobs = []; // { id, title, projectTitle, status: queued|running|done|failed|cancelled, note, controller, run }
 let running = false;
 
-const icons = { queued: "○", running: "◌", done: "✓", failed: "!", cancelled: "×" };
+const icons = { queued: icon("clock"), running: icon("spinner"), done: icon("check"), failed: icon("alert"), cancelled: icon("close") };
 
 function renderQueue() {
   const panel = $("#import-queue");

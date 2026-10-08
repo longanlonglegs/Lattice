@@ -14,9 +14,21 @@ const originSelect = item => `<select class="work-origin" data-work-origin="${it
 
 export const ob = { mode: "create", step: 1, projectId: null, colour: "sage", work: [] };
 
-export function renderColourPicker() {
-  $("#ob-colours").innerHTML = colourKeys.map(key => `<button class="colour-swatch" type="button" role="radio" aria-checked="${key === ob.colour}" aria-label="${key}" title="${key[0].toUpperCase()}${key.slice(1)}" data-colour="${key}" style="--swatch:${projectColours[key]}"></button>`).join("");
-  $("#ob-colours").querySelectorAll("[data-colour]").forEach(button => button.addEventListener("click", () => { ob.colour = button.dataset.colour; renderColourPicker(); }));
+const colourName = key => `${key[0].toUpperCase()}${key.slice(1)}`;
+// A radio group: one tab stop (the chosen colour), arrow keys move the choice.
+export function renderColourPicker({ focus = false } = {}) {
+  $("#ob-colours").innerHTML = colourKeys.map(key => `<button class="colour-swatch" type="button" role="radio" aria-checked="${key === ob.colour}" tabindex="${key === ob.colour ? 0 : -1}" aria-label="${colourName(key)}" title="${colourName(key)}" data-colour="${key}" style="--swatch:${projectColours[key]}"></button>`).join("");
+  const choose = (key, refocus) => { ob.colour = key; renderColourPicker({ focus: refocus }); };
+  $("#ob-colours").querySelectorAll("[data-colour]").forEach(button => {
+    button.addEventListener("click", () => choose(button.dataset.colour, true));
+    button.addEventListener("keydown", event => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      choose(colourKeys[(colourKeys.indexOf(ob.colour) + step + colourKeys.length) % colourKeys.length], true);
+    });
+  });
+  if (focus) $("#ob-colours [aria-checked='true']").focus();
 }
 export function renderWorkList() {
   $("#ob-work-list").innerHTML = ob.work.map(item => `<li class="work-item ${item.status === "error" ? "error" : ""}"><span class="kind-chip own-work">${item.kind === "pdf" ? "PDF" : "TXT"}</span><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.note)}</small></div>${item.status === "error" ? "" : originSelect(item)}${item.status === "reading" ? "" : `<button type="button" data-remove-work="${item.id}" aria-label="Remove ${escapeHtml(item.title)}">×</button>`}</li>`).join("");
@@ -32,13 +44,26 @@ export function renderOnboarding() {
     const index = +item.dataset.obIndex;
     item.classList.toggle("active", index === ob.step);
     item.classList.toggle("done", index < ob.step);
+    if (index === ob.step) item.setAttribute("aria-current", "step"); else item.removeAttribute("aria-current");
   });
   $("#ob-back").classList.toggle("hidden", !create || ob.step === 1);
   $("#ob-next").classList.toggle("hidden", !create || ob.step === 4);
   $("#ob-submit").classList.toggle("hidden", create && ob.step !== 4);
-  $("#ob-submit").innerHTML = create ? "Create project <span>→</span>" : "Save changes";
-  $("#ob-submit").disabled = create && !$("#ob-ack").checked;
+  $("#ob-submit").innerHTML = create ? "Create project <span aria-hidden=\"true\">→</span>" : "Save changes";
+  // Create stays clickable: if the privacy box isn't ticked, clicking it says so (a disabled button can't explain itself).
+  $("#ob-submit").disabled = false;
+  clearObError();
+}
+const stepNames = ["Basics", "Research focus", "Your work so far", "Privacy"];
+// After Next or Back: move focus to the new step's heading and announce where the user is.
+export function focusObStep() {
+  if (ob.mode !== "create") return;
+  $(`[data-ob-section="${ob.step}"] h2`)?.focus();
+  $("#ob-step-status").textContent = `Step ${ob.step} of 4: ${stepNames[ob.step - 1]}`;
+}
+export function clearObError() {
   $("#ob-error").textContent = "";
+  $("#ob-question").removeAttribute("aria-invalid");
 }
 export function openOnboarding(mode, projectId = null) {
   ob.mode = mode;
@@ -48,7 +73,7 @@ export function openOnboarding(mode, projectId = null) {
   const project = projectId ? normalizeProject(workspace.projects.find(item => item.id === projectId)) : null;
   const used = new Set(workspace.projects.map(item => item.colour));
   ob.colour = project ? project.colour : colourKeys.find(key => !used.has(key)) || colourKeys[Math.floor(Math.random() * colourKeys.length)];
-  $("#ob-eyebrow").textContent = project ? "PROJECT SETTINGS" : "NEW PROJECT";
+  $("#ob-eyebrow").textContent = project ? "Project settings" : "New project";
   $("#ob-title").textContent = project ? project.title : "Set up your project";
   $("#ob-privacy-help").textContent = project ? "How data in this project is stored and shared." : "Please read this before you create the project.";
   $("#ob-lede").textContent = project ? "Update the basics and research focus for this project. Changes save when you click Save changes." : "A few questions so Lattice knows what you’re working on. You can change any of this later from Project settings.";
@@ -60,7 +85,7 @@ export function openOnboarding(mode, projectId = null) {
   $("#ob-ack").checked = Boolean(acknowledged);
   $(".ob-ack").classList.toggle("hidden", Boolean(acknowledged));
   $("#ob-acked").classList.toggle("hidden", !acknowledged);
-  $("#ob-acked").textContent = acknowledged ? `✓ You acknowledged this on ${new Date(acknowledged).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}.` : "";
+  $("#ob-acked").textContent = acknowledged ? `You acknowledged this on ${new Date(acknowledged).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}.` : "";
   $("#ob-danger-help").textContent = "Removes the project, its sources, cards, and activity from this browser. This can’t be undone unless you have a backup.";
   $("#ob-form").classList.remove("hidden");
   $("#ob-cancel").disabled = false;
@@ -71,6 +96,7 @@ export function openOnboarding(mode, projectId = null) {
 export function validateObStep(step) {
   if (step === 2 && !$("#ob-question").value.trim()) {
     $("#ob-error").textContent = "Add a research question to continue. A rough one is fine; you can refine it later.";
+    $("#ob-question").setAttribute("aria-invalid", "true");
     $("#ob-question").focus();
     return false;
   }
@@ -107,10 +133,9 @@ export async function addObFiles(files) {
 }
 export function saveSettings() {
   const project = normalizeProject(workspace.projects.find(item => item.id === ob.projectId));
-  const question = $("#ob-question").value.trim();
-  const hypothesis = $("#ob-hypothesis").value.trim();
-  if (question !== project.question || hypothesis !== project.hypothesis) project.aiAnalysis = null;
-  Object.assign(project, { title: $("#ob-name").value.trim() || defaultTitle, colour: ob.colour, question, hypothesis, placeholder: false, updatedAt: new Date().toISOString() });
+  // The question and hypothesis are edited only in Question & history, where every change can be recorded as a
+  // version; settings covers the name, colour, and privacy acknowledgement.
+  Object.assign(project, { title: $("#ob-name").value.trim() || defaultTitle, colour: ob.colour, placeholder: false, updatedAt: new Date().toISOString() });
   if (!project.acknowledgedAt && $("#ob-ack").checked) project.acknowledgedAt = new Date().toISOString();
   recordActivity("setup", "Updated project settings", "", project);
   persist(); renderProject();
@@ -118,7 +143,7 @@ export function saveSettings() {
   toast("Project settings saved.");
 }
 export async function createProject() {
-  if (!$("#ob-ack").checked) { $("#ob-error").textContent = "Please confirm you understand how Lattice handles this project’s data."; return; }
+  if (!$("#ob-ack").checked) { $("#ob-error").textContent = "Tick the box above to confirm you’ve read how Lattice handles this project’s data, then create the project."; $("#ob-ack").focus(); return; }
   if (ob.work.some(item => item.status === "reading")) { $("#ob-error").textContent = "A PDF is still being read. Wait for it to finish, then create the project."; return; }
   const now = new Date().toISOString();
   const project = newProject($("#ob-name").value.trim() || defaultTitle, { colour: ob.colour, question: $("#ob-question").value.trim(), hypothesis: $("#ob-hypothesis").value.trim(), acknowledgedAt: now });
@@ -138,7 +163,8 @@ export async function createProject() {
     queueSource(project, source, item.pages, { mode: extractionMode(item.origin), activity: ["import", `Added ${label.toLowerCase()}: ${item.title}`, source.detail] });
   }
   openProject(project.id);
-  toast(work.length ? `${project.title} is ready. Your work is being read in the background; cards appear as each item finishes.` : `${project.title} is ready. Use + Add evidence to add your first source.`);
+  // The web's starting point takes it from here: the question, the hypothesis, and what is being read.
+  toast(`${project.title} is ready.`);
 }
 
 export function deleteProject() {
