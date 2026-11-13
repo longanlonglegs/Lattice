@@ -7,12 +7,15 @@ const { fetchSource } = require("./routes/fetch-source");
 const { lookupDoiRoute } = require("./routes/lookup-doi");
 const { splitHypothesis } = require("./routes/hypothesis");
 const { embedTexts, relatePairs } = require("./routes/relations");
+const { researchRoute } = require("./routes/research");
 
 const root = path.resolve(__dirname, "..");
 const mime = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".wasm": "application/wasm" };
 
 http.createServer((req, res) => {
-  const pathname = req.url === "/" ? "/index.html" : req.url.split("?")[0];
+  const requestedPath = req.url.split("?")[0];
+  const pathname = ["/", "/research", "/research/"].includes(requestedPath) ? "/index.html" : requestedPath;
+  if (req.method === "POST" && pathname === "/api/research") return researchRoute(req, res);
   if (req.method === "POST" && pathname === "/api/evidence-analysis") return analyzeEvidence(req, res);
   if (req.method === "POST" && pathname === "/api/extract-cards") return extractCards(req, res);
   if (req.method === "POST" && pathname === "/api/fetch-source") return fetchSource(req, res);

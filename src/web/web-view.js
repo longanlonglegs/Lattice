@@ -293,10 +293,10 @@ function renderStart(project) {
   start.classList.toggle("hidden", !hasStart);
   $("#web-empty").classList.toggle("is-start", hasStart);
   $("#web-empty").classList.toggle("has-review", hasStart && pendingCards(project).length > 0);
-  $("#web-title").textContent = hasStart ? "Your starting point" : "Add evidence to start your web";
+  $("#web-title").textContent = hasStart ? "Your starting point" : "Start your idea map";
   $("#web-empty-text").textContent = hasStart
-    ? "Everything you add gathers around your hypothesis, with lines showing what supports it, contradicts it, or adds a condition."
-    : "Every claim from your sources, experiments, and hypothesis appears here as an idea, with lines showing how they relate.";
+    ? "Add sources to see how their ideas connect to your hypothesis."
+    : "Add a paper, file, or note. Its key ideas will appear here.";
   if (!hasStart) { start.innerHTML = ""; return; }
   const guesses = project.cards.filter(item => item.origin === "hypothesis" && !item.superseded);
   const waiting = pendingCards(project);
@@ -701,8 +701,8 @@ const lineSwatch = type => `<svg viewBox="0 0 26 10" aria-hidden="true"><line x1
 function renderLegend() {
   const nodes = [...web.nodes.values()];
   $("#web-legend").innerHTML = `
-    <div class="legend-row">${Object.keys(origins).map(key => `<button type="button" class="legend-chip ${hidden.origins.has(key) ? "off" : ""}" data-toggle-origin="${key}"><span class="legend-shape" data-origin="${key}" style="--origin:${origins[key].colour}"></span>${escapeHtml(origins[key].label)} <small>${nodes.filter(node => node.card.origin === key).length}</small></button>`).join("")}</div>
-    <div class="legend-row">${Object.entries(relationTypes).map(([key, type]) => `<button type="button" class="legend-chip ${hidden.relations.has(key) ? "off" : ""}" data-toggle-relation="${key}">${lineSwatch(type)}${escapeHtml(type.label)} <small>${web.links.filter(link => link.edge.relation === key).length}</small></button>`).join("")}</div>`;
+    <div class="legend-row">${Object.keys(origins).filter(key => hidden.origins.has(key) || nodes.some(node => node.card.origin === key)).map(key => `<button type="button" aria-pressed="${!hidden.origins.has(key)}" class="legend-chip ${hidden.origins.has(key) ? "off" : ""}" data-toggle-origin="${key}"><span class="legend-shape" data-origin="${key}" style="--origin:${origins[key].colour}"></span>${escapeHtml(origins[key].label)} <small>${nodes.filter(node => node.card.origin === key).length}</small></button>`).join("")}</div>
+    <div class="legend-row">${Object.entries(relationTypes).filter(([key]) => hidden.relations.has(key) || web.links.some(link => link.edge.relation === key)).map(([key, type]) => `<button type="button" aria-pressed="${!hidden.relations.has(key)}" class="legend-chip ${hidden.relations.has(key) ? "off" : ""}" data-toggle-relation="${key}">${lineSwatch(type)}${escapeHtml(type.label)} <small>${web.links.filter(link => link.edge.relation === key).length}</small></button>`).join("")}</div>`;
   $("#web-legend").querySelectorAll("[data-toggle-origin]").forEach(button => button.addEventListener("click", () => toggle(hidden.origins, button.dataset.toggleOrigin)));
   $("#web-legend").querySelectorAll("[data-toggle-relation]").forEach(button => button.addEventListener("click", () => toggle(hidden.relations, button.dataset.toggleRelation)));
 }

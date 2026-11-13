@@ -108,7 +108,7 @@ export function renderCards() {
   $("#cards-review-banner").classList.toggle("hidden", !waiting);
   $("#cards-review-count").textContent = plural(waiting, "new card");
   const empty = filter === "all"
-    ? "<strong>No accepted cards yet.</strong><p>Use + Add evidence to add a source or some of your own work. You review each card Lattice extracts before it joins your project.</p>"
+    ? "<strong>No accepted cards yet.</strong><p>Add a source, then review its extracted ideas here.</p>"
     : "<strong>No accepted cards from this origin.</strong><p>Choose All origins to see every card.</p>";
   const rejectedHtml = rejected.length
     ? `<details class="rejected-section"><summary>Rejected cards · ${rejected.length}<small>Not in the web, relations, Insights, or exports. Restore one to bring it back.</small></summary>${cardColumns(rejected.map((item, index) => cardHtml(item, index, shortCitation(project.sources.find(source => source.id === item.sourceId)?.meta))))}</details>`

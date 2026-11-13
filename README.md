@@ -19,6 +19,14 @@ npm start
 
 Then open `http://localhost:4173` (set `PORT` to use another port). `node_modules/` is not committed, so `npm install` is required after cloning: the browser loads `pdf.js` from `node_modules/`, and the server reads PDFs from links with `pdfjs-dist`, which needs the native `@napi-rs/canvas` binary for your platform. npm installs the right one automatically; if you copy `node_modules/` between machines (for example Windows → macOS), run `npm install` again so link-fetching of PDFs keeps working.
 
+### Research mode
+
+Open `http://localhost:4173/research`, or choose **Research** in the menu. A reading list loads automatically from the active project's current hypothesis (or question) and the three most recently added external paper titles. Lattice searches Crossref, ranks the returned metadata by shared topics, excludes papers already saved (by DOI or title), and gives a short matching reason for each recommendation. Suggestions are topical matches, not judgments that a paper supports or contradicts your hypothesis.
+
+The list refreshes when you add or remove sources or change the hypothesis. Successful lists are reused for ten minutes within the current browser session, separately for each project and publication-period filter. Search manually at any time, then choose **For you** to return to the automatic list. **Past 3 years** limits publication dates. The exploration rail links each search angle to the hypothesis or source title that inspired it.
+
+Search terms are derived locally from your hypothesis, question, and external paper titles; only those terms are sent to Crossref, never source files or full text. No AI key is required. DOI links open the papers; the plus icon opens the normal evidence-import drawer for the active project. Papers are not saved or analyzed until you choose **Extract cards**.
+
 ### Tests and lint
 
 ```bash

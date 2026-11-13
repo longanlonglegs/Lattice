@@ -98,6 +98,7 @@ export async function flushSaves() {
   while (saving) await saving;
 }
 export function persist() {
+  window.dispatchEvent(new Event("lattice:project-updated"));
   saveNow();
   renderProjectNav();
 }

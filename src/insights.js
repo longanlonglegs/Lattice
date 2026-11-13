@@ -28,8 +28,8 @@ function sideOf(edge, guessId) {
   return null;
 }
 const sides = {
-  for: { label: "For", line: "supports", empty: "Nothing backs this up yet." },
-  against: { label: "Against", line: "contradicts", empty: "Nothing argues against it yet. Look for evidence that could prove it wrong: a guess that survives that is much stronger." },
+  for: { label: "For", line: "supports", empty: "No supporting evidence yet." },
+  against: { label: "Against", line: "contradicts", empty: "No opposing evidence yet." },
   nuance: { label: "Adds a condition or a cause", line: "refines", empty: "" },
   explained: { label: "This part would explain", line: "explains", empty: "" }
 };
@@ -81,9 +81,9 @@ function countVerdict({ for: pro, against }) {
 const listOf = items => items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
 
 function countOverview(web, sourceCount) {
-  if (!web.cards.length) return "Your web is empty, so there is nothing to compare yet. Add a source or some of your own work to get started.";
+  if (!web.cards.length) return "Add evidence to start comparing ideas.";
   const ideas = `${plural(web.cards.length - web.guesses.length, "idea")} from ${plural(sourceCount, "source")}.`;
-  if (!web.guesses.length) return `${ideas} You haven’t written a working hypothesis, so there is nothing to test them against yet.`;
+  if (!web.guesses.length) return `${ideas} Add a hypothesis to compare these ideas.`;
   const tally = {};
   web.around.forEach(item => { const key = countVerdict(item); tally[key] = (tally[key] || 0) + 1; });
   const parts = Object.keys(verdicts).filter(key => tally[key]).map(key => `${tally[key]} ${tally[key] === 1 ? "is" : "are"} ${verdicts[key].phrase}`);
@@ -153,8 +153,8 @@ const aiTag = `<span class="ins-ai-tag">AI</span>`;
 // The setup steps that come before the analysis is worth reading: [title, explanation, target].
 function setupSteps(project) {
   const steps = [];
-  if (!project.question.trim()) steps.push(["Frame the research question", "It’s what every piece of evidence is read against.", "history"]);
-  if (!project.hypothesis.trim()) steps.push(["Write a working hypothesis", "Lattice splits it into parts and tests each one.", "history"]);
+  if (!project.question.trim()) steps.push(["Add a question", "It’s what every piece of evidence is read against.", "history"]);
+  if (!project.hypothesis.trim()) steps.push(["Add a hypothesis", "Lattice splits it into parts and tests each one.", "history"]);
   if (!project.sources.length) steps.push(["Add your first source", "A paper, a link, or your own notes.", "evidence"]);
   const pending = pendingCards(project).length;
   if (pending) steps.push([`Review ${plural(pending, "new card")}`, "Only accepted cards count here.", "review"]);
@@ -214,14 +214,13 @@ function citeChips(ids, web, guess) {
 function verdictBasis(item, verdictKey, ai, project) {
   const { backing, sourceIds, ownOnly } = basisOf(item, project);
   let text;
-  if (verdictKey === "untested") text = "Nothing in your web bears on this part directly yet.";
-  else if (ai) text = "The AI read weighed what the quotes say, not just the counts.";
+  if (verdictKey === "untested") text = "No direct evidence yet.";
+  else if (ai) text = "Based on the AI reading of your quotes.";
   else {
     const rests = ownOnly ? ", all from your own work" : sourceIds.size === 1 ? ", all from one source" : "";
-    text = `From the counts: ${item.for.length} for and ${item.against.length} against${rests}.${backing.length < 3 ? " That’s thin, so treat the verdict as a first impression." : ""}`;
+    text = `From the counts: ${item.for.length} for and ${item.against.length} against${rests}.${backing.length < 3 ? " Limited evidence; provisional verdict." : ""}`;
   }
-  const reassure = verdictKey === "challenged" || verdictKey === "mixed" ? ` <span class="ins-reassure">Evidence against a guess is progress: it shows you what to test or reword next.</span>` : "";
-  return `<p class="ins-basis">${text}${reassure}</p>`;
+  return `<p class="ins-basis">${text}</p>`;
 }
 
 function partHtml(item, index, web, ai, aiGuess, project) {
@@ -231,9 +230,9 @@ function partHtml(item, index, web, ai, aiGuess, project) {
   const total = item.for.length + item.against.length;
   const prose = (label, text, ids, tone, empty) => `<div class="ins-prose ${tone}${text ? "" : " muted"}"><p class="ins-label">${lineGlyph(tone === "agree" ? "supports" : "contradicts")}${label}</p><p>${escapeHtml(text || empty)}</p>${text ? citeChips(ids, web, guess) : ""}</div>`;
   const analysis = aiGuess
-    ? `<div class="ins-prose-grid">${prose("Where the evidence agrees", aiGuess.agreement, aiGuess.agreement_ids, "agree", "No evidence backs this part yet.")}${prose("Where it disagrees", aiGuess.disagreement, aiGuess.disagreement_ids, "disagree", "No evidence argues against it yet.")}</div>
-      ${aiGuess.revision ? `<div class="ins-revision"><div><p class="ins-label">Consider rewording this part</p><p class="ins-revision-text">${escapeHtml(aiGuess.revision)}</p></div><button class="ghost-button" type="button" data-tab="history" data-key="reword:${guess.id}">Edit hypothesis</button></div>` : ""}
-      ${aiGuess.suggestions?.length ? `<div class="ins-steps"><p class="ins-label">Next steps for this part</p><ol>${aiGuess.suggestions.map(step => `<li><span class="ins-priority" data-priority="${escapeHtml(step.priority)}">${escapeHtml(step.priority)}</span><div><strong>${escapeHtml(step.action)}</strong><p>${escapeHtml(step.reason)}</p></div></li>`).join("")}</ol></div>` : ""}`
+    ? `<div class="ins-prose-grid">${prose("Supporting evidence", aiGuess.agreement, aiGuess.agreement_ids, "agree", "No evidence backs this part yet.")}${prose("Opposing evidence", aiGuess.disagreement, aiGuess.disagreement_ids, "disagree", "No evidence argues against it yet.")}</div>
+      ${aiGuess.revision ? `<div class="ins-revision"><div><p class="ins-label">Suggested revision</p><p class="ins-revision-text">${escapeHtml(aiGuess.revision)}</p></div><button class="ghost-button" type="button" data-tab="history" data-key="reword:${guess.id}">Edit hypothesis</button></div>` : ""}
+      ${aiGuess.suggestions?.length ? `<div class="ins-steps"><p class="ins-label">Next steps</p><ol>${aiGuess.suggestions.map(step => `<li><span class="ins-priority" data-priority="${escapeHtml(step.priority)}">${escapeHtml(step.priority)}</span><div><strong>${escapeHtml(step.action)}</strong><p>${escapeHtml(step.reason)}</p></div></li>`).join("")}</ol></div>` : ""}`
     : ai
       ? `<p class="ins-ai-hint">${index >= MAX_AI_GUESSES ? `The AI read covers the first ${MAX_AI_GUESSES} parts of your hypothesis, so this part only has its counts.` : "Your hypothesis changed after the last AI read. Run it again to read this part."}</p>`
       : "";
@@ -257,7 +256,7 @@ function partHtml(item, index, web, ai, aiGuess, project) {
         ${item.nuance.length || item.explained.length ? `<div class="ins-extra">${sideColumn("nuance", item.nuance, project, guess)}${sideColumn("explained", item.explained, project, guess)}</div>` : ""}
       </div>
       ${analysis}
-      <button class="ins-link ins-part-web" type="button" data-web-card="${guess.id}" data-key="web:part:${guess.id}">Show this part in the web →</button>
+      <button class="ins-link ins-part-web" type="button" data-web-card="${guess.id}" data-key="web:part:${guess.id}">View in map →</button>
     </div>
   </article>`;
 }
@@ -278,8 +277,8 @@ function contradictions(web, ai) {
 
 function clashHtml(item, project) {
   const context = `c${item.a.id}-${item.b.id}`;
-  return `<article class="ins-clash">
-    <p class="ins-clash-title">${escapeHtml(item.ai?.title || "These two ideas can’t both be true")}${item.aiOnly ? ` <span class="ins-ai-tag">Found by AI</span>` : ""}</p>
+  return `<details class="ins-clash ins-detail" data-detail="clash:${item.a.id}:${item.b.id}">
+    <summary class="ins-clash-title">${escapeHtml(item.ai?.title || "Conflicting claims")}${item.aiOnly ? ` <span class="ins-ai-tag">Found by AI</span>` : ""}</summary>
     ${item.ai?.explanation || item.edge?.rationale ? `<p class="ins-clash-text">${escapeHtml(item.ai?.explanation || item.edge.rationale)}</p>` : ""}
     <div class="ins-clash-pair">
       ${ideaCard(item.a, project, { edge: item.edge, context })}
@@ -287,18 +286,18 @@ function clashHtml(item, project) {
       ${ideaCard(item.b, project, { edge: item.edge, context })}
     </div>
     ${item.ai?.resolve ? `<p class="ins-resolve"><b>What could explain it</b> ${escapeHtml(item.ai.resolve)}</p>` : ""}
-    <button class="ins-link" type="button" data-web-pair="${item.a.id}|${item.b.id}" data-key="pair:${item.a.id}|${item.b.id}">Show both in the web →</button>
-  </article>`;
+    <button class="ins-link" type="button" data-web-pair="${item.a.id}|${item.b.id}" data-key="pair:${item.a.id}|${item.b.id}">View pair →</button>
+  </details>`;
 }
 
 function gapHtml(gap, index) {
   const chips = gap.cards.slice(0, 4).map(card => `<button class="ins-chip" type="button" data-web-card="${card.id}" data-key="gap:${index}:${card.id}" style="--origin:${originOf(card.origin).colour}"><i></i>${escapeHtml(shortText(card.short || card.claim, 46))}</button>`).join("");
-  return `<li class="ins-gap">
-    <p class="ins-gap-title">${escapeHtml(gap.title)} <span class="${gap.ai ? "ins-ai-tag" : "ins-gap-kind"}">${escapeHtml(gap.kind)}</span></p>
+  return `<li class="ins-gap"><details class="ins-detail" data-detail="gap:${escapeHtml(gap.title)}">
+    <summary class="ins-gap-title">${escapeHtml(gap.title)} <span class="${gap.ai ? "ins-ai-tag" : "ins-gap-kind"}">${escapeHtml(gap.kind)}</span></summary>
     <p>${escapeHtml(gap.explanation)}</p>
     <p class="ins-gap-research"><b>Research next:</b> ${escapeHtml(gap.research)}</p>
     ${chips ? `<p class="ins-cites">${chips}</p>` : ""}
-  </li>`;
+  </details></li>`;
 }
 
 // The one thing to do next: the most urgent AI suggestion on the weakest part, else the plainest gap the web shows.
@@ -331,48 +330,52 @@ export function renderInsights({ tabs = true } = {}) {
   bindOnce();
   const panel = $("[data-panel='insights']");
   const focusKey = panel.contains(document.activeElement) ? document.activeElement.dataset.key : null;
+  const expandedDetails = panel.dataset.project === project.id
+    ? [...panel.querySelectorAll("details[open][data-detail]")].map(node => node.dataset.detail) : [];
+  panel.dataset.project = project.id;
   const web = readWeb(project);
   const ai = currentRead(project);
   const aiGuesses = new Map((ai?.guesses || []).map(item => [String(item.guess_id), item]));
-  if (!openParts.has(project.id) && web.guesses.length) openParts.set(project.id, new Set([web.guesses[0].id]));
+  if (!openParts.has(project.id) && web.guesses.length) openParts.set(project.id, new Set());
 
   lastSteps = setupSteps(project);
   $("#ins-setup").classList.toggle("hidden", !lastSteps.length);
-  $("#ins-setup").innerHTML = lastSteps.length ? `<p>Before this page can say much:</p>${lastSteps.map((step, index) => `<button type="button" data-step="${index}" data-key="step:${index}"><strong>${escapeHtml(step[0])}</strong><small>${escapeHtml(step[1])}</small><span aria-hidden="true">→</span></button>`).join("")}` : "";
+  $("#ins-setup").innerHTML = lastSteps.length ? `<p>Get started</p>${lastSteps.map((step, index) => `<button type="button" data-step="${index}" data-key="step:${index}"><strong>${escapeHtml(step[0])}</strong><span aria-hidden="true">→</span></button>`).join("")}` : "";
 
   // Where the sources stand
   const sourceCount = new Set(web.cards.filter(card => card.origin !== "hypothesis").map(card => card.sourceId)).size;
   const stale = ai && isStale(ai, project);
   // The for/against chart is always shown (it is counted, not written); the AI read adds its summary beside it.
   const totals = `${plural(web.cards.length - web.guesses.length, "idea")} from ${plural(sourceCount, "source")}${web.attention.contradictions.length ? ` · ${plural(web.attention.contradictions.length, "contradiction")}` : ""}`;
-  $("#ins-overview").classList.toggle("has-chart", web.around.length > 0);
+  $("#ins-overview").classList.remove("has-chart");
   $("#ins-overview").innerHTML = `
     <div class="ins-overview-text">
-      ${ai ? `<p class="ins-overview-prose">${escapeHtml(ai.overview)}</p><p class="ins-overview-note">${aiTag} Written by the AI read from your cards only, ${escapeHtml(ai.confidence || "unknown")} confidence${stale ? ". Your web has changed since." : "."}</p>`
-        : web.around.length ? `<p class="ins-overview-prose">${escapeHtml(totals)}.</p><p class="ins-overview-note">Counted from your web. The AI read adds a written summary here.</p>`
+      ${ai ? `<p class="ins-overview-prose">${escapeHtml(totals)}</p><p class="ins-overview-note">${aiTag} ${escapeHtml(ai.confidence || "unknown")} confidence · Saved cards only${stale ? " · Out of date" : ""}</p><details class="ins-detail" data-detail="overview"><summary>AI summary</summary><p>${escapeHtml(ai.overview)}</p></details>`
+        : web.around.length ? `<p class="ins-overview-prose">${escapeHtml(totals)}.</p><p class="ins-overview-note">Connection counts, not evidence quality.</p>`
         : `<p class="ins-overview-prose">${escapeHtml(countOverview(web, sourceCount))}</p>`}
     </div>
-    ${web.around.length ? standChart(web, aiGuesses) : ""}`;
+    ${web.around.length ? `<details class="ins-detail ins-balance" data-detail="balance"><summary>Evidence balance</summary>${standChart(web, aiGuesses)}</details>` : ""}`;
 
   // How each part is holding up
   $("#ins-guesses-legend").classList.toggle("hidden", !web.around.length);
   $("#ins-guesses").innerHTML = web.around.length
     ? web.around.map((item, index) => partHtml(item, index, web, ai, aiGuesses.get(String(item.guess.id)), project)).join("")
-    : `<div class="ins-empty"><strong>No hypothesis to test yet</strong><p>Write a working hypothesis and Lattice splits it into parts, then gathers the evidence for and against each one here.</p><button class="primary" type="button" data-tab="history" data-key="write-hypothesis">Write a hypothesis</button></div>`;
+    : `<div class="ins-empty"><strong>No hypothesis to test yet</strong><p>Add a hypothesis to see evidence for and against it.</p><button class="primary" type="button" data-tab="history" data-key="write-hypothesis">Write a hypothesis</button></div>`;
 
   // Contradictions and gaps
   const clashes = contradictions(web, ai);
   const aiGaps = (ai?.gaps || []).map(gap => ({ kind: "Found by AI", ai: true, title: gap.title, explanation: gap.explanation, research: gap.research, related: gap.related_ids.map(String), cards: gap.related_ids.map(id => web.byId.get(Number(id))).filter(Boolean) }));
   // Where the AI read describes a gap around the same guess, its version replaces the counted one.
   const gaps = [...countGaps(web, project).filter(gap => !gap.guessId || !aiGaps.some(item => item.related.includes(String(gap.guessId)))), ...aiGaps];
-  $("#ins-contradictions").innerHTML = `<h4 class="ins-sub">Contradictions <b>${clashes.length}</b></h4>${clashes.length ? clashes.map(item => clashHtml(item, project)).join("") : `<p class="ins-none">No two pieces of evidence contradict each other. Evidence against a part of your hypothesis is shown with that part above.</p>`}`;
-  $("#ins-gaps").innerHTML = `<h4 class="ins-sub">Gaps that need more research <b>${gaps.length}</b></h4>${gaps.length ? `<ul class="ins-gap-list">${gaps.map(gapHtml).join("")}</ul>` : `<p class="ins-none">${web.cards.length ? "No gaps: every tested part of your hypothesis rests on more than one source." : "Gaps show up once your web has some evidence."}</p>`}`;
+  $("#ins-contradictions").innerHTML = `<h4 class="ins-sub">Contradictions <b>${clashes.length}</b></h4>${clashes.length ? clashes.map(item => clashHtml(item, project)).join("") : `<p class="ins-none">No conflicts detected in saved evidence.</p>`}`;
+  $("#ins-gaps").innerHTML = `<h4 class="ins-sub">Evidence gaps <b>${gaps.length}</b></h4>${gaps.length ? `<ul class="ins-gap-list">${gaps.map(gapHtml).join("")}</ul>` : `<p class="ins-none">${web.cards.length ? "No gaps flagged in saved evidence." : "Add evidence to find gaps."}</p>`}`;
 
   // Your next step
   lastNextStep = lastSteps.length ? null : nextStep(web, ai, aiGuesses, clashes, gaps);
   $("#ins-next").classList.toggle("hidden", !lastNextStep);
-  $("#ins-next").innerHTML = lastNextStep ? `<h3 class="ins-title">Your next step</h3><div class="ins-next-body"><div><p class="ins-next-action">${escapeHtml(lastNextStep.action)}</p><p class="ins-next-reason">${escapeHtml(lastNextStep.reason)}</p></div>${lastNextStep.button ? `<button class="primary" type="button" data-next data-key="next">${escapeHtml(lastNextStep.button)}</button>` : ""}</div>` : "";
+  $("#ins-next").innerHTML = lastNextStep ? `<h3 class="ins-title">Next step</h3><div class="ins-next-body"><div><p class="ins-next-action">${escapeHtml(lastNextStep.action)}</p><details class="ins-detail" data-detail="next"><summary>Why this?</summary><p class="ins-next-reason">${escapeHtml(lastNextStep.reason)}</p></details></div>${lastNextStep.button ? `<button class="primary" type="button" data-next data-key="next">${escapeHtml(lastNextStep.button)}</button>` : ""}</div>` : "";
 
+  expandedDetails.forEach(key => panel.querySelector(`details[data-detail="${CSS.escape(key)}"]`)?.setAttribute("open", ""));
   renderAiStatus(web);
   drawInsightLines();
   if (focusKey) panel.querySelector(`[data-key="${CSS.escape(focusKey)}"]`)?.focus({ preventScroll: true });

@@ -1,4 +1,5 @@
 // Entry point: wires up events and opens the first view.
+import { initResearch } from "./research.js";
 import { $ } from "./util.js";
 import { initWorkspace, currentProject, saveWorkspace } from "./state.js";
 import { renderProjectsGrid, openProject } from "./projects.js";
@@ -18,6 +19,7 @@ import { ob, renderOnboarding, openOnboarding, validateObStep, addObText, addObF
 import { addLocalFile, addPastedText, addUrlSource, receiveBrowserCapture } from "./ingest.js";
 
 await initWorkspace();
+initResearch();
 
 let activeTab = "link";
 
@@ -99,8 +101,20 @@ $("#upload-button").addEventListener("click", () => addLocalFile($("#file-input"
 $("#text-button").addEventListener("click", addPastedText);
 
 // The hash remembers the view and, for a project, its tab: #workspace/cards
-const [hashView, hashTab] = window.location.hash.slice(1).split("/");
+const [hashView, hashTab] = (window.location.hash.slice(1) || (window.location.pathname.replace(/\/$/, "") === "/research" ? "research" : "")).split("/");
 renderProject();
 if (currentProject()) showTab(projectTabs.includes(hashTab) ? hashTab : "web");
 showView(Object.keys(viewSections).filter(view => view !== "onboarding").includes(hashView) ? hashView : "workspace");
 requestReview(); // cards left waiting in an earlier session
+
+// Native disclosure keeps occasional canvas controls out of the main toolbar.
+const mapOptions = $("#map-options");
+document.addEventListener("click", event => {
+  if (!mapOptions.contains(event.target) || event.target.closest("#web-reset")) mapOptions.open = false;
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && mapOptions.open) {
+    mapOptions.open = false;
+    mapOptions.querySelector("summary").focus();
+  }
+});
